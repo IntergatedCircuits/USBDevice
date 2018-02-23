@@ -7,9 +7,10 @@ compliant to the USB 2.0 specification.
 ## Contents
 
 The project consists of the followings:
-1. The USB 2.0 device framework is located in the Device folder.
-2. Common USB classes are implemented as part of the project, under the Class folder.
+1. The USB 2.0 device framework is located in the **Device** folder.
+2. Common USB classes are implemented as part of the project, under the **Class** folder.
 3. The Templates folder contains example files which are mandatory for the library's functionality.
+4. The Doc folder contains a prepared *doxyfile* for **Doxygen** documentation generation.
 
 
 ## Authors
