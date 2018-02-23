@@ -23,11 +23,39 @@
   */
 #include <usbd_private.h>
 
-/** @addtogroup USBD
+/** @ingroup USBD
+ * @addtogroup USBD_Private_Functions_IfClass
  * @{ */
 
-/** @defgroup USBD_Internal_Functions USB Device Internal Functions
- *  @brief This group is used by the Device and the Classes.
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::InData function.
+ * @param itf: reference of the interface
+ * @param ep:  reference of the endpoint
+ */
+__STATIC_INLINE
+void USBD_IfClass_InData(USBD_IfHandleType *itf, USBD_EpHandleType *ep)
+{
+    USBD_SAFE_CALLBACK(itf->Class->InData, itf, ep);
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::OutData function.
+ * @param itf: reference of the interface
+ * @param ep:  reference of the endpoint
+ */
+__STATIC_INLINE
+void USBD_IfClass_OutData(USBD_IfHandleType *itf, USBD_EpHandleType *ep)
+{
+    USBD_SAFE_CALLBACK(itf->Class->OutData, itf, ep);
+}
+
+/** @} */
+
+/** @ingroup USBD
+ * @defgroup USBD_Internal_Functions USB Device Internal Functions
+ * @brief This group is used by the Device and the Classes.
  * @{ */
 
 /**
@@ -103,9 +131,8 @@ void USBD_EpInCallback(USBD_HandleType *dev, USBD_EpHandleType *ep)
     }
     else
     {
-        USBD_IfHandleType *itf = dev->IF[ep->IfNum];
         ep->State = USB_EP_STATE_IDLE;
-        USBD_SAFE_CALLBACK(itf->Class->InData, itf, ep);
+        USBD_IfClass_InData(dev->IF[ep->IfNum], ep);
     }
 }
 
@@ -123,15 +150,14 @@ void USBD_EpOutCallback(USBD_HandleType *dev, USBD_EpHandleType *ep)
     }
     else
     {
-        USBD_IfHandleType *itf = dev->IF[ep->IfNum];
         ep->State = USB_EP_STATE_IDLE;
-        USBD_SAFE_CALLBACK(itf->Class->OutData, itf, ep);
+        USBD_IfClass_OutData(dev->IF[ep->IfNum], ep);
     }
 }
 
 /** @} */
 
-/** @addtogroup USBD_Private_Functions_Req
+/** @addtogroup USBD_Private_Functions_Ctrl
  * @{ */
 
 /**
@@ -205,7 +231,5 @@ USBD_ReturnType USBD_EpRequest(USBD_HandleType *dev)
 
     return retval;
 }
-
-/** @} */
 
 /** @} */

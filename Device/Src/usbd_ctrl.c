@@ -5,7 +5,7 @@
   * @version 0.1
   * @date    2018-01-31
   * @brief   Universal Serial Bus Device Driver
-  *          USB request routing and control transfer management
+  *          Control transfer management
   *
   * Copyright (c) 2018 Benedek Kupper
   *
@@ -23,10 +23,25 @@
   */
 #include <usbd_private.h>
 
-/** @addtogroup USBD
+/** @ingroup USBD
+ * @addtogroup USBD_Private_Functions_IfClass
  * @{ */
 
-/** @defgroup USBD_Private_Functions_Req USB Device Request Handling Functions
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::DataStage function.
+ * @param itf: reference of the interface
+ */
+__STATIC_INLINE
+void USBD_IfClass_DataStage(USBD_IfHandleType *itf)
+{
+    USBD_SAFE_CALLBACK(itf->Class->DataStage, itf);
+}
+
+/** @} */
+
+/** @ingroup USBD
+ * @defgroup USBD_Private_Functions_Ctrl USBD Control Request Handling
  * @{ */
 
 /**
@@ -89,9 +104,7 @@ void USBD_CtrlInCallback(USBD_HandleType *dev)
                 (dev->Setup.RequestType.Recipient == USB_REQ_RECIPIENT_INTERFACE))
             {
                 /* If callback for transmitted EP0 data */
-                USBD_IfHandleType *itf = dev->IF[(uint8_t)dev->Setup.Index];
-
-                USBD_SAFE_CALLBACK(itf->Class->DataStage, itf);
+                USBD_IfClass_DataStage(dev->IF[(uint8_t)dev->Setup.Index]);
             }
 
             /* Proceed to Status stage */
@@ -121,9 +134,7 @@ void USBD_CtrlOutCallback(USBD_HandleType *dev)
         if (dev->ConfigSelector != 0)
         {
             /* If callback for received EP0 data */
-            USBD_IfHandleType *itf = dev->IF[(uint8_t)dev->Setup.Index];
-
-            USBD_SAFE_CALLBACK(itf->Class->DataStage, itf);
+            USBD_IfClass_DataStage(dev->IF[(uint8_t)dev->Setup.Index]);
         }
 
         /* Proceed to Status stage */
@@ -246,7 +257,5 @@ void USBD_SetupCallback(USBD_HandleType *dev)
         /* Data stage starts in the requested direction */
     }
 }
-
-/** @} */
 
 /** @} */

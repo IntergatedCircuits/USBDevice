@@ -4,7 +4,7 @@
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-01-31
-  * @brief   Universal Serial Bus Communications Device Class
+  * @brief   USB Communications Device Class implementation
   *
   * Copyright (c) 2018 Benedek Kupper
   *
@@ -23,8 +23,9 @@
 #include <usbd_internal.h>
 #include <usbd_cdc.h>
 
-/** @addtogroup USBD_CDC
- * @{ */
+#if (USBD_MAX_IF_COUNT < 2)
+#error "A single CDC interface takes up 2 device interface slots!"
+#endif
 
 #if (USBD_CDC_NOTEP_USED == 1)
 #define CDC_NOT_INTR_INTERVAL                       1
@@ -184,7 +185,8 @@ static const USBD_ClassType cdc_cbks = {
     .InData         = (USBD_IfEpCbkType)    cdc_inData,
 };
 
-/** @defgroup USBD_CDC_Private_Functions USBD CDC Private Functions
+/** @ingroup USBD_CDC
+ * @defgroup USBD_CDC_Private_Functions CDC Private Functions
  * @{ */
 
 #if (USBD_CDC_ALTSETTINGS != 0)
@@ -430,7 +432,7 @@ static void cdc_inData(USBD_CDC_IfHandleType *itf, USBD_EpHandleType *ep)
 
 /** @} */
 
-/** @defgroup USBD_CDC_Exported_Functions USBD CDC Exported Functions
+/** @defgroup USBD_CDC_Exported_Functions CDC Exported Functions
  * @{ */
 
 /**
@@ -456,9 +458,6 @@ USBD_ReturnType USBD_CDC_MountInterface(USBD_CDC_IfHandleType *itf, USBD_HandleT
         itf->Base.AltCount = 1;
         itf->Base.AltSelector = 0;
 
-        /* Setting IfNum is necessary to identify interface from EP callback */
-        /* Setting Type and MaxPacketSize is done so the EP hardware allocation
-         * can be performed at USB Reset (see USB_vAllocateEPs) */
         {
             USBD_EpHandleType *ep;
 
@@ -515,7 +514,5 @@ USBD_ReturnType USBD_CDC_Receive(USBD_CDC_IfHandleType *itf, uint8_t *data, uint
 {
     return USBD_EpReceive(itf->Base.Device, itf->Config.OutEpNum, data, length);
 }
-
-/** @} */
 
 /** @} */

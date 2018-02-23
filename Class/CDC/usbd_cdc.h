@@ -4,7 +4,7 @@
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-01-31
-  * @brief   Universal Serial Bus Communications Device Class
+  * @brief   USB Communications Device Class
   *
   * Copyright (c) 2018 Benedek Kupper
   *
@@ -30,16 +30,14 @@ extern "C"
 
 #include <usbd_types.h>
 
-/** @addtogroup USBD
+/** @ingroup USBD
+ * @addtogroup USBD_Class USBD Classes
  * @{ */
 
-/** @addtogroup USBD_Class
+/** @defgroup USBD_CDC Communications Device Class (CDC)
  * @{ */
 
-/** @defgroup USBD_CDC USBD Communications Device Class
- * @{ */
-
-/** @defgroup USBD_CDC_Exported_Macros USBD CDC Exported Macros
+/** @defgroup USBD_CDC_Exported_Macros CDC Exported Macros
  * @{ */
 
 /* Standard CDC control requests */
@@ -55,7 +53,7 @@ extern "C"
 
 /** @} */
 
-/** @defgroup USBD_CDC_Exported_Types USBD CDC Exported Types
+/** @defgroup USBD_CDC_Exported_Types CDC Exported Types
  * @{ */
 
 
@@ -112,8 +110,6 @@ USBD_ReturnType USBD_CDC_Transmit       (USBD_CDC_IfHandleType *itf,
 USBD_ReturnType USBD_CDC_Receive        (USBD_CDC_IfHandleType *itf,
                                          uint8_t *data,
                                          uint16_t length);
-/** @} */
-
 /** @} */
 
 /** @} */

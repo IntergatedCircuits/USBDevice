@@ -26,10 +26,8 @@
 
 #include <usbd_types.h>
 
-/** @addtogroup USBD
- * @{ */
-
-/** @addtogroup USBD_Exported_Functions
+/** @ingroup USBD
+ * @addtogroup USBD_Exported_Functions
  * @{ */
 void            USBD_Init           (USBD_HandleType *dev,
                                      const USBD_DescriptionType *desc);
@@ -40,14 +38,6 @@ void            USBD_Connect        (USBD_HandleType *dev);
 void            USBD_Disconnect     (USBD_HandleType *dev);
 
 USBD_ReturnType USBD_RemoteWakeup   (USBD_HandleType *dev);
-/** @} */
-
-/** @defgroup USBD_Exported_Macros USBD Exported Macros
- * @{ */
-
-
-/** @} */
-
 /** @} */
 
 #endif /* __USBD_H_ */

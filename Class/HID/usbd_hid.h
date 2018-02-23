@@ -4,7 +4,7 @@
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-01-31
-  * @brief   Universal Serial Bus Human Interface Device Class
+  * @brief   USB Human Interface Device Class
   *
   * Copyright (c) 2018 Benedek Kupper
   *
@@ -30,16 +30,14 @@ extern "C"
 
 #include <usbd_types.h>
 
-/** @addtogroup USBD
+/** @ingroup USBD
+ * @addtogroup USBD_Class USBD Classes
  * @{ */
 
-/** @addtogroup USBD_Class
+/** @defgroup USBD_HID Human Interface Device Class (HID)
  * @{ */
 
-/** @defgroup USBD_HID USBD Human Interface Device Class
- * @{ */
-
-/** @defgroup USBD_HID_Exported_Macros USBD HID Exported Macros
+/** @defgroup USBD_HID_Exported_Macros HID Exported Macros
  * @{ */
 
 #define HID_DESCRIPTOR_TYPE             0x21
@@ -62,7 +60,7 @@ extern "C"
 
 /** @} */
 
-/** @defgroup USBD_HID_Exported_Types USBD HID Exported Types
+/** @defgroup USBD_HID_Exported_Types HID Exported Types
  * @{ */
 
 /** @brief HID report types */
@@ -146,8 +144,6 @@ USBD_ReturnType USBD_HID_ReportOut      (USBD_HID_IfHandleType *itf,
                                          uint8_t *data,
                                          uint16_t length);
 #endif
-/** @} */
-
 /** @} */
 
 /** @} */

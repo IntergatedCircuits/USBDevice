@@ -1,10 +1,11 @@
 /**
   ******************************************************************************
-  * @file    xpd_usb_types.h
+  * @file    usb_types.h
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-01-31
   * @brief   Universal Serial Bus Device Driver
+  *          Standard type definitions
   *
   * Copyright (c) 2018 Benedek Kupper
   *

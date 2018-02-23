@@ -4,7 +4,7 @@
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-01-31
-  * @brief   Universal Serial Bus Human Interface Device Class
+  * @brief   USB Human Interface Device Class implementation
   *
   * Copyright (c) 2018 Benedek Kupper
   *
@@ -22,9 +22,6 @@
   */
 #include <usbd_internal.h>
 #include <usbd_hid.h>
-
-/** @addtogroup USBD_HID
- * @{ */
 
 #define HID_SUB_DESC_COUNT              1
 
@@ -119,7 +116,8 @@ static const USBD_ClassType hid_cbks = {
 #endif
 };
 
-/** @defgroup USBD_HID_Private_Functions USBD HID Private Functions
+/** @ingroup USBD_HID
+ * @defgroup USBD_HID_Private_Functions HID Private Functions
  * @{ */
 
 #if (USBD_HID_ALTSETTINGS != 0)
@@ -414,7 +412,7 @@ static void hid_outData(USBD_HID_IfHandleType *itf, USBD_EpHandleType *ep)
 
 /** @} */
 
-/** @defgroup USBD_HID_Exported_Functions USBD HID Exported Functions
+/** @defgroup USBD_HID_Exported_Functions HID Exported Functions
  * @{ */
 
 /**
@@ -438,9 +436,6 @@ USBD_ReturnType USBD_HID_MountInterface(USBD_HID_IfHandleType *itf, USBD_HandleT
         itf->Base.AltCount = 1;
         itf->Base.AltSelector = 0;
 
-        /* Setting IfNum is necessary to identify interface from EP callback */
-        /* Setting Type and MaxPacketSize is done so the EP hardware allocation
-         * can be performed at USB Reset (see USB_vAllocateEPs) */
         {
             USBD_EpHandleType *ep;
 
@@ -517,7 +512,5 @@ USBD_ReturnType USBD_HID_ReportOut(USBD_HID_IfHandleType *itf, uint8_t *data, ui
     return retval;
 }
 #endif /* (USBD_HID_OUT_SUPPORT == 1) */
-
-/** @} */
 
 /** @} */

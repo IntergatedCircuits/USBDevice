@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    usbd.h
+  * @file    usbd_types.h
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-01-31
@@ -28,10 +28,8 @@
 #include <usbd_config.h>
 #include <usbd_pd_def.h>
 
-/** @addtogroup USB
- * @{ */
-
-/** @defgroup USBD USB Device
+/** @ingroup USB
+ * @defgroup USBD USB Device
  * @{ */
 
 /** @defgroup USBD_Exported_Macros USB Device Exported Macros
@@ -43,6 +41,8 @@
 #define USBD_SERIAL_BCD_SIZE            12
 
 #ifndef USBD_MAX_IF_COUNT
+/* Define in usbd_config.h according to the maximum number of interfaces
+ * used by a single device  */
 #define USBD_MAX_IF_COUNT               1
 #endif
 
@@ -275,9 +275,6 @@ typedef struct _USBD_HandleType
     }EP;                                            /*!< Endpoint management */
 
 }USBD_HandleType;
-
-
-/** @} */
 
 /** @} */
 

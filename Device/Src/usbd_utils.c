@@ -5,7 +5,7 @@
   * @version 0.1
   * @date    2018-01-31
   * @brief   Universal Serial Bus Device Driver
-  *          Default utilities for descriptor conversion
+  *          Utilities for descriptor conversion
   *
   * Copyright (c) 2018 Benedek Kupper
   *
@@ -25,10 +25,14 @@
 #include <usbd_utils.h>
 
 /**
+ * @ingroup USBD
+ * @addtogroup USBD_Utils USBD Utility functions
+ * @{ */
+
+/**
  * @brief Convert ASCII string into Unicode
  * @param ascii: Input ASCII format string
  * @param unicode: Unicode string output
- * @param len: ASCII input length
  */
 __weak void Ascii2Unicode(const char *ascii, uint8_t *unicode)
 {
@@ -86,3 +90,5 @@ __weak void Uint2Unicode(const uint8_t *data, uint8_t *unicode, uint16_t len)
     unicode[i] = 0x00;
 #endif
 }
+
+/** @} */

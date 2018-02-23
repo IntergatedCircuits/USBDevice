@@ -24,10 +24,65 @@
 #define USBD_DEVICE_API
 #include <usbd_private.h>
 
-/** @addtogroup USBD
+/** @ingroup USBD
+ * @defgroup USBD_Private_Functions_IfClass USBD Class-specific Interface Callouts
+ * @brief These functions simply call the class-specific function pointer
  * @{ */
 
-/** @defgroup USBD_Private_Functions_If USBD Interface Management
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::Init function.
+ * @param itf: reference of the interface
+ */
+__STATIC_INLINE
+void USBD_IfClass_Init(USBD_IfHandleType *itf)
+{
+    USBD_SAFE_CALLBACK(itf->Class->Init, itf);
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::Deinit function.
+ * @param itf: reference of the interface
+ */
+__STATIC_INLINE
+void USBD_IfClass_Deinit(USBD_IfHandleType *itf)
+{
+    USBD_SAFE_CALLBACK(itf->Class->Deinit, itf);
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::SetupStage function.
+ * @param itf: reference of the interface
+ * @return Return value of the function call
+ */
+__STATIC_INLINE
+USBD_ReturnType USBD_IfClass_SetupStage(USBD_IfHandleType *itf)
+{
+    return itf->Class->SetupStage(itf);
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::GetString function.
+ * @param itf:    reference of the interface
+ * @param intNum: the interface-internal string index
+ * @return String reference
+ */
+__STATIC_INLINE
+const char* USBD_IfClass_GetString(USBD_IfHandleType *itf, uint8_t intNum)
+{
+    if (itf->Class->GetString == NULL)
+        { return (const char*)NULL; }
+    else
+        { return itf->Class->GetString(itf, intNum); }
+}
+
+/** @} */
+
+/** @ingroup USBD
+ * @defgroup USBD_Private_Functions_If USBD Interface Management
  * @{ */
 
 /**
@@ -40,15 +95,13 @@ void USBD_IfConfig(USBD_HandleType *dev, uint8_t cfgNum)
     if (dev->ConfigSelector != cfgNum)
     {
         uint8_t ifNum;
-        USBD_IfHandleType *itf;
 
         /* Clear any previously selected config */
         if (dev->ConfigSelector != 0)
         {
             for (ifNum = 0; ifNum < dev->IfCount; ifNum++)
             {
-                itf = dev->IF[ifNum];
-                USBD_SAFE_CALLBACK(itf->Class->Deinit, itf);
+                USBD_IfClass_Deinit(dev->IF[ifNum]);
             }
         }
 
@@ -60,8 +113,7 @@ void USBD_IfConfig(USBD_HandleType *dev, uint8_t cfgNum)
         {
             for (ifNum = 0; ifNum < dev->IfCount; ifNum++)
             {
-                itf = dev->IF[ifNum];
-                USBD_SAFE_CALLBACK(itf->Class->Init, itf);
+                USBD_IfClass_Init(dev->IF[ifNum]);
             }
         }
     }
@@ -85,10 +137,9 @@ const char* USBD_IfString(USBD_HandleType *dev)
     USBD_IfHandleType *itf = dev->IF[ifNum];
     const char* str = NULL;
 
-    if ((ifNum  < dev->IfCount) &&
-        (itf->Class->GetString != NULL))
+    if (ifNum < dev->IfCount)
     {
-        str = itf->Class->GetString(itf, intNum);
+        str = USBD_IfClass_GetString(itf, intNum);
     }
 
     return str;
@@ -96,7 +147,7 @@ const char* USBD_IfString(USBD_HandleType *dev)
 
 /** @} */
 
-/** @addtogroup USBD_Private_Functions_Req
+/** @addtogroup USBD_Private_Functions_Ctrl
  * @{ */
 
 /**
@@ -135,12 +186,12 @@ USBD_ReturnType USBD_IfRequest(USBD_HandleType *dev)
                 if (itf->AltCount > altSel)
                 {
                     /* Deinit previous AS */
-                    USBD_SAFE_CALLBACK(itf->Class->Deinit, itf);
+                    USBD_IfClass_Deinit(itf);
 
                     itf->AltSelector = altSel;
 
                     /* Init with new AS */
-                    USBD_SAFE_CALLBACK(itf->Class->Init, itf);
+                    USBD_IfClass_Init(itf);
 
                     retval = USBD_E_OK;
                 }
@@ -150,7 +201,7 @@ USBD_ReturnType USBD_IfRequest(USBD_HandleType *dev)
             case USB_REQ_GET_DESCRIPTOR:
             {
                 uint8_t *data = dev->CtrlData;
-                uint16_t i, len = itf->Class->GetDescriptor(itf, data);
+                uint16_t i, len = USBD_IfClass_GetDesc(itf, ifNum, data);
 
                 /* Try to find desc in default descriptor */
                 for (i = 0; i < len; i += data[i])
@@ -165,7 +216,7 @@ USBD_ReturnType USBD_IfRequest(USBD_HandleType *dev)
                 if (i == len)
                 {
                     /* forward the request to the IF */
-                    retval = itf->Class->SetupStage(itf);
+                    retval = USBD_IfClass_SetupStage(itf);
                 }
                 break;
             }
@@ -173,7 +224,7 @@ USBD_ReturnType USBD_IfRequest(USBD_HandleType *dev)
             default:
             {
                 /* forward the request to the IF */
-                retval = itf->Class->SetupStage(itf);
+                retval = USBD_IfClass_SetupStage(itf);
                 break;
             }
         }
@@ -181,12 +232,10 @@ USBD_ReturnType USBD_IfRequest(USBD_HandleType *dev)
     else
     {
         /* forward the request to the IF */
-        retval = itf->Class->SetupStage(itf);
+        retval = USBD_IfClass_SetupStage(itf);
     }
 
     return retval;
 }
-
-/** @} */
 
 /** @} */

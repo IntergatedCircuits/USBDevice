@@ -5,7 +5,7 @@
   * @version 0.1
   * @date    2018-01-31
   * @brief   Universal Serial Bus Device Driver
-  *          USB core services accessible by class-side functions header
+  *          Services accessible by (class) interfaces
   *
   * Copyright (c) 2018 Benedek Kupper
   *
@@ -35,10 +35,8 @@ extern "C"
 /* strlen(), memcpy() */
 #include <string.h>
 
-/** @addtogroup USBD
- * @{ */
-
-/** @addtogroup USBD_Internal_Functions
+/** @ingroup USBD
+ * @addtogroup USBD_Internal_Functions
  * @{ */
 
 USBD_ReturnType USBD_CtrlSendData       (USBD_HandleType *dev,
@@ -52,11 +50,21 @@ uint16_t        USBD_EpDesc             (USBD_HandleType *dev,
                                          uint8_t epAddr,
                                          uint8_t *data);
 
+USBD_ReturnType USBD_EpSend             (USBD_HandleType *dev,
+                                         uint8_t epAddr,
+                                         const uint8_t *data,
+                                         uint16_t len);
+
+USBD_ReturnType USBD_EpReceive          (USBD_HandleType *dev,
+                                         uint8_t epAddr,
+                                         uint8_t *data,
+                                         uint16_t len);
+
 /**
- *
+ * @brief Converts the USBD endpoint address to its reference.
  * @param dev: USB Device handle reference
  * @param epAddr: endpoint address
- * @return
+ * @return The endpoint's reference
  */
 static inline
 USBD_EpHandleType* USBD_EpAddr2Ref      (USBD_HandleType *dev,
@@ -66,10 +74,10 @@ USBD_EpHandleType* USBD_EpAddr2Ref      (USBD_HandleType *dev,
 }
 
 /**
- *
+ * @brief Converts the USBD endpoint reference to its address.
  * @param dev: USB Device handle reference
  * @param ep: USB endpoint handle reference
- * @return
+ * @return The endpoint's address
  */
 static inline uint8_t USBD_EpRef2Addr   (USBD_HandleType *dev,
                                          USBD_EpHandleType *ep)
@@ -85,8 +93,8 @@ static inline uint8_t USBD_EpRef2Addr   (USBD_HandleType *dev,
  * @brief Opens the device endpoint.
  * @param dev: USB Device handle reference
  * @param epAddr: endpoint address
- * @param type
- * @param mps
+ * @param type: endpoint type
+ * @param mps: endpoint maximal packet size
  */
 static inline void USBD_EpOpen          (USBD_HandleType *dev,
                                          uint8_t epAddr,
@@ -108,16 +116,6 @@ static inline void USBD_EpClose         (USBD_HandleType *dev,
     USBD_PD_EpClose(dev, epAddr);
     USBD_EpAddr2Ref(dev, epAddr)->State = USB_EP_STATE_CLOSED;
 }
-
-USBD_ReturnType USBD_EpSend             (USBD_HandleType *dev,
-                                         uint8_t epAddr,
-                                         const uint8_t *data,
-                                         uint16_t len);
-
-USBD_ReturnType USBD_EpReceive          (USBD_HandleType *dev,
-                                         uint8_t epAddr,
-                                         uint8_t *data,
-                                         uint16_t len);
 
 /**
  * @brief Flushes the buffered data from the endpoint.
@@ -177,8 +175,6 @@ static inline void USBD_EpClearStall    (USBD_HandleType *dev,
 #define USBD_IIF_INDEX(IFNUM, INTNUM)   \
     (USBD_ISTR_INTERFACES + (IFNUM) + ((INTNUM) << 4))
 
-
-/** @} */
 
 #ifdef __cplusplus
 }

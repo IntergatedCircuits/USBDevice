@@ -23,11 +23,10 @@
   */
 #include <usbd_private.h>
 
-/** @addtogroup USBD
- * @{ */
-
-/** @defgroup USBD_Exported_Functions USBD Exported Functions
- *  @brief This group is called directly by the Application or by the Hardware Abstraction Layer.
+/** @ingroup USBD
+ * @defgroup USBD_Exported_Functions USB Device Exported Functions
+ * @brief These functions are called by the user code
+ *        (the callbacks by the Peripheral Driver).
  * @{ */
 
 /**
@@ -149,7 +148,8 @@ void USBD_ResetCallback(USBD_HandleType *dev, USB_SpeedType speed)
 
 /** @} */
 
-/** @addtogroup USBD_Private_Functions_Req
+/** @ingroup USBD
+ * @addtogroup USBD_Private_Functions_Ctrl
  * @{ */
 
 /**
@@ -167,7 +167,7 @@ static USBD_ReturnType USBD_SetAddress(USBD_HandleType *dev)
         (dev->ConfigSelector == 0))
     {
         /* Address is accepted, it will be applied
-         * after this transfer is complete */
+         * after this Ctrl transfer is complete */
         retval = USBD_E_OK;
     }
     return retval;
@@ -300,7 +300,5 @@ USBD_ReturnType USBD_DevRequest(USBD_HandleType *dev)
     }
     return retval;
 }
-
-/** @} */
 
 /** @} */
