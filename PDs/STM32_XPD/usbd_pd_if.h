@@ -39,15 +39,15 @@ extern "C"
 
 #define USBD_PD_Init                    USB_vInit
 #define USBD_PD_Deinit                  USB_vDeinit
-#define USBD_PD_Start                   USB_vStart
-#define USBD_PD_Stop                    USB_vStop
-#define USBD_PD_RemoteWakeup            USB_vRemoteWakeup_IT
+#define USBD_PD_Start                   USB_vStart_IT
+#define USBD_PD_Stop                    USB_vStop_IT
+#define USBD_PD_RemoteWakeup            USB_vRemoteWakeup
 #define USBD_PD_SetAddress              USB_vSetAddress
 #define USBD_PD_CtrlEpOpen              USB_vCtrlEpOpen
 #define USBD_PD_EpOpen                  USB_vEpOpen
 #define USBD_PD_EpClose                 USB_vEpClose
-#define USBD_PD_EpSend                  USB_vEpSend_IT
-#define USBD_PD_EpReceive               USB_vEpReceive_IT
+#define USBD_PD_EpSend                  USB_vEpSend
+#define USBD_PD_EpReceive               USB_vEpReceive
 #define USBD_PD_EpSetStall              USB_vEpSetStall
 #define USBD_PD_EpClearStall            USB_vEpClearStall
 #define USBD_PD_EpFlush(HANDLE,EPNUM)   ((void)0)
