@@ -34,10 +34,7 @@ extern "C"
 #if   defined(USB)
 #include <xpd_usb.h>
 
-/** @addtogroup USBD
- * @{ */
-
-/** @addtogroup USBD_Exported_Macros USBD Exported Macros
+/** @addtogroup USBD_Exported_Macros
  * @{ */
 
 #define USBD_PD_Init                    USB_vInit
@@ -54,8 +51,6 @@ extern "C"
 #define USBD_PD_EpSetStall              USB_vEpSetStall
 #define USBD_PD_EpClearStall            USB_vEpClearStall
 #define USBD_PD_EpFlush(HANDLE,EPNUM)   ((void)0)
-
-/** @} */
 
 /** @} */
 

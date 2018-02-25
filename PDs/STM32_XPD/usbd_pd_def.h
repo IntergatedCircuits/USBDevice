@@ -32,10 +32,7 @@ extern "C"
 #include <usbd_config.h>
 #include <xpd_common.h>
 
-/** @addtogroup USBD
- * @{ */
-
-/** @addtogroup USBD_Exported_Macros USBD Exported Macros
+/** @addtogroup USBD_Exported_Macros
  * @{ */
 
 #if defined(USBD_HS_SUPPORT) && !defined(USB_OTG_HS)
@@ -69,7 +66,7 @@ extern "C"
     struct {                                                        \
     XPD_HandleCallbackType DepInit;     /*!< Initialize module dependencies */\
     XPD_HandleCallbackType DepDeinit;   /*!< Restore module dependencies */\
-    XPD_CtrlCallbackType    ConnectCtrl;/*!< Callback to set USB device bus line connection state */\
+    XPD_CtrlCallbackType   ConnectCtrl; /*!< Callback to set USB device bus line connection state */\
     XPD_HandleCallbackType Suspend;     /*!< Suspend request */     \
     XPD_HandleCallbackType Resume;      /*!< Resume request */      \
     XPD_HandleCallbackType SOF;         /*!< Start Of Frame */      \
@@ -111,8 +108,6 @@ extern "C"
       USB_OTG_TypeDef * Inst;   /*!< The address of the peripheral instance used by the handle */\
       FunctionalState DMA;      /*!< DMA activation */
 #endif
-
-/** @} */
 
 /** @} */
 
