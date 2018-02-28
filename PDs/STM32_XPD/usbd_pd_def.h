@@ -63,8 +63,7 @@ extern "C"
 /* Peripheral Driver extension fields */
 #if defined(USB)
 #define USBD_PD_EP_FIELDS                                           \
-    uint8_t             RegId;          /*!< Endpoint register ID */\
-    uint16_t            PacketAddress;  /*!< PMA Address [0..1024] */
+    uint8_t             RegId;          /*!< Endpoint register ID */
 
 #if defined(USB_BCDR_DPPU)
 #define USBD_PD_DEV_FIELDS                                          \
