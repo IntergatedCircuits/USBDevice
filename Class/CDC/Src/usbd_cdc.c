@@ -338,6 +338,10 @@ static void cdc_deinit(USBD_CDC_IfHandleType *itf)
 
     /* Deinitialize application */
     USBD_SAFE_CALLBACK(CDC_APP(itf)->Deinit, );
+
+    /* Reset the endpoint MPS to the desired size */
+    dev->EP.IN [itf->Config.InEpNum  & 0xF].MaxPacketSize = 
+    dev->EP.OUT[itf->Config.OutEpNum      ].MaxPacketSize = CDC_DATA_PACKET_SIZE;
 }
 
 /**
@@ -462,13 +466,13 @@ USBD_ReturnType USBD_CDC_MountInterface(USBD_CDC_IfHandleType *itf, USBD_HandleT
             USBD_EpHandleType *ep;
 
 #if (USBD_CDC_NOTEP_USED == 1)
-            ep = &dev->EP.IN [CDC_APP(itf)->NotEpNum & 0x7F];
+            ep = &dev->EP.IN [CDC_APP(itf)->NotEpNum & 0xF];
             ep->Type            = USB_EP_TYPE_INTERRUPT;
             ep->MaxPacketSize   = CDC_NOT_PACKET_SIZE;
             ep->IfNum           = dev->IfCount;
 #endif
 
-            ep = &dev->EP.IN [itf->Config.InEpNum  & 0x7F];
+            ep = &dev->EP.IN [itf->Config.InEpNum  & 0xF];
             ep->Type            = USB_EP_TYPE_BULK;
             ep->MaxPacketSize   = CDC_DATA_PACKET_SIZE;
             ep->IfNum           = dev->IfCount;

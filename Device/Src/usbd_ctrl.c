@@ -110,12 +110,14 @@ void USBD_CtrlInCallback(USBD_HandleType *dev)
             /* Proceed to Status stage */
             USBD_CtrlReceiveStatus(dev);
         }
+#if (USBD_SET_ADDRESS_IMMEDIATE != 1)
         /* If the address was set by the last request, apply it now */
         else if ((dev->Setup.RequestType.b == 0x00) &&
                  (dev->Setup.Request == USB_REQ_SET_ADDRESS))
         {
             USBD_PD_SetAddress(dev, dev->Setup.Value & 0x7F);
         }
+#endif
     }
 }
 

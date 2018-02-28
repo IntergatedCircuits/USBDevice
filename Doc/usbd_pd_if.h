@@ -60,10 +60,16 @@ extern void USBD_PD_Start(USBD_HandleType * dev);
 extern void USBD_PD_Stop(USBD_HandleType * dev);
 
 /**
- * @brief Performs remote wakeup signaling on the USB bus.
+ * @brief Starts remote wakeup signaling on the USB bus.
  * @param dev: USB Device handle reference
  */
-extern void USBD_PD_RemoteWakeup(USBD_HandleType * dev);
+extern void USBD_PD_SetRemoteWakeup(USBD_HandleType * dev);
+
+/**
+ * @brief Stops SUSPEND state remote wakeup signaling on the USB bus.
+ * @param dev: USB Device handle reference
+ */
+extern void USBD_PD_ClearRemoteWakeup(USBD_HandleType * dev);
 
 /**
  * @brief Sets the USB device's address in the peripheral.
@@ -71,13 +77,6 @@ extern void USBD_PD_RemoteWakeup(USBD_HandleType * dev);
  * @param addr: the new device address to set
  */
 extern void USBD_PD_SetAddress(USBD_HandleType * dev, uint8_t addr);
-
-/**
- * @brief Opens the device's bidirectional control endpoint (EP0).
- * @param dev: USB Device handle reference
- * @param ep0_mps: maximum packet size for EP0
- */
-extern void USBD_PD_CtrlEpOpen(USBD_HandleType * dev, uint16_t ep0_mps);
 
 /**
  * @brief Opens a device endpoint.

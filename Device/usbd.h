@@ -29,15 +29,16 @@
 /** @ingroup USBD
  * @addtogroup USBD_Exported_Functions
  * @{ */
-void            USBD_Init           (USBD_HandleType *dev,
-                                     const USBD_DescriptionType *desc);
-void            USBD_Deinit         (USBD_HandleType *dev);
-void            USBD_HandleReset    (USBD_HandleType *dev);
+void            USBD_Init               (USBD_HandleType *dev,
+                                         const USBD_DescriptionType *desc);
+void            USBD_Deinit             (USBD_HandleType *dev);
+void            USBD_HandleReset        (USBD_HandleType *dev);
 
-void            USBD_Connect        (USBD_HandleType *dev);
-void            USBD_Disconnect     (USBD_HandleType *dev);
+void            USBD_Connect            (USBD_HandleType *dev);
+void            USBD_Disconnect         (USBD_HandleType *dev);
 
-USBD_ReturnType USBD_RemoteWakeup   (USBD_HandleType *dev);
+USBD_ReturnType USBD_SetRemoteWakeup    (USBD_HandleType *dev);
+USBD_ReturnType USBD_ClearRemoteWakeup  (USBD_HandleType *dev);
 /** @} */
 
 #endif /* __USBD_H_ */

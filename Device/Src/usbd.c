@@ -114,14 +114,35 @@ void USBD_Disconnect(USBD_HandleType *dev)
  * @param dev: USB Device handle reference
  * @return OK if the feature is enabled, ERROR otherwise
  */
-USBD_ReturnType USBD_RemoteWakeup(USBD_HandleType *dev)
+USBD_ReturnType USBD_SetRemoteWakeup(USBD_HandleType *dev)
 {
     USBD_ReturnType retval = USBD_E_ERROR;
 
     /* Check if remote wakeup is enabled by the host */
     if (dev->Features.RemoteWakeup != 0)
     {
-        USBD_PD_RemoteWakeup(dev);
+        USBD_PD_SetRemoteWakeup(dev);
+        retval = USBD_E_OK;
+    }
+    return retval;
+}
+
+/**
+ * @brief This function shall be called 1 - 15 ms after setting RemoteWakeup
+ *        in @ref USB_LinkStateType::USB_LINK_STATE_SUSPEND state.
+ *        The RemoteWakeup signal is cleared by hardware when exiting from
+ *        @ref USB_LinkStateType::USB_LINK_STATE_SLEEP state.
+ * @param dev: USB Device handle reference
+ * @return OK if the feature is enabled, ERROR otherwise
+ */
+USBD_ReturnType USBD_ClearRemoteWakeup(USBD_HandleType *dev)
+{
+    USBD_ReturnType retval = USBD_E_ERROR;
+
+    /* Check if remote wakeup is enabled by the host */
+    if (dev->Features.RemoteWakeup != 0)
+    {
+        USBD_PD_ClearRemoteWakeup(dev);
         retval = USBD_E_OK;
     }
     return retval;
@@ -138,8 +159,7 @@ void USBD_ResetCallback(USBD_HandleType *dev, USB_SpeedType speed)
 {
     dev->Speed = speed;
 
-    /* Open EP0 */
-    USBD_PD_CtrlEpOpen(dev, dev->EP.OUT[0].MaxPacketSize);
+    /* Reset EP0 state */
     dev->EP.OUT[0].State = USB_EP_STATE_IDLE;
 
     /* Reset any previous configuration */
@@ -166,6 +186,9 @@ static USBD_ReturnType USBD_SetAddress(USBD_HandleType *dev)
         (dev->Setup.Length   == 0) &&
         (dev->ConfigSelector == 0))
     {
+#if (USBD_SET_ADDRESS_IMMEDIATE == 1)
+        USBD_PD_SetAddress(dev, dev->Setup.Value & 0x7F);
+#endif
         /* Address is accepted, it will be applied
          * after this Ctrl transfer is complete */
         retval = USBD_E_OK;

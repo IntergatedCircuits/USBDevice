@@ -46,22 +46,36 @@ extern "C"
 #define USBD_LPM_SUPPORT                \
     (defined(USB_OTG_GLPMCFG_LPMEN) || defined(USB_LPMCSR_LMPEN))
 
+/* USB cores set the address after the SetAddress request is completed,
+ * while USB_OTG cores need the new address as soon as available */
+#define USBD_SET_ADDRESS_IMMEDIATE      \
+    (defined(USB_OTG_FS))
+
 /* The maximal number of available endpoints differs for all USB cores */
 #if   defined(USB)
 #define USBD_MAX_EP_COUNT         8 /* Theoretical maximum */
-#elif defined(USB_OTG_HS) || defined(USB_OTG_GLPMCFG_LPMEN)
-#define USBD_MAX_EP_COUNT         6
-#else /* 1st gen USB_OTG_FS */
-#define USBD_MAX_EP_COUNT         4
+#elif defined(USB_OTG_HS)
+#define USBD_MAX_EP_COUNT         USB_OTG_HS_MAX_IN_ENDPOINTS
+#elif defined(USB_OTG_FS)
+#define USBD_MAX_EP_COUNT         USB_OTG_FS_MAX_IN_ENDPOINTS
 #endif
 
-#if defined(USB) && !defined(USB_BCDR_DPPU)
+/* Peripheral Driver extension fields */
+#if defined(USB)
 #define USBD_PD_EP_FIELDS                                           \
     uint8_t             RegId;          /*!< Endpoint register ID */\
     uint16_t            PacketAddress;  /*!< PMA Address [0..1024] */
 
-#define USBD_PD_CONFIG_FIELDS
-
+#if defined(USB_BCDR_DPPU)
+#define USBD_PD_DEV_FIELDS                                          \
+    struct {                                                        \
+    XPD_HandleCallbackType DepInit;     /*!< Initialize module dependencies */\
+    XPD_HandleCallbackType DepDeinit;   /*!< Restore module dependencies */\
+    XPD_HandleCallbackType Suspend;     /*!< Suspend request */     \
+    XPD_HandleCallbackType Resume;      /*!< Resume request */      \
+    XPD_HandleCallbackType SOF;         /*!< Start Of Frame */      \
+    }Callbacks;                         /*   Handle Callbacks */
+#else
 #define USBD_PD_DEV_FIELDS                                          \
     struct {                                                        \
     XPD_HandleCallbackType DepInit;     /*!< Initialize module dependencies */\
@@ -70,43 +84,37 @@ extern "C"
     XPD_HandleCallbackType Suspend;     /*!< Suspend request */     \
     XPD_HandleCallbackType Resume;      /*!< Resume request */      \
     XPD_HandleCallbackType SOF;         /*!< Start Of Frame */      \
-    }Callbacks;                         /*   Handle Callbacks */    \
-    union {                                                         \
-        struct {                                                    \
-            uint8_t EsofEn : 1;                                     \
-            uint8_t Timer  : 7;                                     \
-        };                                                          \
-        uint8_t b;                                                  \
-    }RemoteWakeup;
+    }Callbacks;                         /*   Handle Callbacks */
+#endif /* USB_BCDR_DPPU */
 
-#elif defined(USB)
-#define USBD_PD_EP_FIELDS                                           \
-    uint8_t             RegId;          /*!< Endpoint register ID */\
-    uint16_t            PacketAddress;  /*!< PMA Address [0..1024] */
+#elif defined(USB_OTG_FS)
+
+/** @brief USB peripheral PHYsical layer selection */
+typedef enum {
+    USB_PHY_EMBEDDED_FS = 0, /*!< Full-Speed PHY embedded in chip */
+    USB_PHY_ULPI        = 1, /*!< ULPI interface to external High-Speed PHY */
+    USB_PHY_EMBEDDED_HS = 2, /*!< High-Speed PHY embedded in chip */
+}USB_PHYType;
+
+#if defined(USB_OTG_GAHBCFG_DMAEN)
+#define USBD_PD_CONFIG_FIELDS                                       \
+    USB_PHYType     PHY;      /*!< USB PHYsical layer selection */  \
+    FunctionalState DMA;      /*!< DMA activation */
+#else
+#define USBD_PD_CONFIG_FIELDS                                       \
+    USB_PHYType     PHY;      /*!< USB PHYsical layer selection */
+#endif
 
 #define USBD_PD_DEV_FIELDS                                          \
+    USB_OTG_TypeDef * Inst;   /*!< The address of the peripheral */ \
     struct {                                                        \
     XPD_HandleCallbackType DepInit;     /*!< Initialize module dependencies */\
     XPD_HandleCallbackType DepDeinit;   /*!< Restore module dependencies */\
     XPD_HandleCallbackType Suspend;     /*!< Suspend request */     \
     XPD_HandleCallbackType Resume;      /*!< Resume request */      \
     XPD_HandleCallbackType SOF;         /*!< Start Of Frame */      \
-    }Callbacks;                         /*   Handle Callbacks */    \
-    union {                                                         \
-        struct {                                                    \
-            uint8_t EsofEn : 1;                                     \
-            uint8_t Timer  : 7;                                     \
-        };                                                          \
-        uint8_t b;                                                  \
-    }RemoteWakeup;
+    }Callbacks;                         /*   Handle Callbacks */
 
-#elif defined(USB_OTG_FS)
-#define USBD_PD_EP_FIELDS                                          \
-    uint16_t            FifoSize;       /*!< Data FIFO size */
-
-#define USBD_PD_DEV_FIELDS                                         \
-      USB_OTG_TypeDef * Inst;   /*!< The address of the peripheral instance used by the handle */\
-      FunctionalState DMA;      /*!< DMA activation */
 #endif
 
 /** @} */

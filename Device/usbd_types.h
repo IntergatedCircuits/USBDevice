@@ -41,8 +41,6 @@
 #define USBD_SERIAL_BCD_SIZE            12
 
 #ifndef USBD_MAX_IF_COUNT
-/* Define in usbd_config.h according to the maximum number of interfaces
- * used by a single device  */
 #define USBD_MAX_IF_COUNT               1
 #endif
 

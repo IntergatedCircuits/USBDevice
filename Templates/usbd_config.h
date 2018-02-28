@@ -28,10 +28,7 @@ extern "C"
 {
 #endif
 
-/** @addtogroup USBD
- * @{ */
-
-/** @addtogroup USBD_Exported_Macros USBD Exported Macros
+/** @addtogroup USBD_Exported_Macros
  * @{ */
 
 /* Must be set according to the highest number of interfaces for a given USB Device */
@@ -41,10 +38,12 @@ extern "C"
  * or the longest string (as Unicode string descriptor) */
 #define USBD_EP0_BUFFER_SIZE        256
 
+/* Set to 1 if peripheral support and application demand
+ * for High-Speed operation both exist */
+#define USBD_HS_SUPPORT             0
+
 /* Any class-specific configuration may follow, e.g.
  *      USBD_HID_OUT_SUPPORT        1 */
-
-/** @} */
 
 /** @} */
 
