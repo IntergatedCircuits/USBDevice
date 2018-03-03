@@ -56,8 +56,10 @@ extern "C"
 #define USBD_MAX_EP_COUNT         8 /* Theoretical maximum */
 #elif defined(USB_OTG_HS)
 #define USBD_MAX_EP_COUNT         USB_OTG_HS_MAX_IN_ENDPOINTS
-#elif defined(USB_OTG_FS)
+#elif defined(USB_OTG_FS) && defined(USB_OTG_FS_MAX_IN_ENDPOINTS)
 #define USBD_MAX_EP_COUNT         USB_OTG_FS_MAX_IN_ENDPOINTS
+#elif defined(USB_OTG_FS)
+#define USBD_MAX_EP_COUNT         6
 #endif
 
 /* Peripheral Driver extension fields */
