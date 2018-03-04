@@ -37,31 +37,40 @@ extern "C"
 /** @defgroup USBD_HID Human Interface Device Class (HID)
  * @{ */
 
-/** @defgroup USBD_HID_Exported_Macros HID Exported Macros
- * @{ */
-
-#define HID_DESCRIPTOR_TYPE             0x21
-#define HID_REPORT_DESC                 0x22
-#define HID_PHYSICAL_DESC               0x23
-
-
-#define HID_REQ_SET_REPORT              0x09
-#define HID_REQ_GET_REPORT              0x01
-
-#define HID_REQ_SET_IDLE                0x0A
-#define HID_REQ_GET_IDLE                0x02
-
-/* Required for Boot devices only */
-#define HID_REQ_SET_PROTOCOL            0x0B
-#define HID_REQ_GET_PROTOCOL            0x03
-
-#define HID_BOOT_PROTOCOL               0x00
-#define HID_REPORT_PROTOCOL             0x01
-
-/** @} */
-
 /** @defgroup USBD_HID_Exported_Types HID Exported Types
  * @{ */
+
+/** @brief Standard HID control requests */
+typedef enum
+{
+    HID_REQ_SET_REPORT      = 0x09, /*!< Send a report to the device, setting the state of
+                                         input, output, or feature controls.
+                                         wValue.upper = @ref USBD_HID_ReportType
+                                         wValue.lower = Report ID */
+    HID_REQ_GET_REPORT      = 0x01, /*!< Receive a report via the Control pipe.
+                                         wValue.upper = @ref USBD_HID_ReportType
+                                         wValue.lower = Report ID */
+    HID_REQ_SET_IDLE        = 0x0A, /*!< Silence an Input report until the data changes
+                                         or (wValue.upper * 4) ms elapses (0 => infinite).
+                                         wValue.lower = Report ID (0 applies to all reports) */
+    HID_REQ_GET_IDLE        = 0x02, /*!< Read the current idle rate for an Input report.
+                                         wValue.lower = Report ID (0 applies to all reports) */
+
+/* Required for Boot subclass devices only */
+    HID_REQ_SET_PROTOCOL    = 0x0B, /*!< Sets the new protocol.
+                                         wValue = @ref USBD_HID_ProtocolType */
+    HID_REQ_GET_PROTOCOL    = 0x03, /*!< Read which @ref USBD_HID_ProtocolType is currently active. */
+}USBD_HID_RequestType;
+
+
+/** @brief HID standard descriptor types */
+typedef enum
+{
+    HID_DESC_TYPE_HID       = 0x21, /*!< HID class descriptor */
+    HID_DESC_TYPE_REPORT    = 0x22, /*!< HID report descriptor */
+    HID_DESC_TYPE_PHYSICAL  = 0x23, /*!< HID physical descriptor */
+}USBD_HID_DescriptorType;
+
 
 /** @brief HID report types */
 typedef enum
@@ -70,6 +79,14 @@ typedef enum
     HID_REPORT_OUTPUT   = 0x02, /*!< Report sent to the device */
     HID_REPORT_FEATURE  = 0x03, /*!< Bidirectional configuration report */
 }USBD_HID_ReportType;
+
+
+/** @brief HID protocol types */
+typedef enum
+{
+    HID_PROTOCOL_REPORT     = 0x01, /*!< Default HID protocol */
+    HID_PROTOCOL_BOOT       = 0x00, /*!< BOOT protocol */
+}USBD_HID_ProtocolType;
 
 
 /** @brief HID endpoint setup structure */

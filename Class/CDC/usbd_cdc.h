@@ -37,24 +37,44 @@ extern "C"
 /** @defgroup USBD_CDC Communications Device Class (CDC)
  * @{ */
 
-/** @defgroup USBD_CDC_Exported_Macros CDC Exported Macros
- * @{ */
-
-/* Standard CDC control requests */
-#define CDC_SEND_ENCAPSULATED_COMMAND               0x00
-#define CDC_GET_ENCAPSULATED_RESPONSE               0x01
-#define CDC_SET_COMM_FEATURE                        0x02
-#define CDC_GET_COMM_FEATURE                        0x03
-#define CDC_CLEAR_COMM_FEATURE                      0x04
-#define CDC_SET_LINE_CODING                         0x20
-#define CDC_GET_LINE_CODING                         0x21
-#define CDC_SET_CONTROL_LINE_STATE                  0x22
-#define CDC_SEND_BREAK                              0x23
-
-/** @} */
-
 /** @defgroup USBD_CDC_Exported_Types CDC Exported Types
  * @{ */
+
+/** @brief Standard CDC control requests */
+typedef enum
+{
+    CDC_REQ_SEND_ENCAPSULATED_COMMAND   = 0x00, /*!< Host command in the supported control protocol format */
+    CDC_REQ_GET_ENCAPSULATED_RESPONSE   = 0x01, /*!< Device response in the supported control protocol format */
+    CDC_REQ_SET_COMM_FEATURE            = 0x02, /*!< Change a feature (indexed by wIndex) */
+    CDC_REQ_GET_COMM_FEATURE            = 0x03, /*!< Read a feature (indexed by wIndex) */
+    CDC_REQ_CLEAR_COMM_FEATURE          = 0x04, /*!< Reset a feature (indexed by wIndex) to default state */
+    CDC_REQ_SET_LINE_CODING             = 0x20, /*!< Set asynchronous line-character formatting properties */
+    CDC_REQ_GET_LINE_CODING             = 0x21, /*!< Read the current line coding */
+    CDC_REQ_SET_CONTROL_LINE_STATE      = 0x22, /*!< Generate RS-232 control signals
+                                                     (wValue = 0b[RTS activation][DTR activation]) */
+    CDC_REQ_SEND_BREAK                  = 0x23, /*!< Generates an RS-232 style break
+                                                     (wValue = break length in ms,
+                                                     if = 0xFFFF it is continuous until
+                                                     another request with 0 is received) */
+}USBD_CDC_RequestType;
+
+
+/** @brief CDC line coding configuration structure */
+typedef struct
+{
+    uint32_t DTERate;       /*!< Data terminal rate, in bits per second */
+    uint8_t  CharFormat;    /*!< Stop bits:
+                                    @arg 0 -> 1 Stop bit
+                                    @arg 1 -> 1.5 Stop bits
+                                    @arg 2 -> 2 Stop bits */
+    uint8_t  ParityType;    /*!< Parity:
+                                    @arg 0 -> None
+                                    @arg 1 -> Odd
+                                    @arg 2 -> Even
+                                    @arg 3 -> Mark
+                                    @arg 4 -> Space */
+    uint8_t  DataBits;      /*!< Data bits: (5, 6, 7, 8 or 16) */
+}__packed USBD_CDC_LineCodingType;
 
 
 /** @brief CDC application structure */

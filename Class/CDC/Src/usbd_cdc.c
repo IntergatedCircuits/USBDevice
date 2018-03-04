@@ -94,9 +94,9 @@ static const USBD_CDC_DescType cdc_desc = {
         .bDescriptorType    = USB_DESC_TYPE_IAD,
         .bFirstInterface    = 0,
         .bInterfaceCount    = 2,
-        .bFunctionClass     = 0x02,   /* bFunctionClass: Communication Interface Class */
-        .bFunctionSubClass  = 0x02,   /* bFunctionSubClass: Abstract Control Model */
-        .bFunctionProtocol  = 0x01,   /* bFunctionProtocol: Common AT commands */
+        .bFunctionClass     = 0x02, /* bFunctionClass: Communication Interface Class */
+        .bFunctionSubClass  = 0x02, /* bFunctionSubClass: Abstract Control Model */
+        .bFunctionProtocol  = 0x01, /* bFunctionProtocol: Common AT commands */
         .iFunction          = USBD_ISTR_INTERFACES,
     },
     .CID = { /* Comm Interface Descriptor */

@@ -73,13 +73,13 @@ static const USBD_HID_DescType hid_desc = {
     },
     .HIDCD = { /* HID Class Descriptor */
         .bLength            = sizeof(hid_desc.HIDCD),
-        .bDescriptorType    = HID_DESCRIPTOR_TYPE,
+        .bDescriptorType    = HID_DESC_TYPE_HID,
         .bcdHID             = 0x0111,   /* bcdHID: HID Class Spec release number */
         .bCountryCode       = 0x00,     /* bCountryCode: Hardware target country */
         .bNumDescriptors    = HID_SUB_DESC_COUNT,
         .sHIDD = {
             /* Report descriptor is mandatory minimum */
-            {.bDescriptorType   = HID_REPORT_DESC,
+            {.bDescriptorType   = HID_DESC_TYPE_REPORT,
               .wItemLength      = 0, },
         },
     },
@@ -288,14 +288,14 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                 switch (dev->Setup.Value >> 8)
                 {
                     /* Return HID class descriptor */
-                    case HID_DESCRIPTOR_TYPE:
+                    case HID_DESC_TYPE_HID:
                     {
                         retval = USBD_CtrlSendData(dev, (uint8_t*)&hid_desc.HIDCD,
                                 sizeof(hid_desc.HIDCD));
                         break;
                     }
                     /* Return HID report descriptor */
-                    case HID_REPORT_DESC:
+                    case HID_DESC_TYPE_REPORT:
                     {
                         retval = USBD_CtrlSendData(dev,
                                 HID_APP(itf)->Report.Desc,
