@@ -114,7 +114,10 @@ typedef struct
         };
         uint8_t b;
     };
+
+#if (USBD_LPM_SUPPORT != 0)
     uint8_t LPM;            /*!< Link Power Management activation */
+#endif
 
 #ifdef USBD_PD_CONFIG_FIELDS
     USBD_PD_CONFIG_FIELDS;  /*!< Peripheral Driver specific configuration elements */
