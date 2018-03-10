@@ -70,7 +70,7 @@ void USBD_Deinit(USBD_HandleType *dev)
  * @brief Resets the USBD handle to the initial empty state.
  * @param dev: USB Device handle reference
  */
-void USBD_HandleReset(USBD_HandleType *dev)
+void USBD_HandleVarReset(USBD_HandleType *dev)
 {
     int i;
 

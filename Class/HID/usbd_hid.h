@@ -37,6 +37,13 @@ extern "C"
 /** @defgroup USBD_HID Human Interface Device Class (HID)
  * @{ */
 
+/** @defgroup USBD_HID_Exported_Macros HID Exported Macros
+ * @{ */
+
+#define HID_IDLE_RATE_INDEFINITE        0xFFFF
+
+/** @} */
+
 /** @defgroup USBD_HID_Exported_Types HID Exported Types
  * @{ */
 
@@ -119,6 +126,9 @@ typedef struct
 
     void (*GetReport)   (uint8_t reportId); /*!< A report transmission is requested */
 
+    void (*SetIdle)     (uint16_t idleRate_ms,
+                         uint8_t reportId); /*!< Limit the IN reporting frequency */
+
     USBD_HID_ReportDescType Report;         /*!< The Report descriptor */
 }USBD_HID_AppType;
 
@@ -142,7 +152,9 @@ typedef struct
 
     /* HID class internal context */
     uint8_t InGetReport;            /*!< Indicates the call of GetReport() */
-    uint8_t IdleState;
+    uint8_t IdleRate;               /*!< Contains the current idle rate
+                                         @note Report ID separate idle rates are
+                                         not readable with the current API. */
 }USBD_HID_IfHandleType;
 
 /** @} */

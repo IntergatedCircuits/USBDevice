@@ -234,7 +234,7 @@ static void hid_init(USBD_HID_IfHandleType *itf)
 
     /* Initialize state */
     itf->InGetReport = 0;
-    itf->IdleState = 0;
+    itf->IdleRate = itf->Config.InEp.Interval / 4;
 
     /* Initialize application */
     USBD_SAFE_CALLBACK(HID_APP(itf)->Init, );
@@ -336,30 +336,44 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                     /* If report IDs are used, the ID shall be placed
                      * on the first byte */
                     if (HID_APP(itf)->Report.IDs > 0)
-                    {
-                        data++;
-                    }
+                    {   data++; }
 
                     retval = USBD_CtrlReceiveData(dev, data);
                     break;
                 }
-#if 0
+
+                /* Send 1 byte idle rate */
                 case HID_REQ_GET_IDLE:
-                    /* 1 byte idle rate */
-                    retval = USBD_CtrlSendData(dev, itf->IdleState, 1);
+                    retval = USBD_CtrlSendData(dev,
+                            itf->IdleRate, sizeof(itf->IdleRate));
                     break;
 
                 case HID_REQ_SET_IDLE:
+                {
                     /* wValue upper: Duration
                      * 0 - indefinite, only report when input changes
                      * x - 4*x ms idle, then reverts
                      * wValue lower: ID
                      * 0 - applies to all records
                      * x - record ID x only */
-                    itf->IdleState = dev->Setup.Value >> 8;
+                    uint16_t idleRate_ms = HID_IDLE_RATE_INDEFINITE;
+                    uint8_t idleRate = dev->Setup.Value >> 8;
+                    uint8_t reportId = dev->Setup.Value;
+
+                    /* Save only global config */
+                    if (reportId == 0)
+                    {   itf->IdleRate = idleRate; }
+
+                    if (idleRate > 0)
+                    {   idleRate_ms = 4 * itf->IdleRate; }
+
+                    USBD_SAFE_CALLBACK(HID_APP(itf)->SetIdle,
+                            idleRate_ms, reportId);
                     retval = USBD_E_OK;
                     break;
+                }
 
+#if (USBD_HID_BOOT_SUPPORT != 0)
                 case HID_REQ_GET_PROTOCOL:
                     /* 1 byte active protocol */
                     break;

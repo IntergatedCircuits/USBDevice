@@ -32,7 +32,7 @@
 void            USBD_Init               (USBD_HandleType *dev,
                                          const USBD_DescriptionType *desc);
 void            USBD_Deinit             (USBD_HandleType *dev);
-void            USBD_HandleReset        (USBD_HandleType *dev);
+void            USBD_HandleVarReset     (USBD_HandleType *dev);
 
 void            USBD_Connect            (USBD_HandleType *dev);
 void            USBD_Disconnect         (USBD_HandleType *dev);
