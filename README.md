@@ -25,6 +25,8 @@ Currently the following USB device classes are supported:
 Currently the following hardware platforms are supported:
 - STMicroelectronics [STM32](http://www.st.com/en/microcontrollers/stm32-32-bit-arm-cortex-mcus.html)
 using the [STM32_XPD](https://github.com/IntergatedCircuits/STM32_XPD) peripheral drivers
+(a [standalone](https://github.com/IntergatedCircuits/USBDevice/wiki/Integration-for-STM32-without-XPD) 
+solution is also possible)
 
 ## Basis of operation
 
