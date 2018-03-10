@@ -85,8 +85,8 @@ static const USBD_HID_DescType hid_desc = {
     },
 };
 
-#if (USBD_CDC_ALTSETTING_SUPPORT == 1)
-static uint16_t         hid_getAltsDesc (USBD_CDC_IfHandleType *itf, uint8_t ifNum, uint8_t * dest);
+#if (USBD_HID_ALTSETTING_SUPPORT == 1)
+static uint16_t         hid_getAltsDesc (USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t * dest);
 #endif
 static uint16_t         hid_getDesc     (USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t * dest);
 static const char *     hid_getString   (USBD_HID_IfHandleType *itf, uint8_t intNum);
@@ -128,7 +128,7 @@ static const USBD_ClassType hid_cbks = {
  * @param dest: the destination buffer
  * @return Length of the copied descriptor
  */
-static uint16_t hid_getAltsDesc(USBD_CDC_IfHandleType *itf, uint8_t ifNum, uint8_t * dest)
+static uint16_t hid_getAltsDesc(USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t * dest)
 {
     uint8_t as;
     uint16_t len = 0;
