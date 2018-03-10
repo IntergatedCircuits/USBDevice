@@ -11,8 +11,8 @@ It is designed for resource-constrained systems, but it is a completely hardware
 The project consists of the followings:
 1. The USB 2.0 device framework is located in the **Device** folder.
 2. Common USB classes are implemented as part of the project, under the **Class** folder.
-3. The Templates folder contains example files which are mandatory for the library's functionality.
-4. The Doc folder contains a prepared *doxyfile* for **Doxygen** documentation generation.
+3. The *Templates* folder contains example files which are mandatory for the library's functionality.
+4. The *Doc* folder contains a prepared *doxyfile* for Doxygen documentation generation.
 
 ## Class support
 
@@ -31,9 +31,9 @@ using the [STM32_XPD](https://github.com/IntergatedCircuits/STM32_XPD) periphera
 This stack on one side is called by the user application to start or stop the device
 using the public API in *usbd.h*. On the other side the stack shall be notified when any of 
 these device peripheral events occur:
-- USB Reset signal on bus -> ´USBD_ResetCallback()´
-- USB control pipe setup request received -> ´USBD_SetupCallback()´
-- USB endpoint data transfer completed -> ´USBD_EpInCallback()´ or ´USBD_EpOutCallback()´
+- USB Reset signal on bus -> `USBD_ResetCallback()`
+- USB control pipe setup request received -> `USBD_SetupCallback()`
+- USB endpoint data transfer completed -> `USBD_EpInCallback()` or `USBD_EpOutCallback()`
 
 The goal of the USBD structures is to be a common management structure for both this stack 
 and the peripheral driver. Any additional fields that the peripheral driver necessitates
