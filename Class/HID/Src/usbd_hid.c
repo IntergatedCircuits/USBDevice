@@ -85,7 +85,7 @@ static const USBD_HID_DescType hid_desc = {
     },
 };
 
-#if (USBD_HID_ALTSETTING_SUPPORT == 1)
+#if (USBD_HID_ALTSETTINGS != 0)
 static uint16_t         hid_getAltsDesc (USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t * dest);
 #endif
 static uint16_t         hid_getDesc     (USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t * dest);
@@ -275,7 +275,7 @@ static void hid_deinit(USBD_HID_IfHandleType *itf)
  */
 static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
 {
-    USBD_ReturnType retval = XPD_ERROR;
+    USBD_ReturnType retval = USBD_E_ERROR;
     USBD_HandleType *dev = itf->Base.Device;
 
     switch (dev->Setup.RequestType.Type)
@@ -320,7 +320,7 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
 
                     /* Set flag, invoke callback which should provide data
                      * via USBD_HID_ReportIn() */
-                    itf->InGetReport = XPD_BUSY;
+                    itf->InGetReport = USBD_E_BUSY;
                     USBD_SAFE_CALLBACK(HID_APP(itf)->GetReport, reportId);
 
                     retval = itf->InGetReport;
@@ -446,7 +446,7 @@ static void hid_outData(USBD_HID_IfHandleType *itf, USBD_EpHandleType *ep)
  */
 USBD_ReturnType USBD_HID_MountInterface(USBD_HID_IfHandleType *itf, USBD_HandleType *dev)
 {
-    USBD_ReturnType retval = XPD_ERROR;
+    USBD_ReturnType retval = USBD_E_ERROR;
 
     if (dev->IfCount < USBD_MAX_IF_COUNT)
     {
@@ -522,7 +522,7 @@ USBD_ReturnType USBD_HID_ReportIn(USBD_HID_IfHandleType *itf, uint8_t *data, uin
  */
 USBD_ReturnType USBD_HID_ReportOut(USBD_HID_IfHandleType *itf, uint8_t *data, uint16_t length)
 {
-    USBD_ReturnType retval = XPD_ERROR;
+    USBD_ReturnType retval = USBD_E_ERROR;
     USBD_HandleType *dev = itf->Base.Device;
 
     if (itf->Config.OutEp.Size > 0)
