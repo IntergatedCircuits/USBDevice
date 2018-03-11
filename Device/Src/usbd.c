@@ -87,7 +87,7 @@ void USBD_HandleVarReset(USBD_HandleType *dev)
 }
 
 /**
- * @brief This function logically connects the device to the bus.
+ * @brief This function logically connects (attaches) the device to the bus.
  * @param dev: USB Device handle reference
  */
 void USBD_Connect(USBD_HandleType *dev)
@@ -97,7 +97,7 @@ void USBD_Connect(USBD_HandleType *dev)
 }
 
 /**
- * @brief This function logically disconnects the device from the bus.
+ * @brief This function logically disconnects (detaches) the device from the bus.
  * @param dev: USB Device handle reference
  */
 void USBD_Disconnect(USBD_HandleType *dev)

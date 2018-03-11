@@ -94,12 +94,13 @@ void USBD_IfConfig(USBD_HandleType *dev, uint8_t cfgNum)
 {
     if (dev->ConfigSelector != cfgNum)
     {
-        uint8_t ifNum;
+        /* DFU class changes IfCount during Deinit */
+        uint8_t ifNum, ifCount = dev->IfCount;
 
         /* Clear any previously selected config */
         if (dev->ConfigSelector != 0)
         {
-            for (ifNum = 0; ifNum < dev->IfCount; ifNum++)
+            for (ifNum = 0; ifNum < ifCount; ifNum++)
             {
                 USBD_IfClass_Deinit(dev->IF[ifNum]);
             }
@@ -111,7 +112,10 @@ void USBD_IfConfig(USBD_HandleType *dev, uint8_t cfgNum)
         /* Set the new selected valid config */
         if (dev->ConfigSelector != 0)
         {
-            for (ifNum = 0; ifNum < dev->IfCount; ifNum++)
+            /* Reload possibly new value of IfCount */
+            ifCount = *((volatile uint8_t*)&dev->IfCount);
+
+            for (ifNum = 0; ifNum < ifCount; ifNum++)
             {
                 USBD_IfClass_Init(dev->IF[ifNum]);
             }

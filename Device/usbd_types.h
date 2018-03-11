@@ -249,7 +249,6 @@ typedef struct _USBD_HandleType
 {
     const USBD_DescriptionType *Desc;       /*!< Reference of the device description */
     USB_SetupRequestType Setup;             /*!< Setup request is stored */
-    uint8_t CtrlData[USBD_EP0_BUFFER_SIZE]; /*!< Control EP buffer for common use */
 
 #ifdef USBD_PD_DEV_FIELDS
     USBD_PD_DEV_FIELDS;                     /*!< Peripheral Driver specific device context */
@@ -275,6 +274,7 @@ typedef struct _USBD_HandleType
         USBD_EpHandleType OUT[USBD_MAX_EP_COUNT];   /*!< OUT endpoint status */
     }EP;                                            /*!< Endpoint management */
 
+    uint8_t CtrlData[USBD_EP0_BUFFER_SIZE]; /*!< Control EP buffer for common use */
 }USBD_HandleType;
 
 /** @} */
