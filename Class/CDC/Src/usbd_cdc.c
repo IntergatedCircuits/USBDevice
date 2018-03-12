@@ -40,7 +40,7 @@
 #endif
 
 #if (USBD_CDC_ALTSETTINGS != 0)
-#define CDC_APP(ITF)    ((USBD_CDC_AppType*)(&(ITF)->App[(ITF)->AltSelector]))
+#define CDC_APP(ITF)    ((USBD_CDC_AppType*)(&(ITF)->App[(ITF)->Base.AltSelector]))
 #else
 #define CDC_APP(ITF)    ((USBD_CDC_AppType*)((ITF)->App))
 #endif

@@ -26,7 +26,7 @@
 #define HID_SUB_DESC_COUNT              1
 
 #if (USBD_HID_ALTSETTINGS != 0)
-#define HID_APP(ITF)    ((USBD_HID_AppType*)(&(ITF)->App[(ITF)->AltSelector]))
+#define HID_APP(ITF)    ((USBD_HID_AppType*)(&(ITF)->App[(ITF)->Base.AltSelector]))
 #else
 #define HID_APP(ITF)    ((USBD_HID_AppType*)((ITF)->App))
 #endif
