@@ -180,6 +180,7 @@ static uint16_t hid_getDesc(USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t *
 #if (USBD_HID_OUT_SUPPORT == 1)
     if (itf->Config.OutEp.Size > 0)
     {
+        desc->HID.bNumEndpoints = 2;
         len += USBD_EpDesc(dev, itf->Config.OutEp.Num, &dest[len]);
         dest[len - 1] = itf->Config.OutEp.Interval;
     }

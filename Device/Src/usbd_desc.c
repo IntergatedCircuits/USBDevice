@@ -113,7 +113,10 @@ __STATIC_INLINE
 uint16_t        USBD_IfClass_GetDesc    (USBD_IfHandleType *itf,
                                          uint8_t ifNum, uint8_t *dest)
 {
-    return itf->Class->GetDescriptor(itf, ifNum, dest);
+    if (itf->Class->GetDescriptor != NULL)
+        { return itf->Class->GetDescriptor(itf, ifNum, dest); }
+    else
+        { return 0; }
 }
 
 /** @} */

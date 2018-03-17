@@ -206,15 +206,13 @@ USBD_ReturnType USBD_EpRequest(USBD_HandleType *dev)
             /* Report the halt (stall) status of the EP */
             case USB_REQ_GET_STATUS:
             {
-                uint16_t epStatus = 0;
+                uint16_t *epStatus = (uint16_t*)dev->CtrlData;
 
-                if (ep->State == USB_EP_STATE_STALL)
-                {
-                    epStatus = 1 << USB_FEATURE_EP_HALT;
-                }
+                *epStatus = (ep->State == USB_EP_STATE_STALL) ?
+                        1 << USB_FEATURE_EP_HALT : 0;
 
                 retval = USBD_CtrlSendData(dev,
-                        (uint8_t*)&epStatus, sizeof(epStatus));
+                        (uint8_t*)epStatus, sizeof(uint16_t));
                 break;
             }
 
