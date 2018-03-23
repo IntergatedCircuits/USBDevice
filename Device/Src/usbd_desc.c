@@ -54,7 +54,9 @@ __ALIGN_BEGIN static const USB_DeviceDescType usbd_deviceDesc __ALIGN_END = {
     .bcdDevice          = 0xFFFF,
     .iManufacturer      = USBD_ISTR_VENDOR,
     .iProduct           = USBD_ISTR_PRODUCT,
+#if (USBD_SERIAL_BCD_SIZE > 0)
     .iSerialNumber      = USBD_ISTR_SERIAL,
+#endif /* Defaults to 0 */
     .bNumConfigurations = USBD_MAX_CONFIGURATION_COUNT
 };
 
@@ -249,12 +251,14 @@ USBD_ReturnType USBD_GetDescriptor(USBD_HandleType *dev)
                     len = USBD_GetStringDesc(dev->Desc->Config.Name, data);
                     break;
 
+#if (USBD_SERIAL_BCD_SIZE > 0)
                 case USBD_ISTR_SERIAL:
-                    data[0] = len = sizeof(*dev->Desc->SerialNumber) * 2 + 2;
+                    data[0] = len = sizeof(*dev->Desc->SerialNumber) * 4 + 2;
                     data[1] = USB_DESC_TYPE_STRING;
                     Uint2Unicode((const uint8_t*)dev->Desc->SerialNumber,
                             &data[2], sizeof(*dev->Desc->SerialNumber) * 2);
                     break;
+#endif
 
                 default:
                 {

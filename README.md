@@ -48,6 +48,12 @@ be included by the driver.
 
 A debug serial port with selectable output power and battery charging. Composite USB device with one CDC (serial port) and two HID interfaces (onboard sensors and power management).
 
+## How to contribute
+
+This project is free to use for everyone as long as the license terms are met. 
+Any found defects or suggestions should be reported as a GitHub issue.
+Improvements in the form of pull requests are also welcome.
+
 ## Authors
 
 * **Benedek Kupper** - [IntergatedCircuits](https://github.com/IntergatedCircuits)

@@ -58,6 +58,7 @@ __weak void Uint2Unicode(const uint8_t *data, uint8_t *unicode, uint16_t len)
 {
     uint8_t i = 0;
 
+    len *= 2;
     while (i < len)
     {
         uint8_t val;

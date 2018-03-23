@@ -38,7 +38,9 @@
 /** @brief Maximum number of USB configurations per device */
 #define USBD_MAX_CONFIGURATION_COUNT    1
 
-#define USBD_SERIAL_BCD_SIZE            12
+#ifndef USBD_SERIAL_BCD_SIZE
+#define USBD_SERIAL_BCD_SIZE            8
+#endif
 
 #ifndef USBD_MAX_IF_COUNT
 #define USBD_MAX_IF_COUNT               1
@@ -97,7 +99,7 @@ typedef enum
 
 
 /** @brief USB serial number definition */
-typedef const uint8_t USBD_SerialNumberType[USBD_SERIAL_BCD_SIZE / 2];
+typedef const uint8_t USBD_SerialNumberType[USBD_SERIAL_BCD_SIZE];
 
 
 /** @brief USB device configuration structure */
@@ -147,8 +149,9 @@ typedef struct
         }Version;               /*!< Version number */
     }Product;                   /*!< Product properties */
 
+#if (USBD_SERIAL_BCD_SIZE > 0)
     USBD_SerialNumberType *SerialNumber;/*!< Product serial number reference */
-
+#endif
 }USBD_DescriptionType;
 
 
