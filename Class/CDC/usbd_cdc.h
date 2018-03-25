@@ -20,8 +20,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef __USB_CDC_H
-#define __USB_CDC_H
+#ifndef __USBD_CDC_H
+#define __USBD_CDC_H
 
 #ifdef __cplusplus
 extern "C"
@@ -141,4 +141,4 @@ USBD_ReturnType USBD_CDC_Receive        (USBD_CDC_IfHandleType *itf,
 }
 #endif
 
-#endif  /* __USB_CDC_H */
+#endif  /* __USBD_CDC_H */
