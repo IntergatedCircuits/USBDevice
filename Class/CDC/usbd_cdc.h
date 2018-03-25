@@ -100,6 +100,7 @@ typedef struct
 /** @brief CDC interface configuration */
 typedef struct
 {
+    uint8_t Protocol;   /*!< Protocol used for Control requests */
     uint8_t OutEpNum;   /*!< OUT endpoint address */
     uint8_t InEpNum;    /*!< IN endpoint address */
     uint8_t NotEpNum;   /*!< Notification endpoint address

@@ -249,17 +249,22 @@ static uint16_t cdc_getDesc(USBD_CDC_IfHandleType *itf, uint8_t ifNum, uint8_t *
     desc->DID.iInterface = USBD_IIF_INDEX(ifNum, 0);
 #endif /* (USBD_MAX_IF_COUNT > 2) */
 
+    if (itf->Config.Protocol != 0)
+    {
+        desc->CID.bInterfaceProtocol = itf->Config.Protocol;
+    }
+
     desc->NED.bEndpointAddress = itf->Config.NotEpNum;
 
     len += USBD_EpDesc(itf->Base.Device, itf->Config.OutEpNum, &dest[len]);
     len += USBD_EpDesc(itf->Base.Device, itf->Config.InEpNum, &dest[len]);
 
 #if (USBD_HS_SUPPORT == 1)
-    if (itf->Base.Device->Speed == USB_SPEED_HIGH)
+    if (itf->Base.Device->Speed == USB_SPEED_FULL)
     {
         USB_EndpointDescType* ed = &dest[sizeof(cdc_desc)];
-        ed[0].wMaxPacketSize = USB_EP_BULK_HS_MPS;
-        ed[1].wMaxPacketSize = USB_EP_BULK_HS_MPS;
+        ed[0].wMaxPacketSize = USB_EP_BULK_FS_MPS;
+        ed[1].wMaxPacketSize = USB_EP_BULK_FS_MPS;
     }
 #endif
 
@@ -339,9 +344,11 @@ static void cdc_deinit(USBD_CDC_IfHandleType *itf)
     /* Deinitialize application */
     USBD_SAFE_CALLBACK(CDC_APP(itf)->Deinit, );
 
+#if (USBD_HS_SUPPORT == 1)
     /* Reset the endpoint MPS to the desired size */
     dev->EP.IN [itf->Config.InEpNum  & 0xF].MaxPacketSize = 
     dev->EP.OUT[itf->Config.OutEpNum      ].MaxPacketSize = CDC_DATA_PACKET_SIZE;
+#endif
 }
 
 /**
