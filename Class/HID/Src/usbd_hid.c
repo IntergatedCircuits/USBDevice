@@ -438,8 +438,8 @@ static void hid_outData(USBD_HID_IfHandleType *itf, USBD_EpHandleType *ep)
 
 /**
  * @brief Mounts the HID interface to the USB Device at the next interface slot.
- * @note  The interface reference shall have its Config structure and App reference
- *        properly set before this function is called.
+ * @note  The interface reference shall have its @ref USBD_HID_IfHandleType::Config structure
+ *        and @ref USBD_HID_IfHandleType::App reference properly set before this function is called.
  * @param itf: reference of the HID interface
  * @param dev: reference of the USB Device
  * @return OK if the mounting was successful,
