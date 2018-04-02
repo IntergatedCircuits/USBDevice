@@ -19,6 +19,7 @@ The project consists of the followings:
 Currently the following USB device classes are supported:
 - Communications Device Class (CDC) specification version 1.10
 - Human Interface Device Class (HID) specification version 1.11
+- Mass Storage Class (MSC) Bulk-Only Transport revision 1.0 with transparent SCSI command set
 
 ## Platform support
 
