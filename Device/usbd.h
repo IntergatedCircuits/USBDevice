@@ -24,6 +24,11 @@
 #ifndef __USBD_H_
 #define __USBD_H_
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <usbd_types.h>
 
 /** @ingroup USBD
@@ -40,5 +45,9 @@ void            USBD_Disconnect         (USBD_HandleType *dev);
 USBD_ReturnType USBD_SetRemoteWakeup    (USBD_HandleType *dev);
 USBD_ReturnType USBD_ClearRemoteWakeup  (USBD_HandleType *dev);
 /** @} */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __USBD_H_ */

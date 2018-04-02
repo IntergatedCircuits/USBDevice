@@ -24,6 +24,11 @@
 #ifndef __USBD_PRIVATE_H_
 #define __USBD_PRIVATE_H_
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <usbd_internal.h>
 
 /* {function definition} <- {call site} */
@@ -50,5 +55,9 @@ USBD_ReturnType USBD_EpRequest          (USBD_HandleType *dev);
 
 /* usbd_desc <- usbd */
 USBD_ReturnType USBD_GetDescriptor      (USBD_HandleType *dev);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __USBD_PRIVATE_H_ */
