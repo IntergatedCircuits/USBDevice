@@ -31,6 +31,118 @@ extern "C"
 
 #include <usbd_internal.h>
 
+/** @ingroup USBD
+ * @defgroup USBD_Private_Functions_IfClass USBD Class-specific Interface Callouts
+ * @brief These functions simply call the class-specific function pointer
+ * @{ */
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::GetDescriptor function.
+ * @param itf:   reference of the interface
+ * @param ifNum: the interface index in the device
+ * @param dest:  destination buffer pointer
+ * @return Length of the descriptor
+ */
+static inline uint16_t USBD_IfClass_GetDesc(
+        USBD_IfHandleType *itf, uint8_t ifNum, uint8_t *dest)
+{
+    if (itf->Class->GetDescriptor != NULL)
+        { return itf->Class->GetDescriptor(itf, ifNum, dest); }
+    else
+        { return 0; }
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::GetString function.
+ * @param itf:    reference of the interface
+ * @param intNum: the interface-internal string index
+ * @return String reference
+ */
+static inline const char* USBD_IfClass_GetString(
+        USBD_IfHandleType *itf, uint8_t intNum)
+{
+    if (itf->Class->GetString == NULL)
+    {   return (const char*)NULL; }
+    else
+    {   return itf->Class->GetString(itf, intNum); }
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::Init function.
+ * @param itf: reference of the interface
+ */
+static inline void USBD_IfClass_Init(
+        USBD_IfHandleType *itf)
+{
+    USBD_SAFE_CALLBACK(itf->Class->Init, itf);
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::Deinit function.
+ * @param itf: reference of the interface
+ */
+static inline void USBD_IfClass_Deinit(
+        USBD_IfHandleType *itf)
+{
+    USBD_SAFE_CALLBACK(itf->Class->Deinit, itf);
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::SetupStage function.
+ * @param itf: reference of the interface
+ * @return Return value of the function call
+ */
+static inline USBD_ReturnType USBD_IfClass_SetupStage(
+        USBD_IfHandleType *itf)
+{
+    if (itf->Class->SetupStage == NULL)
+    {   return USBD_E_INVALID; }
+    else
+    {   return itf->Class->SetupStage(itf); }
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::DataStage function.
+ * @param itf: reference of the interface
+ */
+static inline void USBD_IfClass_DataStage(
+        USBD_IfHandleType *itf)
+{
+    USBD_SAFE_CALLBACK(itf->Class->DataStage, itf);
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::InData function.
+ * @param itf: reference of the interface
+ * @param ep:  reference of the endpoint
+ */
+static inline void USBD_IfClass_InData(
+        USBD_IfHandleType *itf, USBD_EpHandleType *ep)
+{
+    USBD_SAFE_CALLBACK(itf->Class->InData, itf, ep);
+}
+
+/**
+ * @brief Calls the interface's class specific
+ *        @ref USBD_ClassType::OutData function.
+ * @param itf: reference of the interface
+ * @param ep:  reference of the endpoint
+ */
+static inline void USBD_IfClass_OutData(
+        USBD_IfHandleType *itf, USBD_EpHandleType *ep)
+{
+    USBD_SAFE_CALLBACK(itf->Class->OutData, itf, ep);
+}
+
+/** @} */
+
 /* {function definition} <- {call site} */
 
 /* usbd <- usbd_ctrl */

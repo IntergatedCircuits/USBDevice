@@ -53,13 +53,13 @@ extern "C"
 
 /* The maximal number of available endpoints differs for all USB cores */
 #if   defined(USB)
-#define USBD_MAX_EP_COUNT         8 /* Theoretical maximum */
+#define USBD_MAX_EP_COUNT               8 /* Theoretical maximum */
 #elif defined(USB_OTG_HS)
-#define USBD_MAX_EP_COUNT         USB_OTG_HS_MAX_IN_ENDPOINTS
+#define USBD_MAX_EP_COUNT               USB_OTG_HS_MAX_IN_ENDPOINTS
 #elif defined(USB_OTG_FS) && defined(USB_OTG_FS_MAX_IN_ENDPOINTS)
-#define USBD_MAX_EP_COUNT         USB_OTG_FS_MAX_IN_ENDPOINTS
+#define USBD_MAX_EP_COUNT               USB_OTG_FS_MAX_IN_ENDPOINTS
 #elif defined(USB_OTG_FS)
-#define USBD_MAX_EP_COUNT         6
+#define USBD_MAX_EP_COUNT               6
 #endif
 
 /* Peripheral Driver extension fields */
@@ -88,6 +88,9 @@ extern "C"
     }Callbacks;                         /*   Handle Callbacks */
 #endif /* USB_BCDR_DPPU */
 
+/* Packet memory is 16 bit wide */
+#define USBD_DATA_ALIGNMENT             2
+
 #elif defined(USB_OTG_FS)
 
 /** @brief USB peripheral PHYsical layer selection */
@@ -115,6 +118,9 @@ typedef enum {
     XPD_HandleCallbackType Resume;      /*!< Resume request */      \
     XPD_HandleCallbackType SOF;         /*!< Start Of Frame */      \
     }Callbacks;                         /*   Handle Callbacks */
+
+/* DMA requires word aligned data */
+#define USBD_DATA_ALIGNMENT             4
 
 #endif
 

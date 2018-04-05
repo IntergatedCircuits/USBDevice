@@ -58,6 +58,10 @@
 #define USBD_LANGID_STRING              0x409 /* en-US */
 #endif
 
+#ifndef USBD_DATA_ALIGNMENT
+#define USBD_DATA_ALIGNMENT             1
+#endif
+
 #ifndef USBD_HS_SUPPORT
 #define USBD_HS_SUPPORT                 0
 #endif

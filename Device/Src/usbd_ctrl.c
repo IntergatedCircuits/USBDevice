@@ -24,23 +24,6 @@
 #include <usbd_private.h>
 
 /** @ingroup USBD
- * @addtogroup USBD_Private_Functions_IfClass
- * @{ */
-
-/**
- * @brief Calls the interface's class specific
- *        @ref USBD_ClassType::DataStage function.
- * @param itf: reference of the interface
- */
-__STATIC_INLINE
-void USBD_IfClass_DataStage(USBD_IfHandleType *itf)
-{
-    USBD_SAFE_CALLBACK(itf->Class->DataStage, itf);
-}
-
-/** @} */
-
-/** @ingroup USBD
  * @defgroup USBD_Private_Functions_Ctrl USBD Control Request Handling
  * @{ */
 
@@ -211,7 +194,8 @@ USBD_ReturnType USBD_CtrlReceiveData(USBD_HandleType *dev, uint8_t *data)
 
 /** @addtogroup USBD_Exported_Functions
  * @{ */
-
+USB_SetupRequestType setups[255];
+uint8_t setupCnt = 0;
 /**
  * @brief This function routes the setup request depending on the recipient
  *        and performs the endpoint's status stage if no data stage is requested
@@ -223,6 +207,7 @@ void USBD_SetupCallback(USBD_HandleType *dev)
     USBD_ReturnType retval = USBD_E_INVALID;
 
     dev->EP.OUT[0].State = USB_EP_STATE_SETUP;
+    setups[setupCnt++] = dev->Setup;
 
     /* Route the request to the recipient */
     switch (dev->Setup.RequestType.Recipient)

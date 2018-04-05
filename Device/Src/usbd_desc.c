@@ -29,11 +29,9 @@
  * @defgroup USBD_Private_Constants USBD Descriptor Prototypes
  * @{ */
 
-#if defined ( __ICCARM__ )
-#pragma data_alignment=4
-#endif
+__alignment(USBD_DATA_ALIGNMENT)
 /** @brief USB Standard Language Identifier Descriptor */
-__ALIGN_BEGIN static const USB_LangIdDescType usbd_langIdDesc __ALIGN_END = {
+static const USB_LangIdDescType usbd_langIdDesc __align(USBD_DATA_ALIGNMENT) = {
     .bLength         = sizeof(usbd_langIdDesc),
     .bDescriptorType = USB_DESC_TYPE_STRING,
     .wLANGID         = {USBD_LANGID_STRING,
@@ -41,7 +39,7 @@ __ALIGN_BEGIN static const USB_LangIdDescType usbd_langIdDesc __ALIGN_END = {
 };
 
 /** @brief USB Standard Composite Device Descriptor */
-__ALIGN_BEGIN static const USB_DeviceDescType usbd_deviceDesc __ALIGN_END = {
+static const USB_DeviceDescType usbd_deviceDesc __align(USBD_DATA_ALIGNMENT) = {
     .bLength            = sizeof(USB_DeviceDescType),
     .bDescriptorType    = USB_DESC_TYPE_DEVICE,
     .bcdUSB             = USBD_SPEC_BCD,
@@ -62,7 +60,7 @@ __ALIGN_BEGIN static const USB_DeviceDescType usbd_deviceDesc __ALIGN_END = {
 
 #if (USBD_HS_SUPPORT == 1)
 /** @brief USB Standard Device Qualifier Descriptor */
-__ALIGN_BEGIN static const USB_DeviceQualifierDescType usbd_deviceQualifierDesc __ALIGN_END =
+static const USB_DeviceQualifierDescType usbd_devQualDesc __align(USBD_DATA_ALIGNMENT) =
 {
     .bLength            = sizeof(USB_DeviceQualifierDescType),
     .bDescriptorType    = USB_DESC_TYPE_DEVICE_QUALIFIER,
@@ -77,10 +75,10 @@ __ALIGN_BEGIN static const USB_DeviceQualifierDescType usbd_deviceQualifierDesc 
 
 /** @brief USB Binary device Object Store (BOS) Descriptor */
 #if (USBD_LPM_SUPPORT == 1)
-__ALIGN_BEGIN static const struct {
+static const struct {
     USB_BOSDescType bos;                /*!< BOS base */
     USB_DevCapabilityDescType devCap;   /*!< Device capabilities */
-}__packed usbd_bosDesc __ALIGN_END =
+}__packed usbd_bosDesc __align(USBD_DATA_ALIGNMENT) =
 {
     .bos = {
         .bLength            = sizeof(USB_BOSDescType),
@@ -96,30 +94,6 @@ __ALIGN_BEGIN static const struct {
     }
 };
 #endif
-
-/** @} */
-
-/** @ingroup USBD
- * @addtogroup USBD_Private_Functions_IfClass
- * @{ */
-
-/**
- * @brief Calls the interface's class specific
- *        @ref USBD_ClassType::GetDescriptor function.
- * @param itf:   reference of the interface
- * @param ifNum: the interface index in the device
- * @param dest:  destination buffer pointer
- * @return Length of the descriptor
- */
-__STATIC_INLINE
-uint16_t        USBD_IfClass_GetDesc    (USBD_IfHandleType *itf,
-                                         uint8_t ifNum, uint8_t *dest)
-{
-    if (itf->Class->GetDescriptor != NULL)
-        { return itf->Class->GetDescriptor(itf, ifNum, dest); }
-    else
-        { return 0; }
-}
 
 /** @} */
 
@@ -279,8 +253,8 @@ USBD_ReturnType USBD_GetDescriptor(USBD_HandleType *dev)
         {
             if (dev->Speed == USB_SPEED_HIGH)
             {
-                data = (uint8_t*)&usbd_deviceQualifierDesc;
-                len  = sizeof(USB_DeviceQualifierDescType);
+                data = (uint8_t*)&usbd_devQualDesc;
+                len  = sizeof(usbd_devQualDesc);
             }
             break;
         }

@@ -41,12 +41,22 @@ extern "C"
 /* Compiler macro to byte-align USB structures */
 #if  defined ( __GNUC__ )
 #ifndef __packed
-#define __packed __attribute__((__packed__))
+#define __packed __attribute__((packed))
 #endif /* __packed */
+#ifndef __align
+#define __align(X) __attribute__((aligned(X)))
+#endif /* __align */
+#define __alignment(X)
 #ifndef __weak
 #define __weak   __attribute__((weak))
 #endif /* __weak */
-#endif /* __GNUC__ */
+#elif defined ( __ICCARM__ )
+#define __stringize(X) #X
+#define __align(X)
+#define __alignment(X) _Pragma(__stringize(data_alignment=X))
+#else
+#define __alignment(X)
+#endif
 
 /* The current implementation is based on USB release 2.00 */
 #define USB_SPEC_BCD                    0x0200

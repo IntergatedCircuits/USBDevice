@@ -24,36 +24,6 @@
 #include <usbd_private.h>
 
 /** @ingroup USBD
- * @addtogroup USBD_Private_Functions_IfClass
- * @{ */
-
-/**
- * @brief Calls the interface's class specific
- *        @ref USBD_ClassType::InData function.
- * @param itf: reference of the interface
- * @param ep:  reference of the endpoint
- */
-__STATIC_INLINE
-void USBD_IfClass_InData(USBD_IfHandleType *itf, USBD_EpHandleType *ep)
-{
-    USBD_SAFE_CALLBACK(itf->Class->InData, itf, ep);
-}
-
-/**
- * @brief Calls the interface's class specific
- *        @ref USBD_ClassType::OutData function.
- * @param itf: reference of the interface
- * @param ep:  reference of the endpoint
- */
-__STATIC_INLINE
-void USBD_IfClass_OutData(USBD_IfHandleType *itf, USBD_EpHandleType *ep)
-{
-    USBD_SAFE_CALLBACK(itf->Class->OutData, itf, ep);
-}
-
-/** @} */
-
-/** @ingroup USBD
  * @defgroup USBD_Internal_Functions USB Device Internal Functions
  * @brief This group is used by the Device and the Classes.
  * @{ */
@@ -170,7 +140,7 @@ USBD_ReturnType USBD_EpRequest(USBD_HandleType *dev)
     USBD_ReturnType retval = USBD_E_INVALID;
     uint8_t epAddr = (uint8_t)dev->Setup.Index;
 
-    if ((dev->ConfigSelector == 0) && ((epAddr & 0x7F) != 0))
+    if ((dev->ConfigSelector == 0) && ((epAddr & 0xF) != 0))
     {
         /* Only EP0 can be affected while the device is not configured */
     }
@@ -185,9 +155,13 @@ USBD_ReturnType USBD_EpRequest(USBD_HandleType *dev)
             {
                 if (dev->Setup.Value == USB_FEATURE_EP_HALT)
                 {
-                    USBD_PD_EpSetStall(dev, epAddr);
-                    ep->State = USB_EP_STATE_STALL;
                     retval = USBD_E_OK;
+
+                    if (ep->State != USB_EP_STATE_STALL)
+                    {
+                        USBD_PD_EpSetStall(dev, epAddr);
+                        ep->State = USB_EP_STATE_STALL;
+                    }
                 }
                 break;
             }
@@ -196,9 +170,25 @@ USBD_ReturnType USBD_EpRequest(USBD_HandleType *dev)
             {
                 if (dev->Setup.Value == USB_FEATURE_EP_HALT)
                 {
-                    USBD_PD_EpClearStall(dev, epAddr);
-                    ep->State = USB_EP_STATE_IDLE;
                     retval = USBD_E_OK;
+
+                    if (ep->State == USB_EP_STATE_STALL)
+                    {
+                        USBD_PD_EpClearStall(dev, epAddr);
+                        ep->State = USB_EP_STATE_IDLE;
+
+                        ep->Transfer.Length = 0;
+                        /* Workaround: notify interface of ready endpoint
+                         * by completion callback with 0 length */
+                        if ((epAddr & 0x8F) > 0x80)
+                        {
+                            USBD_IfClass_InData(dev->IF[ep->IfNum], ep);
+                        }
+                        else if ((epAddr & 0xF) > 0)
+                        {
+                            USBD_IfClass_OutData(dev->IF[ep->IfNum], ep);
+                        }
+                    }
                 }
                 break;
             }

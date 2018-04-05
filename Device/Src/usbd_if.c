@@ -25,66 +25,6 @@
 #include <usbd_private.h>
 
 /** @ingroup USBD
- * @defgroup USBD_Private_Functions_IfClass USBD Class-specific Interface Callouts
- * @brief These functions simply call the class-specific function pointer
- * @{ */
-
-/**
- * @brief Calls the interface's class specific
- *        @ref USBD_ClassType::Init function.
- * @param itf: reference of the interface
- */
-__STATIC_INLINE
-void USBD_IfClass_Init(USBD_IfHandleType *itf)
-{
-    USBD_SAFE_CALLBACK(itf->Class->Init, itf);
-}
-
-/**
- * @brief Calls the interface's class specific
- *        @ref USBD_ClassType::Deinit function.
- * @param itf: reference of the interface
- */
-__STATIC_INLINE
-void USBD_IfClass_Deinit(USBD_IfHandleType *itf)
-{
-    USBD_SAFE_CALLBACK(itf->Class->Deinit, itf);
-}
-
-/**
- * @brief Calls the interface's class specific
- *        @ref USBD_ClassType::SetupStage function.
- * @param itf: reference of the interface
- * @return Return value of the function call
- */
-__STATIC_INLINE
-USBD_ReturnType USBD_IfClass_SetupStage(USBD_IfHandleType *itf)
-{
-    if (itf->Class->SetupStage == NULL)
-        { return USBD_E_INVALID; }
-    else
-        { return itf->Class->SetupStage(itf); }
-}
-
-/**
- * @brief Calls the interface's class specific
- *        @ref USBD_ClassType::GetString function.
- * @param itf:    reference of the interface
- * @param intNum: the interface-internal string index
- * @return String reference
- */
-__STATIC_INLINE
-const char* USBD_IfClass_GetString(USBD_IfHandleType *itf, uint8_t intNum)
-{
-    if (itf->Class->GetString == NULL)
-        { return (const char*)NULL; }
-    else
-        { return itf->Class->GetString(itf, intNum); }
-}
-
-/** @} */
-
-/** @ingroup USBD
  * @defgroup USBD_Private_Functions_If USBD Interface Management
  * @{ */
 
