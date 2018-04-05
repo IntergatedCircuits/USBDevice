@@ -88,9 +88,11 @@ USBD_ReturnType SCSI_ProcessRead(USBD_MSC_IfHandleType *itf)
 
         itf->CSW.dDataResidue -= len;
 
-        /* After transfer completion send CSW */
-        itf->State = (itf->SCSI.RemLength > 0) ?
-                MSC_STATE_DATA_IN : MSC_STATE_LAST_DATA_IN;
+        if (itf->SCSI.RemLength == 0)
+        {
+            /* Next transfer is CSW */
+            itf->State = MSC_STATE_STATUS_IN;
+        }
     }
     return retval;
 }
@@ -99,7 +101,7 @@ USBD_ReturnType SCSI_ProcessRead(USBD_MSC_IfHandleType *itf)
  * @brief Writes the received data to the current block, and continues or terminates
  *        further block data reception.
  * @param itf: reference of the MSC interface
- * @return Status of the block write: BUSY if ongoing, OK if complete, ERROR if failed
+ * @return Result of the current block write operation
  */
 USBD_ReturnType SCSI_ProcessWrite(USBD_MSC_IfHandleType *itf)
 {
@@ -118,7 +120,6 @@ USBD_ReturnType SCSI_ProcessWrite(USBD_MSC_IfHandleType *itf)
     {
         SCSI_PutSenseCode(itf, SCSI_SKEY_HARDWARE_ERROR,
                 SCSI_ASC_WRITE_FAULT);
-        retval = USBD_E_ERROR;
     }
     else
     {
@@ -133,8 +134,6 @@ USBD_ReturnType SCSI_ProcessWrite(USBD_MSC_IfHandleType *itf)
 
             /* Prepare EP to receive next packet */
             USBD_EpReceive(dev, itf->Config.OutEpNum, itf->Buffer, len);
-
-            retval = USBD_E_BUSY;
         }
     }
     return retval;
@@ -572,13 +571,12 @@ static uint32_t SCSI_Read10(USBD_MSC_IfHandleType *itf)
             SCSI_PutSenseCode(itf, SCSI_SKEY_ILLEGAL_REQUEST,
                     SCSI_ASC_INVALID_CDB);
         }
-        /* ProcessRead puts sense code internally */
         else
         {
             SCSI_ProcessRead(itf);
         }
     }
-    return 0;
+    return itf->CBW.dDataLength;
 }
 
 /**
@@ -658,9 +656,8 @@ static uint32_t SCSI_Write10(USBD_MSC_IfHandleType *itf)
 /**
  * @brief Routes the SCSI command to its handler based on the operation code.
  * @param itf: reference of the MSC interface
- * @return The length of the response data
  */
-uint32_t SCSI_ProcessCommand(USBD_MSC_IfHandleType *itf)
+void SCSI_ProcessCommand(USBD_MSC_IfHandleType *itf)
 {
     uint32_t respLen = 0;
 
@@ -721,7 +718,21 @@ uint32_t SCSI_ProcessCommand(USBD_MSC_IfHandleType *itf)
             break;
     }
 
-    return respLen;
+    if (respLen > itf->CBW.dDataLength)
+    {   respLen = itf->CBW.dDataLength; }
+
+    /* Unhandled transfers are sent here */
+    if ((itf->CSW.bStatus == MSC_CSW_CMD_PASSED) &&
+        (itf->State == MSC_STATE_COMMAND_OUT) && (respLen > 0))
+    {
+        /* Send command response */
+        USBD_EpSend(itf->Base.Device, itf->Config.InEpNum, itf->Buffer, respLen);
+
+        itf->CSW.dDataResidue -= respLen;
+
+        /* Send CSW next */
+        itf->State = MSC_STATE_STATUS_IN;
+    }
 }
 
 /** @} */

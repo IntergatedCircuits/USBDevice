@@ -109,7 +109,7 @@ typedef enum
 const USBD_MSC_LUType* MSC_GetLU    (USBD_MSC_IfHandleType *itf,
                                      uint8_t lunIndex);
 
-uint32_t        SCSI_ProcessCommand (USBD_MSC_IfHandleType *itf);
+void            SCSI_ProcessCommand (USBD_MSC_IfHandleType *itf);
 USBD_ReturnType SCSI_ProcessRead    (USBD_MSC_IfHandleType *itf);
 USBD_ReturnType SCSI_ProcessWrite   (USBD_MSC_IfHandleType *itf);
 

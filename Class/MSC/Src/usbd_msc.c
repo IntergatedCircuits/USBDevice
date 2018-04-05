@@ -142,6 +142,8 @@ static const char* MSC_GetString(USBD_MSC_IfHandleType *itf, uint8_t intNum)
  */
 static void MSC_ReceiveCBW(USBD_MSC_IfHandleType *itf)
 {
+    itf->State = MSC_STATE_COMMAND_OUT;
+
     USBD_EpReceive(itf->Base.Device, itf->Config.OutEpNum,
             (uint8_t *)&itf->CBW, MSC_CBW_SIZE);
 }
@@ -152,8 +154,6 @@ static void MSC_ReceiveCBW(USBD_MSC_IfHandleType *itf)
  */
 static void MSC_SendCSW(USBD_MSC_IfHandleType *itf)
 {
-    itf->State = MSC_STATE_IDLE;
-
     USBD_EpSend(itf->Base.Device, itf->Config.InEpNum,
             (uint8_t*)&itf->CSW, MSC_CSW_SIZE);
 
@@ -185,7 +185,6 @@ static void MSC_Init(USBD_MSC_IfHandleType *itf)
     USBD_EpOpen(dev, itf->Config.OutEpNum, USB_EP_TYPE_BULK, mps);
 
     /* Initialize BOT layer */
-    itf->State = MSC_STATE_IDLE;
     itf->Status = MSC_STATUS_NORMAL;
     itf->CSW.dSignature = MSC_CSW_SIGNATURE;
 
@@ -235,14 +234,7 @@ static USBD_ReturnType MSC_SetupStage(USBD_MSC_IfHandleType *itf)
                 }
                 case MSC_BOT_RESET:
                 {
-                    itf->State = MSC_STATE_IDLE;
                     itf->Status = MSC_STATUS_RECOVERY;
-
-                    USBD_EpFlush(dev, itf->Config.InEpNum);
-                    USBD_EpFlush(dev, itf->Config.OutEpNum);
-
-                    MSC_ReceiveCBW(itf);
-
                     retval = USBD_E_OK;
                     break;
                 }
@@ -263,28 +255,37 @@ static USBD_ReturnType MSC_SetupStage(USBD_MSC_IfHandleType *itf)
  */
 static void MSC_InData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
 {
+    USBD_HandleType *dev = itf->Base.Device;
+
     switch (itf->State)
     {
         /* Keep sending the read data */
         case MSC_STATE_DATA_IN:
         {
             /* Continue with READ10 command */
-            if (SCSI_ProcessRead(itf) != USBD_E_OK)
+            SCSI_ProcessRead(itf);
+
+            if (itf->CSW.bStatus != MSC_CSW_CMD_PASSED)
+            {
+                itf->State = MSC_STATE_STALL;
+                USBD_EpSetStall(dev, itf->Config.InEpNum);
+            }
+            break;
+        }
+
+        /* Single or last transfer is complete, send CSW */
+        case MSC_STATE_STATUS_IN:
+        /* EP ClearStall */
+        case MSC_STATE_STALL:
+        {
+            if (itf->Status == MSC_STATUS_NORMAL)
             {
                 MSC_SendCSW(itf);
             }
             break;
         }
 
-        /* Single or last transfer is complete, send CSW */
-        case MSC_STATE_SEND_DATA:
-        case MSC_STATE_LAST_DATA_IN:
-        {
-            MSC_SendCSW(itf);
-            break;
-        }
-
-        default:
+        default: /* MSC_SendCSW completed */
             break;
     }
 }
@@ -296,14 +297,13 @@ static void MSC_InData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
  */
 static void MSC_OutData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
 {
+    USBD_HandleType *dev = itf->Base.Device;
+
     switch (itf->State)
     {
         /* Command Transport */
-        case MSC_STATE_IDLE:
+        case MSC_STATE_COMMAND_OUT:
         {
-            USBD_HandleType *dev = itf->Base.Device;
-            uint32_t respLen = 0;
-
             /* CSW initial setup */
             itf->CSW.dTag = itf->CBW.dTag;
             itf->CSW.dDataResidue = itf->CBW.dDataLength;
@@ -316,55 +316,40 @@ static void MSC_OutData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
                 (itf->CBW.bCBLength > 0) &&
                 (itf->CBW.bCBLength <= 16))
             {
-                respLen = SCSI_ProcessCommand(itf);
-            }
-            else
-            {
-                SCSI_PutSenseCode(itf, SCSI_SKEY_ILLEGAL_REQUEST,
-                        SCSI_ASC_INVALID_CDB);
+                SCSI_ProcessCommand(itf);
 
-                itf->Status = MSC_STATUS_ERROR;
-            }
-
-            /* Treat rejected command */
-            if (itf->CSW.bStatus != MSC_CSW_CMD_PASSED)
-            {
-                /* Terminate transfer by STALLing the proper endpoint */
-                if ((itf->CBW.bmFlags == 0) &&
-                    (itf->CBW.dDataLength != 0) &&
-                    (itf->Status == MSC_STATUS_NORMAL))
-                {
-                    USBD_EpSetStall(dev, itf->Config.OutEpNum);
-                }
-                else
-                {
-                    USBD_EpFlush(dev, itf->Config.InEpNum);
-                    USBD_EpSetStall(dev, itf->Config.InEpNum);
-
-                    /* Prepare reception of new CBW */
-                    MSC_ReceiveCBW(itf);
-                }
-            }
-            else
-            if ((itf->State == MSC_STATE_IDLE) ||
-                (itf->State == MSC_STATE_SEND_DATA))
-            {
-                /* Send command response */
-                if (respLen > 0)
-                {
-                    if (respLen > itf->CBW.dDataLength)
-                    {   respLen = itf->CBW.dDataLength; }
-
-                    itf->CSW.dDataResidue -= respLen;
-                    itf->State = MSC_STATE_SEND_DATA; /* Send CSW after response */
-
-                    USBD_EpSend(dev, itf->Config.InEpNum, itf->Buffer, respLen);
-                }
                 /* Send command status */
-                else
+                if (itf->CBW.dDataLength == 0)
                 {
                     MSC_SendCSW(itf);
                 }
+                /* Treat rejected command */
+                else if (itf->CSW.bStatus != MSC_CSW_CMD_PASSED)
+                {
+                    itf->State = MSC_STATE_STALL;
+
+                    /* Terminate transfer by STALLing the proper endpoint */
+                    if (itf->CBW.bmFlags == 0)
+                    {
+                        USBD_EpSetStall(dev, itf->Config.OutEpNum);
+                    }
+                    else
+                    {
+                        USBD_EpSetStall(dev, itf->Config.InEpNum);
+                    }
+                }
+            }
+            else
+            {
+                /* CBW invalid, STALL both endpoints until recovery */
+                SCSI_PutSenseCode(itf, SCSI_SKEY_ILLEGAL_REQUEST,
+                        SCSI_ASC_INVALID_CDB);
+
+                itf->State = MSC_STATE_STALL;
+                itf->Status = MSC_STATUS_ERROR;
+
+                USBD_EpSetStall(dev, itf->Config.OutEpNum);
+                USBD_EpSetStall(dev, itf->Config.InEpNum);
             }
             break;
         }
@@ -373,15 +358,35 @@ static void MSC_OutData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
         case MSC_STATE_DATA_OUT:
         {
             /* Continue with WRITE10 command */
-            if (SCSI_ProcessWrite(itf) != USBD_E_BUSY)
+            SCSI_ProcessWrite(itf);
+
+            if (itf->CSW.bStatus != MSC_CSW_CMD_PASSED)
+            {
+                itf->State = MSC_STATE_STALL;
+                USBD_EpSetStall(dev, itf->Config.OutEpNum);
+            }
+            /* Write completed, send status */
+            else if (itf->CSW.dDataResidue == 0)
             {
                 MSC_SendCSW(itf);
             }
             break;
         }
 
+        /* EP ClearStall */
         default:
+        {
+            if (itf->Status == MSC_STATUS_NORMAL)
+            {
+                MSC_SendCSW(itf);
+            }
+            else if (itf->Status == MSC_STATUS_RECOVERY)
+            {
+                MSC_ReceiveCBW(itf);
+                itf->Status = MSC_STATUS_NORMAL;
+            }
             break;
+        }
     }
 }
 

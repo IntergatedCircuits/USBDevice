@@ -111,11 +111,11 @@ typedef struct
 /** @brief MSC interface transfer states */
 typedef enum
 {
-    MSC_STATE_IDLE          = 0, /*!< Waiting for new CBW */
+    MSC_STATE_COMMAND_OUT   = 0, /*!< Waiting for new CBW */
     MSC_STATE_DATA_OUT      = 1, /*!< Block write ongoing */
     MSC_STATE_DATA_IN       = 2, /*!< Block read ongoing */
-    MSC_STATE_LAST_DATA_IN  = 3, /*!< Send CSW after completed block read */
-    MSC_STATE_SEND_DATA     = 4, /*!< Send CSW after completed command response */
+    MSC_STATE_STATUS_IN     = 3, /*!< Send CSW after completed command response */
+    MSC_STATE_STALL         = 4, /*!< Transfer is blocked by error condition */
 }USBD_MSC_StateType;
 
 
