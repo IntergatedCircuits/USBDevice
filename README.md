@@ -1,10 +1,23 @@
 # Composite USB Device library
 
 This project implements a platform-independent, highly flexible USB Device software framework,
-which allows you to create a full-feature full or high speed USB device firmware 
-with multiple independent interfaces,
-compliant to the USB 2.0 specification.
-It is designed for resource-constrained systems, but it is a completely hardware-independent stack.
+which allows you to create a full-feature USB 2.0 device firmware 
+with multiple independent interfaces.
+
+## Features
+
+* Effective compliance to USB 2.0 specification
+* Interfaces are independent of the device and are entirely reusable between projects
+* Interface classes support multiple instantiation
+* All USB descriptors are created internally (no need for user definition)
+* Code size optimized for resource-constrained systems
+* Platform-independent stack
+
+### Supported device classes
+
+* Communications Device Class (CDC-ACM) specification version 1.10
+* Human Interface Device Class (HID) specification version 1.11 - with helper macros for report definition
+* Mass Storage Class Bulk-Only Transport (MSC-BOT) revision 1.0 with transparent SCSI command set
 
 ## Contents
 
@@ -13,13 +26,6 @@ The project consists of the followings:
 2. Common USB classes are implemented as part of the project, under the **Class** folder.
 3. The *Templates* folder contains example files which are mandatory for the library's functionality.
 4. The *Doc* folder contains a prepared *doxyfile* for Doxygen documentation generation.
-
-## Class support
-
-Currently the following USB device classes are supported:
-- Communications Device Class (CDC) specification version 1.10
-- Human Interface Device Class (HID) specification version 1.11
-- Mass Storage Class (MSC) Bulk-Only Transport revision 1.0 with transparent SCSI command set
 
 ## Platform support
 
