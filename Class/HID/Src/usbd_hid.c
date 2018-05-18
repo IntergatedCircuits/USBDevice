@@ -346,7 +346,7 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                 /* Send 1 byte idle rate */
                 case HID_REQ_GET_IDLE:
                     retval = USBD_CtrlSendData(dev,
-                            itf->IdleRate, sizeof(itf->IdleRate));
+                            &itf->IdleRate, sizeof(itf->IdleRate));
                     break;
 
                 case HID_REQ_SET_IDLE:
