@@ -124,10 +124,6 @@ typedef enum {
 
 #endif
 
-#ifndef USBD_DFU_ST_EXTENSION
-#define USBD_DFU_ST_EXTENSION           1
-#endif
-
 /** @} */
 
 #ifdef __cplusplus

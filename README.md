@@ -7,7 +7,7 @@ with multiple independent interfaces.
 ## Features
 
 * Effective compliance to USB 2.0 specification
-* Interfaces are independent of the device and are entirely reusable between projects
+* Interfaces are independent of the device and can be added or removed in runtime
 * Interface classes support multiple instantiation
 * All USB descriptors are created internally (no need for user definition)
 * Code size optimized for resource-constrained systems
@@ -18,6 +18,9 @@ with multiple independent interfaces.
 * Communications Device Class (CDC-ACM) specification version 1.10
 * Human Interface Device Class (HID) specification version 1.11 - with helper macros for report definition
 * Mass Storage Class Bulk-Only Transport (MSC-BOT) revision 1.0 with transparent SCSI command set
+* Device Firmware Upgrade Class (DFU) specification version 1.1
+  (or DFU STMicroelectronics Extension [(DFUSE)](www.st.com/resource/en/application_note/cd00264379.pdf) 1.1A
+  using `USBD_DFU_ST_EXTENSION` compile switch)
 
 ## Contents
 
