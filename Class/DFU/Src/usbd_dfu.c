@@ -434,10 +434,10 @@ static USBD_ReturnType dfu_download(USBD_DFU_IfHandleType *itf)
     USBD_ReturnType retval = USBD_E_INVALID;
     USBD_HandleType *dev = itf->Base.Device;
 
-    /* Check for download support */
-    if ((DFU_APP(itf)->Erase != NULL) && (DFU_APP(itf)->Write != NULL))
+    if (dev->Setup.Length > 0)
     {
-        if (dev->Setup.Length > 0)
+        /* Check for download support */
+        if ((DFU_APP(itf)->Erase != NULL) && (DFU_APP(itf)->Write != NULL))
         {
 #if (USBD_DFU_ST_EXTENSION == 0)
             if (itf->DevStatus.State == DFU_STATE_IDLE)
@@ -464,13 +464,15 @@ static USBD_ReturnType dfu_download(USBD_DFU_IfHandleType *itf)
                 retval = USBD_CtrlReceiveData(dev, dev->CtrlData);
             }
         }
-        /* Final download packet, upgrade should be complete */
-        else if (itf->DevStatus.State == DFU_STATE_DNLOAD_IDLE)
-        {
-            itf->BlockLength = 1;
-            itf->DevStatus.State = DFU_STATE_MANIFEST_SYNC;
-            retval = USBD_E_OK;
-        }
+    }
+    /* Deviation from spec: allow 0 length Dnload in IDLE state to
+     * put device in manifestation mode ->
+     * It is possible to return to application mode without effective update */
+    else
+    {
+        itf->BlockLength = 1;
+        itf->DevStatus.State = DFU_STATE_MANIFEST_SYNC;
+        retval = USBD_E_OK;
     }
     return retval;
 }
@@ -489,10 +491,8 @@ static USBD_ReturnType dfu_upload(USBD_DFU_IfHandleType *itf)
     if ((dev->Setup.Length > 0) && (DFU_APP(itf)->Read != NULL))
     {
         uint8_t *data = dev->CtrlData;
-
-        itf->BlockLength = dev->Setup.Length;
 #if (USBD_DFU_ST_EXTENSION != 0)
-        itf->BlockNum    = dev->Setup.Value;
+        itf->BlockNum = dev->Setup.Value;
 
         /* Get commands */
         if (itf->BlockNum == 0)
@@ -511,9 +511,9 @@ static USBD_ReturnType dfu_upload(USBD_DFU_IfHandleType *itf)
             DFU_APP(itf)->Read(
                     DFUSE_GETADDRESS(itf, &dfu_desc),
                     data,
-                    itf->BlockLength);
+                    dev->Setup.Length);
 
-            retval = USBD_CtrlSendData(dev, data, itf->BlockLength);
+            retval = USBD_CtrlSendData(dev, data, dev->Setup.Length);
         }
 #else
         /* The host sends DFU_UPLOAD requests to the device until it
@@ -531,32 +531,31 @@ static USBD_ReturnType dfu_upload(USBD_DFU_IfHandleType *itf)
         /* Check for correct sequence */
         if (dev->Setup.Value == ((itf->BlockNum + 1) & 0xFFFF))
         {
+            uint16_t len;
             uint32_t progress = (uint32_t)itf->Address - DFU_APP(itf)->Firmware.Address;
 
-            /* Shorten the block size if it's the end of the firmware memory */
-            if ((progress + itf->BlockLength) > DFU_APP(itf)->Firmware.TotalSize)
+            /* Shorten the block size if it's the end of the firmware memory,
+             * return to IDLE */
+            if ((progress + dev->Setup.Length) > DFU_APP(itf)->Firmware.TotalSize)
             {
-                itf->BlockLength = DFU_APP(itf)->Firmware.TotalSize - progress;
+                len = DFU_APP(itf)->Firmware.TotalSize - progress;
+                itf->DevStatus.State = DFU_STATE_IDLE;
+            }
+            else
+            {
+                len = dev->Setup.Length;
+                itf->DevStatus.State = DFU_STATE_UPLOAD_IDLE;
             }
 
-            DFU_APP(itf)->Read(
-                    itf->Address,
-                    data,
-                    itf->BlockLength);
+            DFU_APP(itf)->Read(itf->Address, data, len);
 
             /* Increment address for next block upload */
-            itf->Address        += itf->BlockLength;
-            itf->BlockNum        = dev->Setup.Value;
-            itf->DevStatus.State = DFU_STATE_UPLOAD_IDLE;
+            itf->Address  += len;
+            itf->BlockNum  = dev->Setup.Value;
 
-            retval = USBD_CtrlSendData(dev, data, itf->BlockLength);
+            retval = USBD_CtrlSendData(dev, data, len);
         }
 #endif /* (USBD_DFU_ST_EXTENSION != 0) */
-        else /* Invalid BlockNum */
-        {
-            itf->DevStatus.State = DFU_STATE_ERROR;
-            itf->DevStatus.Status = DFU_ERROR_STALLEDPKT;
-        }
     }
     else /* No data stage */
     {
@@ -602,7 +601,6 @@ static USBD_ReturnType dfu_getStatus(USBD_DFU_IfHandleType *itf)
     {
         /* Manifestation has been completed */
         itf->DevStatus.State = nextState = DFU_STATE_IDLE;
-
     }
 
     /* Send the status data over EP0 */
