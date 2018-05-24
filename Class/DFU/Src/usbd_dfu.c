@@ -83,7 +83,7 @@ static const USBD_DFU_DescType dfu_desc = {
         .bNumEndpoints      = 0,
         .bInterfaceClass    = 0xFE, /* bInterfaceClass: Application Specific Class Code */
         .bInterfaceSubClass = 0x01, /* bInterfaceSubClass: Device Firmware Upgrade Code */
-        .bInterfaceProtocol = 0x01, /* bInterfaceProtocol: 1=runtime, 2=boot mode */
+        .bInterfaceProtocol = 0x02, /* bInterfaceProtocol: 1=runtime, 2=boot mode */
         .iInterface         = USBD_ISTR_INTERFACES,
     },
     .DFUFD = { /* DFU Functional Descriptor */
