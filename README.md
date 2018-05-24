@@ -15,11 +15,11 @@ with multiple independent interfaces.
 
 ### Supported device classes
 
-* Communications Device Class (CDC-ACM) specification version 1.10
-* Human Interface Device Class (HID) specification version 1.11 - with helper macros for report definition
-* Mass Storage Class Bulk-Only Transport (MSC-BOT) revision 1.0 with transparent SCSI command set
-* Device Firmware Upgrade Class (DFU) specification version 1.1
-  (or DFU STMicroelectronics Extension [(DFUSE)](www.st.com/resource/en/application_note/cd00264379.pdf) 1.1A
+* Communications Device Class (**CDC**-ACM) specification version 1.10
+* Human Interface Device Class (**HID**) specification version 1.11 - with helper macros for report definition
+* Mass Storage Class Bulk-Only Transport (**MSC**-BOT) revision 1.0 with transparent SCSI command set
+* Device Firmware Upgrade Class (**DFU**) specification version 1.1
+  (or DFU STMicroelectronics Extension [(DFUSE)](http://www.st.com/resource/en/application_note/cd00264379.pdf) 1.1A
   using `USBD_DFU_ST_EXTENSION` compile switch)
 
 ## Contents
@@ -57,6 +57,11 @@ be included by the driver.
 ### [DebugDongle](https://github.com/IntergatedCircuits/DebugDongleFW)
 
 A debug serial port with selectable output power and battery charging. Composite USB device with one CDC (serial port) and two HID interfaces (onboard sensors and power management).
+
+### [DfuBootloader](https://github.com/IntergatedCircuits/DfuBootloader)
+
+A generic USB device bootloader firmware for STM32 controllers. USB device with a single DFU interface
+which is mountable on both the bootloader's and the application's device stack.
 
 ## How to contribute
 
