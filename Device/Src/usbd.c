@@ -67,17 +67,18 @@ void USBD_Deinit(USBD_HandleType *dev)
 }
 
 /**
- * @brief Resets the USBD handle to the initial empty state.
+ * @brief Removes all mounted interfaces from the device.
  * @param dev: USB Device handle reference
  */
-void USBD_HandleVarReset(USBD_HandleType *dev)
+void USBD_UnmountInterfaces(USBD_HandleType *dev)
 {
     int i;
 
-    dev->Desc = NULL;
+    USBD_IfConfig(dev, 0);
+
     dev->IfCount = 0;
 
-    for (i = 0; i < USBD_MAX_EP_COUNT; i++)
+    for (i = 1; i < USBD_MAX_EP_COUNT; i++)
     {
         dev->EP.IN [i].MaxPacketSize = 0;
         dev->EP.IN [i].State = USB_EP_STATE_CLOSED;
