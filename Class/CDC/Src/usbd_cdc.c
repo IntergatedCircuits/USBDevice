@@ -251,6 +251,7 @@ static uint16_t cdc_getDesc(USBD_CDC_IfHandleType *itf, uint8_t ifNum, uint8_t *
 
     if (itf->Config.Protocol != 0)
     {
+        desc->IAD.bFunctionProtocol  = itf->Config.Protocol;
         desc->CID.bInterfaceProtocol = itf->Config.Protocol;
     }
 
