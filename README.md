@@ -19,7 +19,7 @@ with multiple independent interfaces.
 * Human Interface Device Class (**HID**) specification version 1.11 - with helper macros for report definition
 * Mass Storage Class Bulk-Only Transport (**MSC**-BOT) revision 1.0 with transparent SCSI command set
 * Device Firmware Upgrade Class (**DFU**) specification version 1.1
-  (or DFU STMicroelectronics Extension [(DFUSE)](http://www.st.com/resource/en/application_note/cd00264379.pdf) 1.1A
+  (or DFU STMicroelectronics Extension [(DFUSE)][DFUSE] 1.1A
   using `USBD_DFU_ST_EXTENSION` compile switch)
 
 ## Contents
@@ -33,10 +33,8 @@ The project consists of the followings:
 ## Platform support
 
 Currently the following hardware platforms are supported:
-- STMicroelectronics [STM32](http://www.st.com/en/microcontrollers/stm32-32-bit-arm-cortex-mcus.html)
-using the [STM32_XPD](https://github.com/IntergatedCircuits/STM32_XPD) peripheral drivers
-(a [standalone](https://github.com/IntergatedCircuits/USBDevice/wiki/Integration-for-STM32-without-XPD) 
-solution is also possible)
+- STMicroelectronics [STM32][STM32] using the [STM32_XPD][STM32_XPD] peripheral drivers
+(a [standalone][standalone] solution is also possible)
 
 ## Basis of operation
 
@@ -54,14 +52,23 @@ be included by the driver.
 
 ## Projects using USBDevice
 
-### [DebugDongle](https://github.com/IntergatedCircuits/DebugDongleFW)
+### [DfuBootloader][DfuBootloader]
 
-A debug serial port with selectable output power and battery charging. Composite USB device with one CDC (serial port) and two HID interfaces (onboard sensors and power management).
-
-### [DfuBootloader](https://github.com/IntergatedCircuits/DfuBootloader)
-
-A generic USB device bootloader firmware for STM32 controllers. USB device with a single DFU interface
+A generic USB device bootloader firmware for STM32 controllers.
+USB device with a single DFU interface
 which is mountable on both the bootloader's and the application's device stack.
+
+### [DebugDongle][DebugDongle]
+
+A debug serial port with selectable output power and battery charging.
+Composite USB device with one CDC (serial port),
+two HID interfaces (onboard sensors and power management)
+and the bootloader's DFU interface.
+
+### [CanDybug][CanDybug]
+
+A CAN bus gateway which uses a custom protocol over a USB serial port emulation.
+Composite USB device with CDC function and the bootloader's DFU interface.
 
 ## How to contribute
 
@@ -72,3 +79,11 @@ Improvements in the form of pull requests are also welcome.
 ## Authors
 
 * **Benedek Kupper** - [IntergatedCircuits](https://github.com/IntergatedCircuits)
+
+[CanDybug]: https://github.com/IntergatedCircuits/CanDybugFW
+[DebugDongle]: https://github.com/IntergatedCircuits/DebugDongleFW
+[DfuBootloader]: https://github.com/IntergatedCircuits/DfuBootloader
+[DFUSE]: http://www.st.com/resource/en/application_note/cd00264379.pdf
+[standalone]: https://github.com/IntergatedCircuits/USBDevice/wiki/Integration-for-STM32-without-XPD 
+[STM32]: http://www.st.com/en/microcontrollers/stm32-32-bit-arm-cortex-mcus.html
+[STM32_XPD]: https://github.com/IntergatedCircuits/STM32_XPD
