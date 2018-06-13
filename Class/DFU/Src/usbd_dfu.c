@@ -576,31 +576,33 @@ static USBD_ReturnType dfu_getStatus(USBD_DFU_IfHandleType *itf)
     USBD_DFU_StateType nextState = itf->DevStatus.State;
 
     /* Provide timeout values before starting download / manifestation */
-    if (((itf->DevStatus.State == DFU_STATE_DNLOAD_SYNC) ||
-         (itf->DevStatus.State == DFU_STATE_MANIFEST_SYNC)) &&
-         (itf->BlockLength > 0))
+    if ((itf->DevStatus.State == DFU_STATE_DNLOAD_SYNC) ||
+        (itf->DevStatus.State == DFU_STATE_MANIFEST_SYNC))
     {
-        if (DFU_APP(itf)->GetTimeout_ms != NULL)
+        if (itf->BlockLength > 0)
         {
-            /* Read the poll timeout */
-            itf->DevStatus.PollTimeout = DFU_APP(itf)->GetTimeout_ms(
-                    itf->Address,
-                    itf->BlockLength);
-        }
+            if (DFU_APP(itf)->GetTimeout_ms != NULL)
+            {
+                /* Read the poll timeout */
+                itf->DevStatus.PollTimeout = DFU_APP(itf)->GetTimeout_ms(
+                        itf->Address,
+                        itf->BlockLength);
+            }
 
-        /* DNLOAD_SYNC   -> DNLOAD_BUSY
-         * MANIFEST_SYNC -> MANIFEST */
-        nextState += 1;
-    }
-    else if (itf->DevStatus.State == DFU_STATE_DNLOAD_SYNC)
-    {
-        /* Download has been completed */
-        itf->DevStatus.State = nextState = DFU_STATE_DNLOAD_IDLE;
-    }
-    else
-    {
-        /* Manifestation has been completed */
-        itf->DevStatus.State = nextState = DFU_STATE_IDLE;
+            /* DNLOAD_SYNC   -> DNLOAD_BUSY
+             * MANIFEST_SYNC -> MANIFEST */
+            nextState += 1;
+        }
+        else if (itf->DevStatus.State == DFU_STATE_DNLOAD_SYNC)
+        {
+            /* Download has been completed */
+            itf->DevStatus.State = nextState = DFU_STATE_DNLOAD_IDLE;
+        }
+        else
+        {
+            /* Manifestation has been completed */
+            itf->DevStatus.State = nextState = DFU_STATE_IDLE;
+        }
     }
 
     /* Send the status data over EP0 */
