@@ -146,8 +146,8 @@ typedef struct
         uint16_t ID;            /*!< Product IDentifier (PID) */
         union {
             struct {
-                uint8_t Major;  /*!< Major version */
                 uint8_t Minor;  /*!< Minor version */
+                uint8_t Major;  /*!< Major version */
             };
             uint16_t bcd;       /*!< BCD-coded version number */
         }Version;               /*!< Version number */
