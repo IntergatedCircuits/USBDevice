@@ -151,7 +151,7 @@ typedef struct
     USBD_HID_ConfigType Config;     /*!< HID interface configuration */
 
     /* HID class internal context */
-    uint8_t InGetReport;            /*!< Indicates the call of GetReport() */
+    volatile uint8_t InGetReport;   /*!< Indicates the call of GetReport() */
     uint8_t IdleRate;               /*!< Contains the current idle rate
                                          @note Report ID separate idle rates are
                                          not readable with the current API. */
