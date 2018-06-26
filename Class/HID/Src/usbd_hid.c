@@ -337,7 +337,7 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                     /* If report IDs are used, the ID shall be placed
                      * on the first byte */
                     if (HID_APP(itf)->Report.IDs > 0)
-                    {   data++; }
+                    {   data += 4; }
 
                     retval = USBD_CtrlReceiveData(dev, data);
                     break;
@@ -402,19 +402,22 @@ static void hid_dataStage(USBD_HID_IfHandleType *itf)
 {
     USBD_HandleType *dev = itf->Base.Device;
 
-    if (dev->Setup.RequestType.Direction == USB_DIRECTION_OUT)
+    if ((dev->Setup.RequestType.b == 0xA1) &&
+        (dev->Setup.Request == HID_REQ_SET_REPORT))
     {
         uint16_t len = dev->Setup.Length;
+        uint8_t* data = dev->CtrlData;
 
         if (HID_APP(itf)->Report.IDs > 0)
         {
             /* First byte is report ID from setup */
-            dev->CtrlData[0] = (uint8_t)dev->Setup.Value;
+            data += 3;
+            data[0] = (uint8_t)dev->Setup.Value;
             len++;
         }
 
         /* Hand over received data to App */
-        USBD_SAFE_CALLBACK(HID_APP(itf)->SetReport, dev->CtrlData, len);
+        USBD_SAFE_CALLBACK(HID_APP(itf)->SetReport, data, len);
     }
 }
 
