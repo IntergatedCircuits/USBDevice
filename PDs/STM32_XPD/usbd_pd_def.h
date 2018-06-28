@@ -101,13 +101,22 @@ typedef enum {
 }USB_PHYType;
 
 #if defined(USB_OTG_GAHBCFG_DMAEN)
+
 #define USBD_PD_CONFIG_FIELDS                                       \
     USB_PHYType     PHY;      /*!< USB PHYsical layer selection */  \
     FunctionalState DMA;      /*!< DMA activation */
+
+/* DMA requires word aligned data */
+#define USBD_DATA_ALIGNMENT             4
+
 #else
+
 #define USBD_PD_CONFIG_FIELDS                                       \
     USB_PHYType     PHY;      /*!< USB PHYsical layer selection */
-#endif
+
+#define USBD_DATA_ALIGNMENT             1
+
+#endif /* USB_OTG_GAHBCFG_DMAEN */
 
 #define USBD_PD_DEV_FIELDS                                          \
     USB_OTG_TypeDef * Inst;   /*!< The address of the peripheral */ \
@@ -118,9 +127,6 @@ typedef enum {
     XPD_HandleCallbackType Resume;      /*!< Resume request */      \
     XPD_HandleCallbackType SOF;         /*!< Start Of Frame */      \
     }Callbacks;                         /*   Handle Callbacks */
-
-/* DMA requires word aligned data */
-#define USBD_DATA_ALIGNMENT             4
 
 #endif
 
