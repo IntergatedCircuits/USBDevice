@@ -39,7 +39,7 @@ static const USB_LangIdDescType usbd_langIdDesc __align(USBD_DATA_ALIGNMENT) = {
 };
 
 /** @brief USB Standard Composite Device Descriptor */
-static const USB_DeviceDescType usbd_deviceDesc __align(USBD_DATA_ALIGNMENT) = {
+static const USB_DeviceDescType usbd_deviceDesc = {
     .bLength            = sizeof(USB_DeviceDescType),
     .bDescriptorType    = USB_DESC_TYPE_DEVICE,
     .bcdUSB             = USBD_SPEC_BCD,
