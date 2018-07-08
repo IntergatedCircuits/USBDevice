@@ -12,6 +12,7 @@ with multiple independent interfaces.
 * All USB descriptors are created internally (no need for user definition)
 * Code size optimized for resource-constrained systems
 * Platform-independent stack
+* A console interface template provides zero-effort implementation for standard I/O through a CDC serial port
 
 ### Supported device classes
 
