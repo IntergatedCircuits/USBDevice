@@ -234,7 +234,7 @@ static void hid_init(USBD_HID_IfHandleType *itf)
 #endif /* (USBD_HID_OUT_SUPPORT == 1) */
 
     /* Initialize state */
-    itf->InGetReport = 0;
+    itf->Request = 0;
     itf->IdleRate = itf->Config.InEp.Interval / 4;
 
     /* Initialize application */
@@ -312,20 +312,21 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
 
         case USB_REQ_TYPE_CLASS:
         {
+            uint8_t reportId = (uint8_t)dev->Setup.Value;
+
             switch (dev->Setup.Request)
             {
                 /* HID report IN */
                 case HID_REQ_GET_REPORT:
                 {
-                    uint8_t reportId = (uint8_t)dev->Setup.Value;
-
                     /* Set flag, invoke callback which should provide data
                      * via USBD_HID_ReportIn() */
-                    itf->InGetReport = USBD_E_BUSY;
+                    itf->Request = dev->Setup.Value >> 8;
                     USBD_SAFE_CALLBACK(HID_APP(itf)->GetReport, reportId);
 
-                    retval = itf->InGetReport;
-                    itf->InGetReport = USBD_E_OK;
+                    if (itf->Request == 0)
+                    {   retval = USBD_E_OK; }
+                    itf->Request = 0;
                     break;
                 }
 
@@ -336,7 +337,7 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
 
                     /* If report IDs are used, the ID shall be placed
                      * on the first byte */
-                    if (HID_APP(itf)->Report.IDs > 0)
+                    if (reportId != 0)
                     {   data += 4; }
 
                     retval = USBD_CtrlReceiveData(dev, data);
@@ -359,7 +360,6 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                      * x - record ID x only */
                     uint16_t idleRate_ms = HID_IDLE_RATE_INDEFINITE;
                     uint8_t idleRate = dev->Setup.Value >> 8;
-                    uint8_t reportId = dev->Setup.Value;
 
                     /* Save only global config */
                     if (reportId == 0)
@@ -402,13 +402,12 @@ static void hid_dataStage(USBD_HID_IfHandleType *itf)
 {
     USBD_HandleType *dev = itf->Base.Device;
 
-    if ((dev->Setup.RequestType.b == 0xA1) &&
-        (dev->Setup.Request == HID_REQ_SET_REPORT))
+    if (dev->Setup.Request == HID_REQ_SET_REPORT)
     {
         uint16_t len = dev->Setup.Length;
         uint8_t* data = dev->CtrlData;
 
-        if (HID_APP(itf)->Report.IDs > 0)
+        if ((dev->Setup.Value & 0xFF) != 0)
         {
             /* First byte is report ID from setup */
             data += 3;
@@ -416,8 +415,10 @@ static void hid_dataStage(USBD_HID_IfHandleType *itf)
             len++;
         }
 
-        /* Hand over received data to App */
+        /* Set ctrl context and hand over received data to App */
+        itf->Request = dev->Setup.Value >> 8;
         USBD_SAFE_CALLBACK(HID_APP(itf)->SetReport, data, len);
+        itf->Request = 0;
     }
 }
 
@@ -501,13 +502,27 @@ USBD_ReturnType USBD_HID_ReportIn(USBD_HID_IfHandleType *itf, uint8_t *data, uin
 {
     USBD_ReturnType retval;
     USBD_HandleType *dev = itf->Base.Device;
+    uint8_t reportId = (uint8_t)dev->Setup.Value;
 
     /* If the function is invoked in the EP0 GetReport() callback context,
-     * use EP0 to transfer the report */
-    if (itf->InGetReport != USBD_E_OK)
+     * and the report ID matches, use EP0 to transfer the report */
+    if ((itf->Request != 0) &&
+        ((reportId == 0) || (reportId == data[0])))
     {
+        /* Report ID is not transmitted over control endpoint data */
+        if (reportId != 0)
+        {
+            length--;
+#if (USBD_DATA_ALIGNMENT == 1)
+            data++;
+#else
+            /* Copy to properly aligned buffer */
+            memcpy(dev->CtrlData, &data[1], length);
+            data = dev->CtrlData;
+#endif
+        }
         retval = USBD_CtrlSendData(dev, data, length);
-        itf->InGetReport = USBD_E_OK;
+        itf->Request = 0;
     }
     else
     {

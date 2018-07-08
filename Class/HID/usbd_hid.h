@@ -108,7 +108,7 @@ typedef struct {
 typedef struct {
     const uint8_t*  Desc;   /*!< Pointer to the report descriptor */
     uint16_t        Length; /*!< Byte size of the report descriptor */
-    uint8_t         IDs;    /*!< Specifies whether Report IDs are used */
+    uint8_t         IDs;    /*!< unused */
 }USBD_HID_ReportDescType;
 
 
@@ -151,10 +151,11 @@ typedef struct
     USBD_HID_ConfigType Config;     /*!< HID interface configuration */
 
     /* HID class internal context */
-    volatile uint8_t InGetReport;   /*!< Indicates the call of GetReport() */
     uint8_t IdleRate;               /*!< Contains the current idle rate
                                          @note Report ID separate idle rates are
                                          not readable with the current API. */
+    volatile uint8_t Request;       /*!< Holds the @ref USBD_HID_ReportType during
+                                         control report transfers, otherwise it is 0 */
 }USBD_HID_IfHandleType;
 
 /** @} */
