@@ -322,7 +322,7 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                     /* Set flag, invoke callback which should provide data
                      * via USBD_HID_ReportIn() */
                     itf->Request = dev->Setup.Value >> 8;
-                    USBD_SAFE_CALLBACK(HID_APP(itf)->GetReport, reportId);
+                    USBD_SAFE_CALLBACK(HID_APP(itf)->GetReport, itf->Request, reportId);
 
                     if (itf->Request == 0)
                     {   retval = USBD_E_OK; }
@@ -333,21 +333,15 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                 /* HID report OUT */
                 case HID_REQ_SET_REPORT:
                 {
-                    uint8_t* data = dev->CtrlData;
-
-                    /* If report IDs are used, the ID shall be placed
-                     * on the first byte */
-                    if (reportId != 0)
-                    {   data += 4; }
-
-                    retval = USBD_CtrlReceiveData(dev, data);
+                    retval = USBD_CtrlReceiveData(dev, dev->CtrlData);
                     break;
                 }
 
                 /* Send 1 byte idle rate */
                 case HID_REQ_GET_IDLE:
+                    dev->CtrlData[0] = itf->IdleRate;
                     retval = USBD_CtrlSendData(dev,
-                            &itf->IdleRate, sizeof(itf->IdleRate));
+                            dev->CtrlData, sizeof(itf->IdleRate));
                     break;
 
                 case HID_REQ_SET_IDLE:
@@ -404,20 +398,9 @@ static void hid_dataStage(USBD_HID_IfHandleType *itf)
 
     if (dev->Setup.Request == HID_REQ_SET_REPORT)
     {
-        uint16_t len = dev->Setup.Length;
-        uint8_t* data = dev->CtrlData;
-
-        if ((dev->Setup.Value & 0xFF) != 0)
-        {
-            /* First byte is report ID from setup */
-            data += 3;
-            data[0] = (uint8_t)dev->Setup.Value;
-            len++;
-        }
-
-        /* Set ctrl context and hand over received data to App */
         itf->Request = dev->Setup.Value >> 8;
-        USBD_SAFE_CALLBACK(HID_APP(itf)->SetReport, data, len);
+        USBD_SAFE_CALLBACK(HID_APP(itf)->SetReport, itf->Request,
+                dev->CtrlData, dev->Setup.Length);
         itf->Request = 0;
     }
 }
@@ -430,7 +413,7 @@ static void hid_dataStage(USBD_HID_IfHandleType *itf)
  */
 static void hid_outData(USBD_HID_IfHandleType *itf, USBD_EpHandleType *ep)
 {
-    USBD_SAFE_CALLBACK(HID_APP(itf)->SetReport,
+    USBD_SAFE_CALLBACK(HID_APP(itf)->SetReport, HID_REPORT_OUTPUT,
             ep->Transfer.Data - ep->Transfer.Length, ep->Transfer.Length);
 }
 #endif /* (USBD_HID_OUT_SUPPORT == 1) */
@@ -509,18 +492,6 @@ USBD_ReturnType USBD_HID_ReportIn(USBD_HID_IfHandleType *itf, uint8_t *data, uin
     if ((itf->Request != 0) &&
         ((reportId == 0) || (reportId == data[0])))
     {
-        /* Report ID is not transmitted over control endpoint data */
-        if (reportId != 0)
-        {
-            length--;
-#if (USBD_DATA_ALIGNMENT == 1)
-            data++;
-#else
-            /* Copy to properly aligned buffer */
-            memcpy(dev->CtrlData, &data[1], length);
-            data = dev->CtrlData;
-#endif
-        }
         retval = USBD_CtrlSendData(dev, data, length);
         itf->Request = 0;
     }

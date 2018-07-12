@@ -121,10 +121,12 @@ typedef struct
 
     void (*Deinit)      (void); /*!< Shutdown request */
 
-    void (*SetReport)   (uint8_t * data,
+    void (*SetReport)   (USBD_HID_ReportType type,
+                         uint8_t * data,
                          uint16_t length);  /*!< Process a received report */
 
-    void (*GetReport)   (uint8_t reportId); /*!< A report transmission is requested */
+    void (*GetReport)   (USBD_HID_ReportType type,
+                         uint8_t reportId); /*!< A report transmission is requested */
 
     void (*SetIdle)     (uint16_t idleRate_ms,
                          uint8_t reportId); /*!< Limit the IN reporting frequency */
