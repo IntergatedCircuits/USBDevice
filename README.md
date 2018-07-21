@@ -28,7 +28,7 @@ with multiple independent interfaces.
 The project consists of the followings:
 1. The USB 2.0 device framework is located in the **Device** folder.
 2. Common USB classes are implemented as part of the project, under the **Class** folder.
-3. The *Templates* folder contains example files which are mandatory for the library's functionality.
+3. The *Templates* folder contains `usbd_config.h` configuration file and various example files.
 4. The *Doc* folder contains a prepared *doxyfile* for Doxygen documentation generation.
 
 ## Platform support
