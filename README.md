@@ -53,7 +53,7 @@ be included by the driver.
 
 ## Projects using USBDevice
 
-### [DfuBootloader][DfuBootloader]
+### [DfuBootloader][DfuBootloader] [![Build Status](https://travis-ci.org/IntergatedCircuits/DfuBootloader.svg?branch=master)](https://travis-ci.org/IntergatedCircuits/DfuBootloader)
 
 A generic USB device bootloader firmware for STM32 controllers.
 USB device with a single DFU interface
