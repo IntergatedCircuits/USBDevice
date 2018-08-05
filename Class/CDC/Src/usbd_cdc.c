@@ -177,7 +177,6 @@ static const USBD_ClassType cdc_cbks = {
     .GetDescriptor  = (USBD_IfDescCbkType)  cdc_getDesc,
 #endif
     .GetString      = (USBD_IfStrCbkType)   cdc_getString,
-    .Init           = (USBD_IfCbkType)      cdc_init,
     .Deinit         = (USBD_IfCbkType)      cdc_deinit,
     .SetupStage     = (USBD_IfSetupCbkType) cdc_setupStage,
     .DataStage      = (USBD_IfCbkType)      cdc_dataStage,
@@ -323,7 +322,7 @@ static void cdc_init(USBD_CDC_IfHandleType *itf)
 #endif
 
     /* Initialize application */
-    USBD_SAFE_CALLBACK(CDC_APP(itf)->Init, );
+    USBD_SAFE_CALLBACK(CDC_APP(itf)->Open, &itf->LineCoding);
 }
 
 /**
@@ -333,23 +332,27 @@ static void cdc_init(USBD_CDC_IfHandleType *itf)
  */
 static void cdc_deinit(USBD_CDC_IfHandleType *itf)
 {
-    USBD_HandleType *dev = itf->Base.Device;
+    if (itf->LineCoding.DataBits != 0)
+    {
+        USBD_HandleType *dev = itf->Base.Device;
 
-    /* Close EPs */
-    USBD_EpClose(dev, itf->Config.InEpNum);
-    USBD_EpClose(dev, itf->Config.OutEpNum);
+        /* Close EPs */
+        USBD_EpClose(dev, itf->Config.InEpNum);
+        USBD_EpClose(dev, itf->Config.OutEpNum);
 #if (USBD_CDC_NOTEP_USED == 1)
-    USBD_EpClose(dev, itf->Config.NotEpNum);
+        USBD_EpClose(dev, itf->Config.NotEpNum);
 #endif
 
-    /* Deinitialize application */
-    USBD_SAFE_CALLBACK(CDC_APP(itf)->Deinit, );
+        /* Deinitialize application */
+        USBD_SAFE_CALLBACK(CDC_APP(itf)->Close, );
 
 #if (USBD_HS_SUPPORT == 1)
-    /* Reset the endpoint MPS to the desired size */
-    dev->EP.IN [itf->Config.InEpNum  & 0xF].MaxPacketSize = 
-    dev->EP.OUT[itf->Config.OutEpNum      ].MaxPacketSize = CDC_DATA_PACKET_SIZE;
+        /* Reset the endpoint MPS to the desired size */
+        dev->EP.IN [itf->Config.InEpNum  & 0xF].MaxPacketSize =
+        dev->EP.OUT[itf->Config.OutEpNum      ].MaxPacketSize = CDC_DATA_PACKET_SIZE;
 #endif
+        itf->LineCoding.DataBits = 0;
+    }
 }
 
 /**
@@ -366,29 +369,55 @@ static USBD_ReturnType cdc_setupStage(USBD_CDC_IfHandleType *itf)
     {
         case USB_REQ_TYPE_CLASS:
         {
-            /* Data stage is upcoming */
-            if (dev->Setup.Length > 0)
+            switch (dev->Setup.Request)
             {
-                if (dev->Setup.RequestType.Direction == USB_DIRECTION_IN)
-                {
-                    /* Get the data to send */
-                    CDC_APP(itf)->Control(&dev->Setup, dev->CtrlData);
+                case CDC_REQ_SET_LINE_CODING:
+                    /* Reset the data interface */
+                    cdc_deinit(itf);
 
-                    retval = USBD_CtrlSendData(dev, dev->CtrlData, dev->Setup.Length);
-                }
-                else
-                {
-                    /* Receive Control data first */
-                    retval = USBD_CtrlReceiveData(dev, dev->CtrlData);
-                }
-            }
-            else
-            {
-                /* Simply pass the request with wValue */
-                CDC_APP(itf)->Control(&dev->Setup, (uint8_t*) &dev->Setup.Value);
+                    retval = USBD_CtrlReceiveData(dev, (uint8_t*) &itf->LineCoding);
+                    break;
 
-                /* Accept all class requests */
-                retval = USBD_E_OK;
+                case CDC_REQ_GET_LINE_CODING:
+                    retval = USBD_CtrlSendData(dev,
+                            (const uint8_t*) &itf->LineCoding,
+                            sizeof(itf->LineCoding));
+                    break;
+
+                default:
+#if (USBD_CDC_CONTROL == 1)
+                    if (CDC_APP(itf)->Control != NULL)
+                    {
+                        /* Data stage is upcoming */
+                        if (dev->Setup.Length > 0)
+                        {
+                            if (dev->Setup.RequestType.Direction == USB_DIRECTION_IN)
+                            {
+                                /* Get the data to send */
+                                CDC_APP(itf)->Control(&dev->Setup, dev->CtrlData);
+
+                                retval = USBD_CtrlSendData(dev,
+                                        dev->CtrlData,
+                                        dev->Setup.Length);
+                            }
+                            else
+                            {
+                                /* Receive Control data first */
+                                retval = USBD_CtrlReceiveData(dev, dev->CtrlData);
+                            }
+                        }
+                        else
+                        {
+                            /* Simply pass the request with wValue */
+                            CDC_APP(itf)->Control(&dev->Setup,
+                                    (uint8_t*) &dev->Setup.Value);
+
+                            /* Accept all class requests */
+                            retval = USBD_E_OK;
+                        }
+                    }
+#endif /* USBD_CDC_CONTROL */
+                    break;
             }
             break;
         }
@@ -410,8 +439,17 @@ static void cdc_dataStage(USBD_CDC_IfHandleType *itf)
 
     if (dev->Setup.RequestType.Direction == USB_DIRECTION_OUT)
     {
-        /* Hand over received data to App */
-        CDC_APP(itf)->Control(&dev->Setup, dev->CtrlData);
+        if (dev->Setup.Request == CDC_REQ_SET_LINE_CODING)
+        {
+            cdc_init(itf);
+        }
+#if (USBD_CDC_CONTROL == 1)
+        else
+        {
+            /* Hand over received data to App */
+            CDC_APP(itf)->Control(&dev->Setup, dev->CtrlData);
+        }
+#endif /* USBD_CDC_CONTROL */
     }
 }
 

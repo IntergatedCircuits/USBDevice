@@ -48,8 +48,7 @@ extern int32_t errno;
 /** @defgroup console_if USB serial console interface template
  * @{ */
 
-static void console_if_init         (void);
-static void console_if_ctrl         (USB_SetupRequestType * req, uint8_t* pbuf);
+static void console_if_open         (USBD_CDC_LineCodingType * lc);
 
 #if (PRINT_BUFFER_SIZE > 0)
 static void console_if_in_cmplt     (uint8_t * pbuf, uint16_t length);
@@ -65,10 +64,8 @@ QUEUE_DEF(console_if_OUT, uint8_t, SCAN_BUFFER_SIZE);
 
 static const USBD_CDC_AppType console_app =
 {
-    .Name           = "Serial port as debug console",
-    .Init           = console_if_init,
-    .Deinit         = console_if_init,
-    .Control        = console_if_ctrl,
+    .Name           = "Serial port as standard I/O",
+    .Open           = console_if_open,
 #if (SCAN_BUFFER_SIZE > 0)
     .Received       = console_if_out_cmplt,
 #endif
@@ -83,28 +80,14 @@ USBD_CDC_IfHandleType _console_if = {
     .Config.Protocol = 0xFF, /* Vendor-specific protocol */
 }, *const console_if = &_console_if;
 
-USBD_CDC_LineCodingType line_coding = {
-        .DTERate  = ~0, /* init to invalid in order to detect serial port connection */
-        .DataBits = 8,
-};
-
-static void console_if_init(void)
+static void console_if_open(USBD_CDC_LineCodingType * lc)
 {
-    line_coding.DTERate = ~0;
 #if (PRINT_BUFFER_SIZE > 0)
     console_if_IN.head = console_if_IN.tail = 0;
 #endif
 #if (SCAN_BUFFER_SIZE > 0)
     console_if_OUT.head = console_if_OUT.tail = 0;
 #endif
-}
-
-static void console_if_ctrl(USB_SetupRequestType * req, uint8_t* pbuf)
-{
-    if (req->Request == CDC_REQ_GET_LINE_CODING)
-    {   memcpy(pbuf, &line_coding, sizeof(line_coding)); }
-    else if (req->Request == CDC_REQ_SET_LINE_CODING)
-    {   memcpy(&line_coding, pbuf, sizeof(line_coding)); }
 }
 
 #if (PRINT_BUFFER_SIZE > 0)
@@ -145,7 +128,7 @@ static void console_if_send(void)
 int _write(int32_t file, uint8_t *ptr, int32_t len)
 {
     int retval = -1;
-    if (line_coding.DTERate == (~0))
+    if (console_if->LineCoding.DataBits == 0)
     {
         errno = EIO;
     }
@@ -194,7 +177,7 @@ static void console_if_recv(void)
 int _read(int32_t file, uint8_t *ptr, int32_t len)
 {
     int retval = -1;
-    if (line_coding.DTERate == (~0))
+    if (console_if->LineCoding.DataBits == 0)
     {
         errno = EIO;
     }

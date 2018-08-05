@@ -82,12 +82,14 @@ typedef struct
 {
     const char* Name;           /*!< String description of the application */
 
-    void (*Init)        (void); /*!< Initialization request */
+    void (*Open)        (USBD_CDC_LineCodingType * coding); /*!< Open port */
 
-    void (*Deinit)      (void); /*!< Shutdown request */
+    void (*Close)       (void); /*!< Close port */
 
+#if (USBD_CDC_CONTROL == 1)
     void (*Control)     (USB_SetupRequestType * req,
                          uint8_t * data);   /*!< Interface interaction through the control channel */
+#endif /* USBD_CDC_CONTROL */
 
     void (*Received)    (uint8_t * data,
                          uint16_t length);  /*!< Received data available */
@@ -112,9 +114,10 @@ typedef struct
 /** @brief CDC class interface structure */
 typedef struct
 {
-    USBD_IfHandleType Base;         /*!< Class-independent interface base */
-    const USBD_CDC_AppType* App;    /*!< CDC application reference */
-    USBD_CDC_ConfigType Config;     /*!< CDC interface configuration */
+    USBD_IfHandleType Base;             /*!< Class-independent interface base */
+    const USBD_CDC_AppType* App;        /*!< CDC application reference */
+    USBD_CDC_ConfigType Config;         /*!< CDC interface configuration */
+    USBD_CDC_LineCodingType LineCoding; /*!< CDC line coding */
 }USBD_CDC_IfHandleType;
 
 /** @} */
