@@ -100,7 +100,7 @@ typedef enum {
     USB_PHY_EMBEDDED_HS = 2, /*!< High-Speed PHY embedded in chip */
 }USB_PHYType;
 
-#if defined(USB_OTG_GAHBCFG_DMAEN)
+#if defined(USB_OTG_HS)
 
 #define USBD_PD_CONFIG_FIELDS                                       \
     USB_PHYType     PHY;      /*!< USB PHYsical layer selection */  \
@@ -116,7 +116,7 @@ typedef enum {
 
 #define USBD_DATA_ALIGNMENT             1
 
-#endif /* USB_OTG_GAHBCFG_DMAEN */
+#endif /* USB_OTG_HS */
 
 #define USBD_PD_DEV_FIELDS                                          \
     USB_OTG_TypeDef * Inst;   /*!< The address of the peripheral */ \
