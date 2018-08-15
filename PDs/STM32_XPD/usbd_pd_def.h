@@ -44,7 +44,7 @@ extern "C"
 
 /* Link Power Management support by peripheral */
 #define USBD_LPM_SUPPORT                \
-    (defined(USB_OTG_GLPMCFG_LPMEN) || defined(USB_LPMCSR_LMPEN))
+    (defined(USB_OTG_GLPMCFG_LPMEN) || defined(USB_LPMCSR_LPMEN))
 
 /* USB cores set the address after the SetAddress request is completed,
  * while USB_OTG cores need the new address as soon as available */
