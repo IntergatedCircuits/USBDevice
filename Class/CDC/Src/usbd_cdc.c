@@ -28,7 +28,7 @@
 #endif
 
 #if (USBD_CDC_NOTEP_USED == 1)
-#define CDC_NOT_INTR_INTERVAL                       1
+#define CDC_NOT_INTR_INTERVAL                       20
 #else
 #define CDC_NOT_INTR_INTERVAL                       0xFF
 #endif
@@ -39,11 +39,7 @@
 #define CDC_DATA_PACKET_SIZE                        USB_EP_BULK_FS_MPS
 #endif
 
-#if (USBD_CDC_ALTSETTINGS != 0)
-#define CDC_APP(ITF)    ((USBD_CDC_AppType*)(&(ITF)->App[(ITF)->Base.AltSelector]))
-#else
 #define CDC_APP(ITF)    ((USBD_CDC_AppType*)((ITF)->App))
-#endif
 
 typedef struct
 {
@@ -120,14 +116,19 @@ static const USBD_CDC_DescType cdc_desc = {
         .bFunctionLength    = sizeof(cdc_desc.CMFD),
         .bDescriptorType    = 0x24, /* bDescriptorType: CS_INTERFACE */
         .bDescriptorSubtype = 0x01, /* bDescriptorSubtype: Call Management Func Desc */
-        .bmCapabilities     = 0x00, /* bmCapabilities: D0+D1 */
+        .bmCapabilities     = 0x00, /* bmCapabilities */
         .bDataInterface     = 1,
     },
     .ACMFD = { /* ACM Functional Descriptor */
         .bFunctionLength    = sizeof(cdc_desc.ACMFD),
         .bDescriptorType    = 0x24, /* bDescriptorType: CS_INTERFACE */
         .bDescriptorSubtype = 0x02, /* bDescriptorSubtype: Abstract Control Management desc */
-        .bmCapabilities     = 0x02, /* bmCapabilities */
+        .bmCapabilities     = 0x02, /* bmCapabilities:
+                                        D3: NETWORK_CONNECTION notification support
+                                        D2: SEND_BREAK request support
+                                        D1: SET_LINE_CODING, SET_CONTROL_LINE_STATE, GET_LINE_CODING requests
+                                            and SERIAL_STATE notification support
+                                        D0: SET_COMM_FEATURE, CLEAR_COMM_FEATURE, and GET_COMM_FEATURE request support */
     },
     .UFD = { /* Union Functional Descriptor */
         .bFunctionLength    = sizeof(cdc_desc.UFD),
@@ -157,9 +158,6 @@ static const USBD_CDC_DescType cdc_desc = {
     },
 };
 
-#if (USBD_CDC_ALTSETTINGS != 0)
-static uint16_t         cdc_getAltsDesc (USBD_CDC_IfHandleType *itf, uint8_t ifNum, uint8_t * dest);
-#endif
 static uint16_t         cdc_getDesc     (USBD_CDC_IfHandleType *itf, uint8_t ifNum, uint8_t * dest);
 static const char *     cdc_getString   (USBD_CDC_IfHandleType *itf, uint8_t intNum);
 static void             cdc_init        (USBD_CDC_IfHandleType *itf);
@@ -171,11 +169,7 @@ static void             cdc_inData      (USBD_CDC_IfHandleType *itf, USBD_EpHand
 
 /* CDC interface class callbacks structure */
 static const USBD_ClassType cdc_cbks = {
-#if (USBD_CDC_ALTSETTINGS != 0)
-    .GetDescriptor  = (USBD_IfDescCbkType)  cdc_getAltsDesc,
-#else
     .GetDescriptor  = (USBD_IfDescCbkType)  cdc_getDesc,
-#endif
     .GetString      = (USBD_IfStrCbkType)   cdc_getString,
     .Deinit         = (USBD_IfCbkType)      cdc_deinit,
     .SetupStage     = (USBD_IfSetupCbkType) cdc_setupStage,
@@ -187,36 +181,6 @@ static const USBD_ClassType cdc_cbks = {
 /** @ingroup USBD_CDC
  * @defgroup USBD_CDC_Private_Functions CDC Private Functions
  * @{ */
-
-#if (USBD_CDC_ALTSETTINGS != 0)
-/**
- * @brief Copies the interface descriptor to the destination buffer.
- * @param itf: reference of the CDC interface
- * @param ifNum: the index of the current interface in the device
- * @param dest: the destination buffer
- * @return Length of the copied descriptor
- */
-static uint16_t cdc_getAltsDesc(USBD_CDC_IfHandleType *itf, uint8_t ifNum, uint8_t * dest)
-{
-    uint8_t as;
-    uint16_t len = 0;
-
-    /* Copy the descriptors many times, add alternate setting indexes */
-    for (as = 0; as < itf->Base.AltCount; as++)
-    {
-        USBD_CDC_DescType *desc = (USBD_CDC_DescType*)&dest[len];
-        len += cdc_getDesc(itf, ifNum, &dest[len]);
-
-        desc->CID.bAlternateSetting = as;
-        desc->DID.bAlternateSetting = as;
-
-        desc->IAD.iFunction  = USBD_IIF_INDEX(ifNum, as);
-        desc->CID.iInterface = USBD_IIF_INDEX(ifNum, as);
-        desc->DID.iInterface = USBD_IIF_INDEX(ifNum, as);
-    }
-    return len;
-}
-#endif /* (USBD_CDC_ALTSETTINGS != 0) */
 
 /**
  * @brief Copies the interface descriptor to the destination buffer.
@@ -247,6 +211,11 @@ static uint16_t cdc_getDesc(USBD_CDC_IfHandleType *itf, uint8_t ifNum, uint8_t *
     desc->CID.iInterface = USBD_IIF_INDEX(ifNum, 0);
     desc->DID.iInterface = USBD_IIF_INDEX(ifNum, 0);
 #endif /* (USBD_MAX_IF_COUNT > 2) */
+
+#if (USBD_CDC_BREAK_SUPPORT == 1)
+    if (CDC_APP(itf)->Break != NULL)
+    {   desc->ACMFD.bmCapabilities |= 4; }
+#endif /* USBD_CDC_BREAK_SUPPORT */
 
     if (itf->Config.Protocol != 0)
     {
@@ -279,18 +248,7 @@ static uint16_t cdc_getDesc(USBD_CDC_IfHandleType *itf, uint8_t ifNum, uint8_t *
  */
 static const char* cdc_getString(USBD_CDC_IfHandleType *itf, uint8_t intNum)
 {
-#if (USBD_CDC_ALTSETTINGS != 0)
-    if (intNum < itf->Base.AltCount)
-    {
-        return itf->App[intNum].Name;
-    }
-    else
-    {
-        return NULL;
-    }
-#else
     return itf->App->Name;
-#endif
 }
 
 /**
@@ -340,7 +298,8 @@ static void cdc_deinit(USBD_CDC_IfHandleType *itf)
         USBD_EpClose(dev, itf->Config.InEpNum);
         USBD_EpClose(dev, itf->Config.OutEpNum);
 #if (USBD_CDC_NOTEP_USED == 1)
-        USBD_EpClose(dev, itf->Config.NotEpNum);
+        if (itf->Config.NotEpNum < USBD_MAX_EP_COUNT)
+        {   USBD_EpClose(dev, itf->Config.NotEpNum); }
 #endif
 
         /* Deinitialize application */
@@ -384,39 +343,18 @@ static USBD_ReturnType cdc_setupStage(USBD_CDC_IfHandleType *itf)
                             sizeof(itf->LineCoding));
                     break;
 
-                default:
-#if (USBD_CDC_CONTROL == 1)
-                    if (CDC_APP(itf)->Control != NULL)
+#if (USBD_CDC_BREAK_SUPPORT == 1)
+                case CDC_REQ_SEND_BREAK:
+                    /* Simply pass the request with wValue */
+                    if (CDC_APP(itf)->Break != NULL)
                     {
-                        /* Data stage is upcoming */
-                        if (dev->Setup.Length > 0)
-                        {
-                            if (dev->Setup.RequestType.Direction == USB_DIRECTION_IN)
-                            {
-                                /* Get the data to send */
-                                CDC_APP(itf)->Control(&dev->Setup, dev->CtrlData);
-
-                                retval = USBD_CtrlSendData(dev,
-                                        dev->CtrlData,
-                                        dev->Setup.Length);
-                            }
-                            else
-                            {
-                                /* Receive Control data first */
-                                retval = USBD_CtrlReceiveData(dev, dev->CtrlData);
-                            }
-                        }
-                        else
-                        {
-                            /* Simply pass the request with wValue */
-                            CDC_APP(itf)->Control(&dev->Setup,
-                                    (uint8_t*) &dev->Setup.Value);
-
-                            /* Accept all class requests */
-                            retval = USBD_E_OK;
-                        }
+                        CDC_APP(itf)->Break(dev->Setup.Value);
+                        retval = USBD_E_OK;
                     }
-#endif /* USBD_CDC_CONTROL */
+                    break;
+#endif /* USBD_CDC_BREAK_SUPPORT */
+
+                default:
                     break;
             }
             break;
@@ -437,19 +375,11 @@ static void cdc_dataStage(USBD_CDC_IfHandleType *itf)
 {
     USBD_HandleType *dev = itf->Base.Device;
 
-    if (dev->Setup.RequestType.Direction == USB_DIRECTION_OUT)
     {
         if (dev->Setup.Request == CDC_REQ_SET_LINE_CODING)
         {
             cdc_init(itf);
         }
-#if (USBD_CDC_CONTROL == 1)
-        else
-        {
-            /* Hand over received data to App */
-            CDC_APP(itf)->Control(&dev->Setup, dev->CtrlData);
-        }
-#endif /* USBD_CDC_CONTROL */
     }
 }
 
@@ -512,10 +442,13 @@ USBD_ReturnType USBD_CDC_MountInterface(USBD_CDC_IfHandleType *itf, USBD_HandleT
             USBD_EpHandleType *ep;
 
 #if (USBD_CDC_NOTEP_USED == 1)
-            ep = &dev->EP.IN [CDC_APP(itf)->NotEpNum & 0xF];
-            ep->Type            = USB_EP_TYPE_INTERRUPT;
-            ep->MaxPacketSize   = CDC_NOT_PACKET_SIZE;
-            ep->IfNum           = dev->IfCount;
+            if (itf->Config.NotEpNum < USBD_MAX_EP_COUNT)
+            {
+                ep = &dev->EP.IN [CDC_APP(itf)->NotEpNum & 0xF];
+                ep->Type            = USB_EP_TYPE_INTERRUPT;
+                ep->MaxPacketSize   = CDC_NOT_PACKET_SIZE;
+                ep->IfNum           = dev->IfCount;
+            }
 #endif
 
             ep = &dev->EP.IN [itf->Config.InEpNum  & 0xF];
@@ -564,5 +497,26 @@ USBD_ReturnType USBD_CDC_Receive(USBD_CDC_IfHandleType *itf, uint8_t *data, uint
 {
     return USBD_EpReceive(itf->Base.Device, itf->Config.OutEpNum, data, length);
 }
+
+#if (USBD_CDC_NOTEP_USED == 1)
+/**
+ * @brief Sends a device notification to the host.
+ * @param itf: reference of the CDC interface
+ * @param notice: pointer to the notification message to send
+ * @return BUSY if the previous transfer is still ongoing, OK if successful
+ */
+USBD_ReturnType USBD_CDC_Notify(USBD_CDC_IfHandleType *itf, USBD_CDC_NotifyMessageType *notice)
+{
+    USBD_ReturnType retval = USBD_E_ERROR;
+
+    if (itf->Config.NotEpNum < USBD_MAX_EP_COUNT)
+    {
+        uint16_t length = sizeof(notice->Header) + notice->Header->Length;
+        retval = USBD_EpSend(itf->Base.Device, itf->Config.NotEpNum, (const uint8_t*)notice, length);
+    }
+
+    return retval;
+}
+#endif
 
 /** @} */
