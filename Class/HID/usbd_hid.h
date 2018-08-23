@@ -98,9 +98,9 @@ typedef enum
 
 /** @brief HID endpoint setup structure */
 typedef struct {
-    uint8_t  Num;       /*!< Endpoint address */
-    uint8_t  Interval;  /*!< Endpoint frame interval */
-    uint16_t Size;      /*!< Endpoint max packet size */
+    uint8_t  Num;           /*!< Endpoint address */
+    uint8_t  Interval_ms;   /*!< Endpoint frame interval in ms */
+    uint16_t Size;          /*!< Endpoint max packet size */
 }USBD_HID_EpConfigType;
 
 

@@ -141,6 +141,9 @@ static uint16_t hid_getAltsDesc(USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8
 
         desc->HID.bAlternateSetting = as;
 
+        /* Set report size */
+        desc->HIDCD.sHIDD[0].wItemLength = itf->App[as].Report.Length;
+
         desc->HID.iInterface = USBD_IIF_INDEX(ifNum, as);
     }
     return len;
@@ -175,14 +178,36 @@ static uint16_t hid_getDesc(USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t *
 
     /* Add endpoints */
     len += USBD_EpDesc(dev, itf->Config.InEp.Num, &dest[len]);
-    dest[len - 1] = itf->Config.InEp.Interval;
+#if (USBD_HS_SUPPORT == 1)
+    if (dev->Speed == USB_SPEED_HIGH)
+    {
+        dest[len - 1] = itf->Config.InEp.Interval_ms * 8;
+        if (dest[len - 1] < itf->Config.InEp.Interval_ms)
+        {   dest[len - 1] = 0xFF; }
+    }
+    else
+#endif /* (USBD_HS_SUPPORT == 1) */
+    {
+        dest[len - 1] = itf->Config.InEp.Interval_ms;
+    }
 
 #if (USBD_HID_OUT_SUPPORT == 1)
     if (itf->Config.OutEp.Size > 0)
     {
         desc->HID.bNumEndpoints = 2;
         len += USBD_EpDesc(dev, itf->Config.OutEp.Num, &dest[len]);
-        dest[len - 1] = itf->Config.OutEp.Interval;
+#if (USBD_HS_SUPPORT == 1)
+        if (dev->Speed == USB_SPEED_HIGH)
+        {
+            dest[len - 1] = itf->Config.OutEp.Interval_ms * 8;
+            if (dest[len - 1] < itf->Config.OutEp.Interval_ms)
+            {   dest[len - 1] = 0xFF; }
+        }
+        else
+#endif /* (USBD_HS_SUPPORT == 1) */
+        {
+            dest[len - 1] = itf->Config.OutEp.Interval_ms;
+        }
     }
 #endif /* (USBD_HID_OUT_SUPPORT == 1) */
 
@@ -235,7 +260,7 @@ static void hid_init(USBD_HID_IfHandleType *itf)
 
     /* Initialize state */
     itf->Request = 0;
-    itf->IdleRate = itf->Config.InEp.Interval / 4;
+    itf->IdleRate = itf->Config.InEp.Interval_ms / 4;
 
     /* Initialize application */
     USBD_SAFE_CALLBACK(HID_APP(itf)->Init, );
