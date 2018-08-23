@@ -290,7 +290,7 @@ static void cdc_init(USBD_CDC_IfHandleType *itf)
 #endif
 
     /* Initialize application */
-    USBD_SAFE_CALLBACK(CDC_APP(itf)->Open, &itf->LineCoding);
+    USBD_SAFE_CALLBACK(CDC_APP(itf)->Open, itf, &itf->LineCoding);
 }
 
 /**
@@ -313,7 +313,7 @@ static void cdc_deinit(USBD_CDC_IfHandleType *itf)
 #endif
 
         /* Deinitialize application */
-        USBD_SAFE_CALLBACK(CDC_APP(itf)->Close, );
+        USBD_SAFE_CALLBACK(CDC_APP(itf)->Close, itf);
 
 #if (USBD_HS_SUPPORT == 1)
         /* Reset the endpoint MPS to the desired size */
@@ -358,7 +358,7 @@ static USBD_ReturnType cdc_setupStage(USBD_CDC_IfHandleType *itf)
                     /* Simply pass the request with wValue */
                     if (CDC_APP(itf)->Break != NULL)
                     {
-                        CDC_APP(itf)->Break(dev->Setup.Value);
+                        CDC_APP(itf)->Break(itf, dev->Setup.Value);
                         retval = USBD_E_OK;
                     }
                     break;
@@ -400,7 +400,7 @@ static void cdc_dataStage(USBD_CDC_IfHandleType *itf)
  */
 static void cdc_outData(USBD_CDC_IfHandleType *itf, USBD_EpHandleType *ep)
 {
-    USBD_SAFE_CALLBACK(CDC_APP(itf)->Received,
+    USBD_SAFE_CALLBACK(CDC_APP(itf)->Received, itf,
             ep->Transfer.Data - ep->Transfer.Length, ep->Transfer.Length);
 }
 
@@ -415,7 +415,7 @@ static void cdc_inData(USBD_CDC_IfHandleType *itf, USBD_EpHandleType *ep)
     if (ep == &itf->Base.Device->EP.IN[itf->Config.InEpNum & 0xF])
 #endif
     {
-        USBD_SAFE_CALLBACK(CDC_APP(itf)->Transmitted,
+        USBD_SAFE_CALLBACK(CDC_APP(itf)->Transmitted, itf,
                 ep->Transfer.Data - ep->Transfer.Length, ep->Transfer.Length);
     }
 }

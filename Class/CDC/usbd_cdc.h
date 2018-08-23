@@ -160,20 +160,24 @@ typedef struct
 /** @brief CDC application structure */
 typedef struct
 {
-    const char* Name;           /*!< String description of the application */
+    const char* Name;   /*!< String description of the application */
 
-    void (*Open)        (USBD_CDC_LineCodingType * coding); /*!< Open port */
+    void (*Open)        (void* itf,
+                         USBD_CDC_LineCodingType* coding);  /*!< Open port */
 
-    void (*Close)       (void);             /*!< Close port */
+    void (*Close)       (void* itf);        /*!< Close port */
 
-    void (*Received)    (uint8_t * data,
+    void (*Received)    (void* itf,
+                         uint8_t* data,
                          uint16_t length);  /*!< Received data available */
 
-    void (*Transmitted) (uint8_t * data,
+    void (*Transmitted) (void* itf,
+                         uint8_t* data,
                          uint16_t length);  /*!< Transmission of data completed */
 
 #if (USBD_CDC_BREAK_SUPPORT == 1)
-    void (*Break)       (uint16_t len_ms);   /*!< Interface interaction through the control channel */
+    void (*Break)       (void* itf,
+                         uint16_t len_ms);  /*!< Interface interaction through the control channel */
 #endif /* USBD_CDC_BREAK_SUPPORT */
 }USBD_CDC_AppType;
 
