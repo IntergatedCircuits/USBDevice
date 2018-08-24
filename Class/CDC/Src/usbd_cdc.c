@@ -444,7 +444,7 @@ USBD_ReturnType USBD_CDC_MountInterface(USBD_CDC_IfHandleType *itf, USBD_HandleT
 #if (USBD_CDC_NOTEP_USED == 1)
             if (itf->Config.NotEpNum < USBD_MAX_EP_COUNT)
             {
-                ep = &dev->EP.IN [CDC_APP(itf)->NotEpNum & 0xF];
+                ep = &dev->EP.IN [itf->Config.NotEpNum & 0xF];
                 ep->Type            = USB_EP_TYPE_INTERRUPT;
                 ep->MaxPacketSize   = CDC_NOT_PACKET_SIZE;
                 ep->IfNum           = dev->IfCount;
