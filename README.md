@@ -17,6 +17,7 @@ with multiple independent interfaces.
 ### Supported device classes
 
 * Communications Device Class (**CDC**-ACM) specification version 1.10
+* Network Control Model (CDC-**NCM**) specification version 1.0
 * Human Interface Device Class (**HID**) specification version 1.11 - with helper macros for report definition
 * Mass Storage Class Bulk-Only Transport (**MSC**-BOT) revision 1.0 with transparent SCSI command set
 * Device Firmware Upgrade Class (**DFU**) specification version 1.1
