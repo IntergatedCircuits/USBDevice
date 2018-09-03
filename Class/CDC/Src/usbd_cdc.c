@@ -4,7 +4,7 @@
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-01-31
-  * @brief   USB Communications Device Class implementation
+  * @brief   USB CDC Abstract Control Model implementation
   *
   * Copyright (c) 2018 Benedek Kupper
   *
@@ -77,8 +77,10 @@ typedef struct
         uint8_t  bMasterInterface;
         uint8_t  bSlaveInterface0;
     }__packed UFD;
+#if (USBD_CDC_NOTEP_USED == 1)
     /* Notification Endpoint Descriptor */
     USB_EndpointDescType NED;
+#endif
     /* Data Interface Descriptor */
     USB_InterfaceDescType DID;
     /* Endpoint descriptors are dynamically added */
@@ -100,7 +102,11 @@ static const USBD_CDC_DescType cdc_desc = {
         .bDescriptorType    = USB_DESC_TYPE_INTERFACE,
         .bInterfaceNumber   = 0,
         .bAlternateSetting  = 0,
+#if (USBD_CDC_NOTEP_USED == 1)
         .bNumEndpoints      = 1,
+#else
+        .bNumEndpoints      = 0,
+#endif
         .bInterfaceClass    = 0x02, /* bInterfaceClass: Communication Interface Class */
         .bInterfaceSubClass = 0x02, /* bInterfaceSubClass: Abstract Control Model */
         .bInterfaceProtocol = 0x01, /* bInterfaceProtocol: Common AT commands */
@@ -137,6 +143,7 @@ static const USBD_CDC_DescType cdc_desc = {
         .bMasterInterface   = 0,
         .bSlaveInterface0   = 1,
     },
+#if (USBD_CDC_NOTEP_USED == 1)
     .NED = { /* Notification Endpoint Descriptor */
         .bLength            = sizeof(cdc_desc.NED),
         .bDescriptorType    = USB_DESC_TYPE_ENDPOINT,
@@ -145,6 +152,7 @@ static const USBD_CDC_DescType cdc_desc = {
         .wMaxPacketSize     = CDC_NOT_PACKET_SIZE,
         .bInterval          = CDC_NOT_INTR_INTERVAL,
     },
+#endif
     .DID = { /* Data class interface descriptor */
         .bLength = sizeof(cdc_desc.DID),
         .bDescriptorType = USB_DESC_TYPE_INTERFACE,
@@ -223,7 +231,9 @@ static uint16_t cdc_getDesc(USBD_CDC_IfHandleType *itf, uint8_t ifNum, uint8_t *
         desc->CID.bInterfaceProtocol = itf->Config.Protocol;
     }
 
+#if (USBD_CDC_NOTEP_USED == 1)
     desc->NED.bEndpointAddress = itf->Config.NotEpNum;
+#endif
 
     len += USBD_EpDesc(itf->Base.Device, itf->Config.OutEpNum, &dest[len]);
     len += USBD_EpDesc(itf->Base.Device, itf->Config.InEpNum, &dest[len]);
@@ -262,7 +272,7 @@ static void cdc_init(USBD_CDC_IfHandleType *itf)
     uint16_t mps;
 
 #if (USBD_HS_SUPPORT == 1)
-    if (itf->Base.Device->Speed == USB_SPEED_HIGH)
+    if (dev->Speed == USB_SPEED_HIGH)
     {
         mps = USB_EP_BULK_HS_MPS;
     }
