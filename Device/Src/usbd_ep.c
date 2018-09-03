@@ -138,11 +138,12 @@ void USBD_EpOutCallback(USBD_HandleType *dev, USBD_EpHandleType *ep)
 USBD_ReturnType USBD_EpRequest(USBD_HandleType *dev)
 {
     USBD_ReturnType retval = USBD_E_INVALID;
-    uint8_t epAddr = (uint8_t)dev->Setup.Index;
+    uint8_t epAddr = (uint8_t)dev->Setup.Index, epNum = epAddr & 0xF;
 
-    if ((dev->ConfigSelector == 0) && ((epAddr & 0xF) != 0))
+    if ((epNum >= USBD_MAX_EP_COUNT) ||
+        (epNum == 0) ||
+        (dev->ConfigSelector == 0))
     {
-        /* Only EP0 can be affected while the device is not configured */
     }
     else if (dev->Setup.RequestType.Type == USB_REQ_TYPE_STANDARD)
     {
@@ -180,11 +181,11 @@ USBD_ReturnType USBD_EpRequest(USBD_HandleType *dev)
                         ep->Transfer.Length = 0;
                         /* Workaround: notify interface of ready endpoint
                          * by completion callback with 0 length */
-                        if ((epAddr & 0x8F) > 0x80)
+                        if (epAddr != epNum)
                         {
                             USBD_IfClass_InData(dev->IF[ep->IfNum], ep);
                         }
-                        else if ((epAddr & 0xF) > 0)
+                        else
                         {
                             USBD_IfClass_OutData(dev->IF[ep->IfNum], ep);
                         }

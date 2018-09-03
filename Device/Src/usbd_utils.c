@@ -30,25 +30,6 @@
  * @{ */
 
 /**
- * @brief Convert ASCII string into Unicode
- * @param ascii: Input ASCII format string
- * @param unicode: Unicode string output
- */
-__weak void Ascii2Unicode(const char *ascii, uint8_t *unicode)
-{
-    while (*ascii != '\0')
-    {
-        *unicode++ = *ascii++;
-        *unicode++ = 0x00;
-    }
-#if 0
-    /* Null termination not used by USB string descriptors */
-    *unicode++ = '\0';
-    *unicode++ = 0x00;
-#endif
-}
-
-/**
  * @brief Convert raw integers into Unicode string
  * @param data: address of raw data
  * @param unicode: Unicode string output
@@ -85,11 +66,10 @@ __weak void Uint2Unicode(const uint8_t *data, uint8_t *unicode, uint16_t len)
         unicode[i] = 0x00;
         i++;
     }
-#if 0
+
     /* Null termination not used by USB string descriptors */
     unicode[i++] = '\0';
     unicode[i] = 0x00;
-#endif
 }
 
 /** @} */

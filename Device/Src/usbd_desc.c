@@ -166,9 +166,29 @@ static uint16_t USBD_ConfigDesc(USBD_HandleType *dev, uint8_t *data)
  */
 static uint16_t USBD_GetStringDesc(const char *str, uint8_t *data)
 {
-    data[0] = 2 + strlen(str) * 2;
+    uint16_t *dst = (uint16_t*)&data[2];
+    data[0] = 2;
     data[1] = USB_DESC_TYPE_STRING;
-    Ascii2Unicode(str, &data[2]);
+
+    /* If ASCII, convert to Unicode */
+    if (str[1] != 0)
+    {
+        uint8_t  *src = (uint8_t*)str;
+        while (*src != 0)
+        {
+            *dst++ = (uint16_t)*src++;
+            data[0] += sizeof(uint16_t);
+        }
+    }
+    else /* If Unicode already, just copy */
+    {
+        uint16_t *src = (uint16_t*)str;
+        while (*src != 0)
+        {
+            *dst++ = *src++;
+            data[0] += sizeof(uint16_t);
+        }
+    }
     return data[0];
 }
 
@@ -227,10 +247,10 @@ USBD_ReturnType USBD_GetDescriptor(USBD_HandleType *dev)
 
 #if (USBD_SERIAL_BCD_SIZE > 0)
                 case USBD_ISTR_SERIAL:
-                    data[0] = len = sizeof(*dev->Desc->SerialNumber) * 4 + 2;
+                    data[0] = len = 2 + USBD_SERIAL_BCD_SIZE * 2;
                     data[1] = USB_DESC_TYPE_STRING;
                     Uint2Unicode((const uint8_t*)dev->Desc->SerialNumber,
-                            &data[2], sizeof(*dev->Desc->SerialNumber) * 2);
+                            &data[2], USBD_SERIAL_BCD_SIZE);
                     break;
 #endif
 

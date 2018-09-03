@@ -30,7 +30,6 @@ extern "C"
 
 #include <stdint.h>
 
-extern void Ascii2Unicode(const char *ascii, uint8_t *unicode);
 extern void Uint2Unicode(const uint8_t *data, uint8_t *unicode, uint16_t len);
 
 #ifdef __cplusplus

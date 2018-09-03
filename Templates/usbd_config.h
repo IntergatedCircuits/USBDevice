@@ -45,9 +45,9 @@ extern "C"
 #define USBD_HS_SUPPORT             0
 
 /** @brief When set to 0, no SerialNumber is readable by the host.
- * Otherwise the SerialNumber will be converted from USBD_SERIAL_BCD_SIZE * 2
+ * Otherwise the SerialNumber will be converted from USBD_SERIAL_BCD_SIZE / 2
  * amount of raw bytes to string BCD format and sent to the host. */
-#define USBD_SERIAL_BCD_SIZE        8
+#define USBD_SERIAL_BCD_SIZE        0
 
 
 

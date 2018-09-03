@@ -104,7 +104,7 @@ typedef enum
 
 #if (USBD_SERIAL_BCD_SIZE > 0)
 /** @brief USB serial number definition */
-typedef const uint8_t USBD_SerialNumberType[USBD_SERIAL_BCD_SIZE];
+typedef const uint8_t USBD_SerialNumberType[(USBD_SERIAL_BCD_SIZE + 1) / 2];
 #endif
 
 

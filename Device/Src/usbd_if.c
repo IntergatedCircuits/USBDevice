@@ -45,6 +45,7 @@ void USBD_IfConfig(USBD_HandleType *dev, uint8_t cfgNum)
             for (ifNum = 0; ifNum < dev->IfCount; ifNum++)
             {
                 USBD_IfClass_Deinit(dev->IF[ifNum]);
+                dev->IF[ifNum]->AltSelector = 0;
             }
         }
 
