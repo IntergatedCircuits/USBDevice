@@ -1,0 +1,32 @@
+/**
+  ******************************************************************************
+  * @file    hid_usage_button.h
+  * @author  Benedek Kupper
+  * @version 0.1
+  * @date    2018-01-31
+  * @brief   USB Human Interface Device Class
+  *          Button Usage Page definitions
+  *
+  * Copyright (c) 2018 Benedek Kupper
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+#ifndef __HID_USAGE_BUTTON_H_
+#define __HID_USAGE_BUTTON_H_
+#include <hid_report.h>
+
+#define HID_USAGE_PAGE_BUTTON           0x05, 0x09 /* Usage page: Button */
+
+#define HID_USAGE_BUTTON(VAL)           0x09, (VAL)
+
+#endif /* __HID_USAGE_BUTTON_H_ */

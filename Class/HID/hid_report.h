@@ -73,14 +73,13 @@ typedef enum
 #define HID_OUTPUT(FLAGS)               HID_ITEM_2(0x9, MAIN, FLAGS)
 #define HID_FEATURE(FLAGS)              HID_ITEM_2(0xB, MAIN, FLAGS)
 
-#define HID_COLLECTION_PHYSICAL         HID_ITEM_1(0xA, MAIN, 0x00) /* Collection: Physical (group of axes) */
-#define HID_COLLECTION_APPLICATION      HID_ITEM_1(0xA, MAIN, 0x01) /* Collection: Application (mouse, keyboard) */
-#define HID_COLLECTION_LOGICAL          HID_ITEM_1(0xA, MAIN, 0x02) /* Collection: Logical (interrelated data) */
-#define HID_COLLECTION_REPORT           HID_ITEM_1(0xA, MAIN, 0x03) /* Collection: Report */
-#define HID_COLLECTION_NAMED_ARRAY      HID_ITEM_1(0xA, MAIN, 0x04) /* Collection: Named array */
-#define HID_COLLECTION_USAGE_SWITCH     HID_ITEM_1(0xA, MAIN, 0x05) /* Collection: Usage switch */
-#define HID_COLLECTION_USAGE_MOD        HID_ITEM_1(0xA, MAIN, 0x06) /* Collection: Usage modifier */
-#define HID_END_COLLECTION              HID_ITEM_0(0xC, MAIN)
+#define HID_COLLECTION_PHYSICAL(...)    HID_ITEM_1(0xA, MAIN, 0x00), __VA_ARGS__ HID_ITEM_0(0xC, MAIN)
+#define HID_COLLECTION_APPLICATION(...) HID_ITEM_1(0xA, MAIN, 0x01), __VA_ARGS__ HID_ITEM_0(0xC, MAIN)
+#define HID_COLLECTION_LOGICAL(...)     HID_ITEM_1(0xA, MAIN, 0x02), __VA_ARGS__ HID_ITEM_0(0xC, MAIN)
+#define HID_COLLECTION_REPORT(...)      HID_ITEM_1(0xA, MAIN, 0x03), __VA_ARGS__ HID_ITEM_0(0xC, MAIN)
+#define HID_COLLECTION_NAMED_ARRAY(...) HID_ITEM_1(0xA, MAIN, 0x04), __VA_ARGS__ HID_ITEM_0(0xC, MAIN)
+#define HID_COLLECTION_USAGE_SWITCH(...)HID_ITEM_1(0xA, MAIN, 0x05), __VA_ARGS__ HID_ITEM_0(0xC, MAIN)
+#define HID_COLLECTION_USAGE_MOD(...)   HID_ITEM_1(0xA, MAIN, 0x06), __VA_ARGS__ HID_ITEM_0(0xC, MAIN)
 
 /* HID Report Global Items */
 
@@ -167,6 +166,7 @@ typedef enum
 #define HID_POP                         HID_ITEM_0(0xA, GLOBAL)
 
 /* HID Report Local Items */
+#define HID_USAGE(VAL)                  HID_ITEM_1(0x0, LOCAL, VAL)
 
 #define HID_USAGE_MIN_8(VAL)            HID_ITEM_1(0x1, LOCAL, VAL)
 #define HID_USAGE_MIN_16(VAL)           HID_ITEM_2(0x1, LOCAL, VAL)
