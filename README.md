@@ -60,14 +60,14 @@ A generic USB device bootloader firmware for STM32 controllers.
 USB device with a single DFU interface
 which is mountable on both the bootloader's and the application's device stack.
 
-### [DebugDongle][DebugDongle]
+### [DebugDongle][DebugDongle] [![Build Status](https://travis-ci.org/IntergatedCircuits/DebugDongleFW.svg?branch=master)](https://travis-ci.org/IntergatedCircuits/DebugDongleFW)
 
 A debug serial port with selectable output power and battery charging.
 Composite USB device with one CDC (serial port),
 two HID interfaces (onboard sensors and power management)
 and the bootloader's DFU interface.
 
-### [CanDybug][CanDybug]
+### [CanDybug][CanDybug] [![Build Status](https://travis-ci.org/IntergatedCircuits/CanDybugFW.svg?branch=master)](https://travis-ci.org/IntergatedCircuits/CanDybugFW)
 
 A CAN bus gateway which uses a custom protocol over a USB serial port emulation.
 Composite USB device with CDC function and the bootloader's DFU interface.
