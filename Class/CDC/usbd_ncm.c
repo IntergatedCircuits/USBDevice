@@ -20,7 +20,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include <usbd_internal.h>
+#include <private/usbd_internal.h>
 #include <usbd_ncm.h>
 #include <usbd_utils.h>
 

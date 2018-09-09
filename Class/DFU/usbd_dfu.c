@@ -20,7 +20,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include <usbd_internal.h>
+#include <private/usbd_internal.h>
 #include <usbd_dfu.h>
 
 #include <string.h>
@@ -437,7 +437,7 @@ static USBD_ReturnType dfu_setupStage(USBD_DFU_IfHandleType *itf)
                     /* Return DFU func. descriptor */
                     case DFU_DESC_TYPE_FUNCTIONAL:
                     {
-                        uint16_t len = dfu_cbks.GetDescriptor(itf, 0, dev->CtrlData);
+                        uint16_t len = dfu_cbks.GetDescriptor((void*)itf, 0, dev->CtrlData);
                         memcpy(dev->CtrlData, &dev->CtrlData[len - sizeof(dfu_desc.DFUFD)],
                                 sizeof(dfu_desc.DFUFD));
                         retval = USBD_CtrlSendData(dev, dev->CtrlData,
@@ -876,7 +876,7 @@ static void dfu_dataStage(USBD_DFU_IfHandleType *itf)
  * @param itf: reference of the DFU interface
  * @param pReboot: reference of the system rebooting function
  * @param app: reference of the program memory handler
- * @param appCount: array size of @ref app parameter (only used when USBD_DFU_ALTSETTINGS != 0)
+ * @param appCount: array size of app parameter (only used when USBD_DFU_ALTSETTINGS != 0)
  */
 void USBD_DFU_BootInit(USBD_DFU_IfHandleType *itf,
                        USBD_DFU_RebootCbkType pReboot,

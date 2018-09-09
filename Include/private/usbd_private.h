@@ -29,7 +29,7 @@ extern "C"
 {
 #endif
 
-#include <usbd_internal.h>
+#include <private/usbd_internal.h>
 
 /** @ingroup USBD
  * @defgroup USBD_Private_Functions_IfClass USBD Class-specific Interface Callouts
