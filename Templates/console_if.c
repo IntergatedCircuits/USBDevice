@@ -48,16 +48,16 @@ extern int32_t errno;
 /** @defgroup console_if USB serial console interface template
  * @{ */
 
-static void console_if_open         (USBD_CDC_LineCodingType * lc);
+static void console_if_open         (void* itf, USBD_CDC_LineCodingType * lc);
 
 #if (PRINT_BUFFER_SIZE > 0)
-static void console_if_in_cmplt     (uint8_t * pbuf, uint16_t length);
+static void console_if_in_cmplt     (void* itf, uint8_t * pbuf, uint16_t length);
 static void console_if_send         (void);
 QUEUE_DEF(console_if_IN, uint8_t, PRINT_BUFFER_SIZE);
 #endif
 
 #if (SCAN_BUFFER_SIZE > 0)
-static void console_if_out_cmplt    (uint8_t * pbuf, uint16_t length);
+static void console_if_out_cmplt    (void* itf, uint8_t * pbuf, uint16_t length);
 static void console_if_recv         (void);
 QUEUE_DEF(console_if_OUT, uint8_t, SCAN_BUFFER_SIZE);
 #endif
@@ -80,7 +80,7 @@ USBD_CDC_IfHandleType _console_if = {
     .Config.Protocol = 0xFF, /* Vendor-specific protocol */
 }, *const console_if = &_console_if;
 
-static void console_if_open(USBD_CDC_LineCodingType * lc)
+static void console_if_open(void* itf, USBD_CDC_LineCodingType * lc)
 {
 #if (PRINT_BUFFER_SIZE > 0)
     console_if_IN.head = console_if_IN.tail = 0;
@@ -91,7 +91,7 @@ static void console_if_open(USBD_CDC_LineCodingType * lc)
 }
 
 #if (PRINT_BUFFER_SIZE > 0)
-static void console_if_in_cmplt(uint8_t * pbuf, uint16_t length)
+static void console_if_in_cmplt(void* itf, uint8_t * pbuf, uint16_t length)
 {
     console_if_send();
 }
@@ -148,7 +148,7 @@ int _write(int32_t file, uint8_t *ptr, int32_t len)
 #endif
 
 #if (SCAN_BUFFER_SIZE > 0)
-static void console_if_out_cmplt(uint8_t * pbuf, uint16_t length)
+static void console_if_out_cmplt(void* itf, uint8_t * pbuf, uint16_t length)
 {
     console_if_OUT.head += length;
     console_if_recv();
