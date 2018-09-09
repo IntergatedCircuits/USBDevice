@@ -93,12 +93,12 @@ typedef enum
 /** @brief USB string descriptor indexes */
 typedef enum
 {
-    USBD_ISTR_LANGID     = 0, /*!< Fixed by standard */
-    USBD_ISTR_VENDOR     = 1, /*!< Vendor name */
-    USBD_ISTR_PRODUCT    = 2, /*!< Product name */
-    USBD_ISTR_SERIAL     = 3, /*!< Serial number string */
-    USBD_ISTR_CONFIG     = 4, /*!< Configuration name */
-    USBD_ISTR_INTERFACES      /*!< Interfaces' names */
+    USBD_ISTR_LANGID     = 0x00, /*!< Fixed by standard */
+    USBD_ISTR_INTERFACES,        /*!< Interfaces' names */
+    USBD_ISTR_VENDOR     = 0x10, /*!< Vendor name */
+    USBD_ISTR_PRODUCT    = 0x20, /*!< Product name */
+    USBD_ISTR_SERIAL     = 0x30, /*!< Serial number string */
+    USBD_ISTR_CONFIG     = 0x40, /*!< Configuration name */
 }USBD_iStringType;
 
 

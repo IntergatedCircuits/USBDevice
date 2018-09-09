@@ -235,9 +235,16 @@ static const char* hid_getString(USBD_HID_IfHandleType *itf, uint8_t intNum)
     }
 #else
 #if (USBD_HID_REPORT_STRINGS != 0)
-    if (HID_APP(itf)->GetString != NULL)
+    if (intNum != 0)
     {
-        return HID_APP(itf)->GetString(itf, intNum);
+        if (HID_APP(itf)->GetString != NULL)
+        {
+            return HID_APP(itf)->GetString(itf, intNum);
+        }
+        else
+        {
+            return NULL;
+        }
     }
     else
 #endif /* USBD_HID_REPORT_STRINGS */
