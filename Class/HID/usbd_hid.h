@@ -115,21 +115,30 @@ typedef struct {
 /** @brief HID application structure */
 typedef struct
 {
-    const char* Name;           /*!< String description of the application */
+    const char* Name;       /*!< String description of the application */
 
-    void (*Init)        (void); /*!< Initialization request */
+    void (*Init)            (void* itf);        /*!< Initialization request */
 
-    void (*Deinit)      (void); /*!< Shutdown request */
+    void (*Deinit)          (void* itf);        /*!< Shutdown request */
 
-    void (*SetReport)   (USBD_HID_ReportType type,
-                         uint8_t * data,
-                         uint16_t length);  /*!< Process a received report */
+    void (*SetReport)       (void* itf,
+                             USBD_HID_ReportType type,
+                             uint8_t * data,
+                             uint16_t length);  /*!< Process a received report */
 
-    void (*GetReport)   (USBD_HID_ReportType type,
-                         uint8_t reportId); /*!< A report transmission is requested */
+    void (*GetReport)       (void* itf,
+                             USBD_HID_ReportType type,
+                             uint8_t reportId); /*!< A report transmission is requested */
 
-    void (*SetIdle)     (uint16_t idleRate_ms,
-                         uint8_t reportId); /*!< Limit the IN reporting frequency */
+    void (*SetIdle)         (void* itf,
+                             uint16_t idleRate_ms,
+                             uint8_t reportId); /*!< Limit the IN reporting frequency */
+
+#if (USBD_HID_REPORT_STRINGS != 0)
+    const char* (*GetString)(void* itf,
+                             uint8_t intNum);   /*!< Return a string from the report description */
+
+#endif
 
     USBD_HID_ReportDescType Report;         /*!< The Report descriptor */
 }USBD_HID_AppType;
