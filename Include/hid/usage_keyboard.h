@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    hid_usage_keyboard.h
+  * @file    usage_keyboard.h
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-01-31
@@ -23,7 +23,7 @@
   */
 #ifndef __HID_USAGE_KEYBOARD_H_
 #define __HID_USAGE_KEYBOARD_H_
-#include <hid_report.h>
+#include <hid/report.h>
 
 #define HID_USAGE_PAGE_KEYBOARD         0x05, 0x07
 

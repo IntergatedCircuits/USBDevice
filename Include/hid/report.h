@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    hid_report.h
+  * @file    report.h
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-01-31

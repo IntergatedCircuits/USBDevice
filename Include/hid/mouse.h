@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    hid_mouse.h
+  * @file    mouse.h
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-09-04
@@ -23,8 +23,9 @@
   */
 #ifndef __HID_MOUSE_H_
 #define __HID_MOUSE_H_
-#include <hid_usage_button.h>
-#include <hid_usage_desktop.h>
+#include <HID/report.h>
+#include <HID/usage_button.h>
+#include <HID/usage_desktop.h>
 
 /** @ingroup USBD_HID
  * @addtogroup USBD_HID_Common_Reports Common HID Reports

@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    hid_keyboard.h
+  * @file    keyboard.h
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-09-04
@@ -23,9 +23,10 @@
   */
 #ifndef __HID_KEYBOARD_H_
 #define __HID_KEYBOARD_H_
-#include <hid_usage_desktop.h>
-#include <hid_usage_keyboard.h>
-#include <hid_usage_led.h>
+#include <hid/report.h>
+#include <hid/usage_desktop.h>
+#include <hid/usage_keyboard.h>
+#include <hid/usage_led.h>
 
 /** @ingroup USBD_HID
  * @addtogroup USBD_HID_Common_Reports Common HID Reports
