@@ -181,9 +181,7 @@ static uint16_t hid_getDesc(USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t *
 #if (USBD_HS_SUPPORT == 1)
     if (dev->Speed == USB_SPEED_HIGH)
     {
-        dest[len - 1] = itf->Config.InEp.Interval_ms * 8;
-        if (dest[len - 1] < itf->Config.InEp.Interval_ms)
-        {   dest[len - 1] = 0xFF; }
+        dest[len - 1] = USBD_EpHsInterval(itf->Config.InEp.Interval_ms);
     }
     else
 #endif /* (USBD_HS_SUPPORT == 1) */
@@ -199,9 +197,7 @@ static uint16_t hid_getDesc(USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t *
 #if (USBD_HS_SUPPORT == 1)
         if (dev->Speed == USB_SPEED_HIGH)
         {
-            dest[len - 1] = itf->Config.OutEp.Interval_ms * 8;
-            if (dest[len - 1] < itf->Config.OutEp.Interval_ms)
-            {   dest[len - 1] = 0xFF; }
+            dest[len - 1] = USBD_EpHsInterval(itf->Config.OutEp.Interval_ms);
         }
         else
 #endif /* (USBD_HS_SUPPORT == 1) */

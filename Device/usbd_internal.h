@@ -50,6 +50,8 @@ uint16_t        USBD_EpDesc             (USBD_HandleType *dev,
                                          uint8_t epAddr,
                                          uint8_t *data);
 
+uint8_t         USBD_EpHsInterval       (uint32_t interval_ms);
+
 USBD_ReturnType USBD_EpSend             (USBD_HandleType *dev,
                                          uint8_t epAddr,
                                          const uint8_t *data,

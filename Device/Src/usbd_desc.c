@@ -357,4 +357,23 @@ uint16_t USBD_EpDesc(USBD_HandleType *dev, uint8_t epAddr, uint8_t *data)
     return sizeof(USB_EndpointDescType);
 }
 
+/**
+ * @brief Converts milliseconds to HS descriptor bInterval format with approximation.
+ * @param interval_ms: the EP polling interval in ms
+ * @return The closest bInterval field value
+ */
+uint8_t USBD_EpHsInterval(uint32_t interval_ms)
+{
+    uint32_t i, interval_125us = (interval_ms * 1000) / 125;
+    for (i = 3; i < 16; i++)
+    {
+        if (interval_125us < (2 << i))
+        {
+            i++;
+            break;
+        }
+    }
+    return (uint8_t)i;
+}
+
 /** @} */
