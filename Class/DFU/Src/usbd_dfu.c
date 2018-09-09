@@ -214,7 +214,7 @@ static uint16_t dfu_getAltsDesc(USBD_DFU_IfHandleType *itf, uint8_t ifNum, uint8
         len += sizeof(dfu_desc.DFU);
 
         /* Set attributes */
-        if (itf->App[as].Write != NULL)
+        if ((itf->App[as].Erase != NULL) && (itf->App[as].Write != NULL))
         {
             desc->bmAttributes |= DFU_ATTR_CAN_DNLOAD;
         }
@@ -351,8 +351,10 @@ static USBD_ReturnType dfu_setupStage(USBD_DFU_IfHandleType *itf)
                     /* Return DFU func. descriptor */
                     case DFU_DESC_TYPE_FUNCTIONAL:
                     {
-                        retval = USBD_CtrlSendData(dev,
-                                (uint8_t*)&dfu_desc.DFUFD,
+                        uint16_t len = dfu_cbks.GetDescriptor(itf, 0, dev->CtrlData);
+                        memcpy(dev->CtrlData, &dev->CtrlData[len - sizeof(dfu_desc.DFUFD)],
+                                sizeof(dfu_desc.DFUFD));
+                        retval = USBD_CtrlSendData(dev, dev->CtrlData,
                                 sizeof(dfu_desc.DFUFD));
                         break;
                     }
