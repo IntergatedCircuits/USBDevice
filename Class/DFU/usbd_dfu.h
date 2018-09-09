@@ -201,6 +201,10 @@ int             USBD_DFU_IsRequested    (USBD_DFU_IfHandleType *itf);
  * @{ */
 void            USBD_DFU_AppInit        (USBD_DFU_IfHandleType *itf,
                                          uint16_t detachTimeout_ms);
+
+USBD_ReturnType USBD_DFU_MountRebootOnly(USBD_DFU_IfHandleType *itf,
+                                         USBD_HandleType *dev);
+
 /** @} */
 
 /** @addtogroup USBD_DFU_Exported_Functions

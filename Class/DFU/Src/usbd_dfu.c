@@ -183,9 +183,41 @@ static USBD_ReturnType (*const dfu_reqFns[])(USBD_DFU_IfHandleType *itf) = {
     dfu_abort,
 };
 
+static uint16_t         rodfu_getDesc   (USBD_DFU_IfHandleType *itf, uint8_t ifNum, uint8_t * dest);
+static USBD_ReturnType  rodfu_setupStage(USBD_DFU_IfHandleType *itf);
+
+/* Reboot-only DFU interface class callbacks structure */
+static const USBD_ClassType rodfu_cbks = {
+    .GetDescriptor  = (USBD_IfDescCbkType)  rodfu_getDesc,
+    .GetString      = (USBD_IfStrCbkType)   dfu_getString,
+    .SetupStage     = (USBD_IfSetupCbkType) rodfu_setupStage,
+};
+
 /** @ingroup USBD_DFU
  * @defgroup USBD_DFU_Private_Functions DFU Private Functions
  * @{ */
+
+/**
+ * @brief Copies the interface descriptor to the destination buffer.
+ * @param itf: reference of the DFU interface
+ * @param ifNum: the index of the current interface in the device
+ * @param dest: the destination buffer
+ * @return Length of the copied descriptor
+ */
+static uint16_t rodfu_getDesc(USBD_DFU_IfHandleType *itf, uint8_t ifNum, uint8_t * dest)
+{
+    USBD_DFU_DescType *desc = (USBD_DFU_DescType*)dest;
+    uint16_t len = sizeof(dfu_desc);
+
+    memcpy(dest, &dfu_desc, sizeof(dfu_desc));
+    desc->DFUFD.wDetachTimeOut = itf->Config.DetachTimeout_ms;
+
+    /* Adjustment of interface indexes */
+    desc->DFU.bInterfaceNumber = ifNum;
+
+    desc->DFU.iInterface = USBD_IIF_INDEX(ifNum, 0);
+    return len;
+}
 
 #if (USBD_DFU_ALTSETTINGS != 0)
 /**
@@ -244,10 +276,7 @@ static uint16_t dfu_getAltsDesc(USBD_DFU_IfHandleType *itf, uint8_t ifNum, uint8
 static uint16_t dfu_getDesc(USBD_DFU_IfHandleType *itf, uint8_t ifNum, uint8_t * dest)
 {
     USBD_DFU_DescType *desc = (USBD_DFU_DescType*)dest;
-    uint16_t len = sizeof(dfu_desc);
-
-    memcpy(dest, &dfu_desc, sizeof(dfu_desc));
-    desc->DFUFD.wDetachTimeOut = itf->Config.DetachTimeout_ms;
+    uint16_t len = rodfu_getDesc(itf, ifNum, dest);
 
     /* Set attributes */
     if ((DFU_APP(itf)->Erase != NULL) && (DFU_APP(itf)->Write != NULL))
@@ -259,10 +288,6 @@ static uint16_t dfu_getDesc(USBD_DFU_IfHandleType *itf, uint8_t ifNum, uint8_t *
         desc->DFUFD.bmAttributes |= DFU_ATTR_CAN_UPLOAD;
     }
 
-    /* Adjustment of interface indexes */
-    desc->DFU.bInterfaceNumber = ifNum;
-
-    desc->DFU.iInterface = USBD_IIF_INDEX(ifNum, 0);
     return len;
 }
 #endif /* (USBD_DFU_ALTSETTINGS != 0) */
@@ -327,6 +352,67 @@ static void dfu_deinit(USBD_DFU_IfHandleType *itf)
         /* Deinitialize media */
         USBD_SAFE_CALLBACK(DFU_APP(itf)->Deinit, );
     }
+}
+
+/**
+ * @brief Performs the interface-specific setup request handling.
+ * @param itf: reference of the DFU interface
+ * @return OK if the setup request is accepted, INVALID otherwise
+ */
+static USBD_ReturnType rodfu_setupStage(USBD_DFU_IfHandleType *itf)
+{
+    USBD_ReturnType retval = USBD_E_INVALID;
+    USBD_HandleType *dev = itf->Base.Device;
+
+    switch (dev->Setup.RequestType.Type)
+    {
+        case USB_REQ_TYPE_STANDARD:
+        {
+            /* DFU specific descriptors can be requested */
+            if (dev->Setup.Request == USB_REQ_GET_DESCRIPTOR)
+            {
+                switch (dev->Setup.Value >> 8)
+                {
+                    /* Return DFU func. descriptor */
+                    case DFU_DESC_TYPE_FUNCTIONAL:
+                    {
+                        retval = USBD_CtrlSendData(dev,
+                                (uint8_t*)&dfu_desc.DFUFD,
+                                sizeof(dfu_desc.DFUFD));
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            break;
+        }
+
+        case USB_REQ_TYPE_CLASS:
+        {
+            switch (dev->Setup.Request)
+            {
+                case DFU_REQ_DETACH:
+                    retval = dfu_detach(itf);
+                    break;
+                case DFU_REQ_GETSTATUS:
+                    return USBD_CtrlSendData(dev,
+                            (uint8_t*)&itf->DevStatus,
+                            sizeof(itf->DevStatus));
+                    break;
+                case DFU_REQ_GETSTATE:
+                    retval = dfu_getState(itf);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        }
+
+        default:
+            break;
+    }
+    return retval;
 }
 
 /**
@@ -851,6 +937,45 @@ void USBD_DFU_AppInit(USBD_DFU_IfHandleType *itf, uint16_t detachTimeout_ms)
     itf->DevStatus.Status = DFU_ERROR_NONE;
 }
 
+/**
+ * @brief Mounts a reboot-only version of the DFU interface to the USB Device
+ *        at the next interface slot. Used for devices which have DFU implementation
+ *        in ROM.
+ * @note  The interface reference shall have its Config structure
+ *        properly set before this function is called.
+ * @param itf: reference of the DFU interface
+ * @param dev: reference of the USB Device
+ * @return OK if the mounting was successful,
+ *         ERROR if it failed due to insufficient device interface slots
+ */
+USBD_ReturnType USBD_DFU_MountRebootOnly(USBD_DFU_IfHandleType *itf, USBD_HandleType *dev)
+{
+    USBD_ReturnType retval = USBD_E_ERROR;
+
+    if (dev->IfCount < USBD_MAX_IF_COUNT)
+    {
+        /* Binding interfaces */
+        itf->Base.Device = dev;
+        itf->Base.Class  = &rodfu_cbks;
+        itf->Base.AltCount = 1;
+        itf->Base.AltSelector = 0;
+
+        /* Setting state in application */
+        itf->DevStatus.State  = DFU_STATE_APP_IDLE;
+        itf->DevStatus.Status = DFU_ERROR_NONE;
+        itf->DevStatus.__reserved  = 0;
+        itf->DevStatus.iString     = 0;
+        itf->DevStatus.PollTimeout = 0;
+
+        dev->IF[dev->IfCount] = (USBD_IfHandleType*)itf;
+        dev->IfCount++;
+
+        retval = USBD_E_OK;
+    }
+
+    return retval;
+}
+
 /** @} */
 
 /** @defgroup USBD_DFU_Exported_Functions DFU Common Exported Functions
@@ -863,7 +988,7 @@ void USBD_DFU_AppInit(USBD_DFU_IfHandleType *itf, uint16_t detachTimeout_ms)
  * @param itf: reference of the DFU interface
  * @param dev: reference of the USB Device
  * @return OK if the mounting was successful,
- *         ERROR if it failed due to occupied first interface
+ *         ERROR if it failed due to insufficient device interface slots
  */
 USBD_ReturnType USBD_DFU_MountInterface(USBD_DFU_IfHandleType *itf, USBD_HandleType *dev)
 {
