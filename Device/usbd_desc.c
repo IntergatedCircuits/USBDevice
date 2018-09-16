@@ -366,7 +366,7 @@ uint8_t USBD_EpHsInterval(uint32_t interval_ms)
     uint32_t i, interval_125us = (interval_ms * 1000) / 125;
     for (i = 3; i < 16; i++)
     {
-        if (interval_125us < (2 << i))
+        if (interval_125us < ((uint32_t)2 << i))
         {
             i++;
             break;

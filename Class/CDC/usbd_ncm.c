@@ -463,8 +463,10 @@ static USBD_ReturnType ncm_setupStage(USBD_NCM_IfHandleType *itf)
 
             case CDC_REQ_GET_NTB_INPUT_SIZE:
             {
-                __packed uint32_t* pmax = (void*)dev->CtrlData;
-                *pmax = itf->In.MaxSize;
+                struct {
+                    uint32_t dw;
+                }__packed *pmax = (void*)dev->CtrlData;
+                pmax->dw = itf->In.MaxSize;
                 retval = USBD_CtrlSendData(dev, dev->CtrlData, sizeof(itf->In.MaxSize));
                 break;
             }
@@ -523,12 +525,14 @@ static void ncm_dataStage(USBD_NCM_IfHandleType *itf)
         {
             case CDC_REQ_SET_NTB_INPUT_SIZE:
             {
-                uint32_t max = *((__packed uint32_t*)dev->CtrlData);
+                struct {
+                    uint32_t dw;
+                }__packed *pmax = (void*)dev->CtrlData;
                 /* Sanity check */
-                if (max > (sizeof(((USBD_NCM_TransferHeaderType*)0)->V16) +
-                           sizeof(((USBD_NCM_DatagramPointerTableType*)0)->V16)))
+                if (pmax->dw > (sizeof(((USBD_NCM_TransferHeaderType*)0)->V16) +
+                                sizeof(((USBD_NCM_DatagramPointerTableType*)0)->V16)))
                 {
-                    itf->In.MaxSize = max;
+                    itf->In.MaxSize = pmax->dw;
                 }
                 break;
             }
