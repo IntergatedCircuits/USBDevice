@@ -4,7 +4,7 @@
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2017-06-10
-  * @brief   Generic circular queue implementation
+  * @brief   Generic circular queue definition
   *
   * Copyright (c) 2018 Benedek Kupper
   *
@@ -23,7 +23,8 @@
 #ifndef __QUEUES_H_
 #define __QUEUES_H_
 
-/** @defgroup Queues Circular queue buffer implementation
+/** @ingroup USBD_Templates
+ * @defgroup Queues Circular queue buffer definition
  * @{ */
 
 /**

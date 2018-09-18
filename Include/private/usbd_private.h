@@ -31,6 +31,31 @@ extern "C"
 
 #include <private/usbd_internal.h>
 
+/* {function definition} <- {call site} */
+
+/* usbd <- usbd_ctrl */
+USBD_ReturnType USBD_DevRequest         (USBD_HandleType *dev);
+
+/* usbd_ctrl <- usbd_ep */
+void            USBD_CtrlInCallback     (USBD_HandleType *dev);
+void            USBD_CtrlOutCallback    (USBD_HandleType *dev);
+
+/* usbd_if <- usbd_ctrl */
+USBD_ReturnType USBD_IfRequest          (USBD_HandleType *dev);
+
+/* usbd_if <- usbd */
+void            USBD_IfConfig           (USBD_HandleType *dev,
+                                         uint8_t cfgNum);
+
+/* usbd_if <- usbd_desc */
+const char*     USBD_IfString           (USBD_HandleType *dev);
+
+/* usbd_ep <- usbd_ctrl */
+USBD_ReturnType USBD_EpRequest          (USBD_HandleType *dev);
+
+/* usbd_desc <- usbd */
+USBD_ReturnType USBD_GetDescriptor      (USBD_HandleType *dev);
+
 /** @ingroup USBD
  * @defgroup USBD_Private_Functions_IfClass USBD Class-specific Interface Callouts
  * @brief These functions simply call the class-specific function pointer
@@ -142,31 +167,6 @@ static inline void USBD_IfClass_OutData(
 }
 
 /** @} */
-
-/* {function definition} <- {call site} */
-
-/* usbd <- usbd_ctrl */
-USBD_ReturnType USBD_DevRequest         (USBD_HandleType *dev);
-
-/* usbd_ctrl <- usbd_ep */
-void            USBD_CtrlInCallback     (USBD_HandleType *dev);
-void            USBD_CtrlOutCallback    (USBD_HandleType *dev);
-
-/* usbd_if <- usbd_ctrl */
-USBD_ReturnType USBD_IfRequest          (USBD_HandleType *dev);
-
-/* usbd_if <- usbd */
-void            USBD_IfConfig           (USBD_HandleType *dev,
-                                         uint8_t cfgNum);
-
-/* usbd_if <- usbd_desc */
-const char*     USBD_IfString           (USBD_HandleType *dev);
-
-/* usbd_ep <- usbd_ctrl */
-USBD_ReturnType USBD_EpRequest          (USBD_HandleType *dev);
-
-/* usbd_desc <- usbd */
-USBD_ReturnType USBD_GetDescriptor      (USBD_HandleType *dev);
 
 #ifdef __cplusplus
 }

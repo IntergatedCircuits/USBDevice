@@ -161,11 +161,13 @@ static inline void USBD_EpClearStall    (USBD_HandleType *dev,
  * @brief  Safe function pointer caller that
  *         checks it against NULL and calls it with parameters.
  * @param  CALLBACK: the function pointer
- * @param  PARAMETERS: the required parameters of the function
+ * @param  ...: the required parameters of the function
  */
 #define USBD_SAFE_CALLBACK(CALLBACK, ...)        \
     do{ if ((CALLBACK) != NULL) (void) CALLBACK(__VA_ARGS__); }while(0)
 
+
+/** @brief Reserved string descriptor index */
 #define USBD_IIF_INVALID                0
 
 /**

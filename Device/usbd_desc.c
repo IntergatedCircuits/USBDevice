@@ -24,8 +24,8 @@
 #include <private/usbd_private.h>
 #include <usbd_utils.h>
 
-/** @ingroup USBD
- * @defgroup USBD_Private_Constants USBD Descriptor Prototypes
+/** @ingroup USBD_Private
+ * @defgroup USBD_Private_Functions_Desc USBD Descriptors Provision
  * @{ */
 
 __alignment(USBD_DATA_ALIGNMENT)
@@ -93,12 +93,6 @@ static const struct {
     }
 };
 #endif
-
-/** @} */
-
-/** @ingroup USBD
- * @defgroup USBD_Private_Functions_Desc USBD Descriptors Provision
- * @{ */
 
 /**
  * @brief This function provides the USB device descriptor.

@@ -4,7 +4,7 @@
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2018-07-08
-  * @brief   USB serial console interface template
+  * @brief   USB serial console interface
   *
   * @details
   * This CDC interface can be used to channel standard I/O operations through
@@ -45,7 +45,8 @@
 #undef errno
 extern int32_t errno;
 
-/** @defgroup console_if USB serial console interface template
+/** @ingroup USBD_Templates
+ * @defgroup console_if USB serial console interface
  * @{ */
 
 static void console_if_open         (void* itf, USBD_CDC_LineCodingType * lc);

@@ -23,12 +23,10 @@
 #ifndef __USBD_CONFIG_H_
 #define __USBD_CONFIG_H_
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+/** @defgroup USBD_Templates Templates
+ * @{ */
 
-/** @addtogroup USBD_Exported_Macros
+/** @defgroup USBD_Exported_Macro_Templates USBD precompiler configuration
  * @{ */
 
 /** @brief Must be set according to the highest number of interfaces for a given USB Device. */
@@ -80,8 +78,6 @@ extern "C"
 
 /** @} */
 
-#ifdef __cplusplus
-}
-#endif
+/** @} */
 
 #endif /* __USBD_CONFIG_H_ */

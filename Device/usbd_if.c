@@ -23,7 +23,7 @@
   */
 #include <private/usbd_private.h>
 
-/** @ingroup USBD
+/** @ingroup USBD_Private
  * @defgroup USBD_Private_Functions_If USBD Interface Management
  * @{ */
 

@@ -170,6 +170,10 @@ void USBD_ResetCallback(USBD_HandleType *dev, USB_SpeedType speed)
 /** @} */
 
 /** @ingroup USBD
+ * @defgroup USBD_Private USB Device Private Functions
+ */
+
+/** @ingroup USBD_Private
  * @addtogroup USBD_Private_Functions_Ctrl
  * @{ */
 
