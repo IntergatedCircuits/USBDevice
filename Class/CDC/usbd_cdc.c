@@ -353,6 +353,10 @@ static USBD_ReturnType cdc_setupStage(USBD_CDC_IfHandleType *itf)
                             sizeof(itf->LineCoding));
                     break;
 
+                case CDC_REQ_SET_CONTROL_LINE_STATE:
+                    retval = USBD_E_OK;
+                    break;
+
 #if (USBD_CDC_BREAK_SUPPORT == 1)
                 case CDC_REQ_SEND_BREAK:
                     /* Simply pass the request with wValue */
