@@ -108,7 +108,8 @@ static struct {                                                     \
         if (_LEN2_ > 0) {                                           \
             (Q).tail = 0;                                           \
             while (_LEN2_--)                                        \
-            {   ELEMENTS[_I_++] = (Q).buffer[++(Q).tail]; }         \
+            {   ELEMENTS[_I_++] = (Q).buffer[(Q).tail++]; }         \
+            (Q).tail--;                                             \
     }   } while (0)
 
 /**
@@ -127,7 +128,8 @@ static struct {                                                     \
         if (_LEN2_ > 0) {                                           \
             (Q).head = 0;                                           \
             while (_LEN2_--)                                        \
-            {   (Q).buffer[++(Q).head] = ELEMENTS[_I_++]; }         \
+            {   (Q).buffer[(Q).head++] = ELEMENTS[_I_++]; }         \
+            (Q).head--;                                             \
     }   } while (0)
 
 /** @} */
