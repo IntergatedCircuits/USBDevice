@@ -55,20 +55,20 @@ be included by the driver.
 
 ## Projects using USBDevice
 
-### [DfuBootloader][DfuBootloader] [![Build Status](https://travis-ci.org/IntergatedCircuits/DfuBootloader.svg?branch=master)](https://travis-ci.org/IntergatedCircuits/DfuBootloader)
+### [DfuBootloader][DfuBootloader]
 
 A generic USB device bootloader firmware for STM32 controllers.
 USB device with a single DFU interface
 which is mountable on both the bootloader's and the application's device stack.
 
-### [DebugDongle][DebugDongle] [![Build Status](https://travis-ci.org/IntergatedCircuits/DebugDongleFW.svg?branch=master)](https://travis-ci.org/IntergatedCircuits/DebugDongleFW)
+### [DebugDongle][DebugDongle]
 
 A debug serial port with selectable output power and battery charging.
 Composite USB device with one CDC (serial port),
 two HID interfaces (onboard sensors and power management)
 and the bootloader's DFU interface.
 
-### [CanDybug][CanDybug] [![Build Status](https://travis-ci.org/IntergatedCircuits/CanDybugFW.svg?branch=master)](https://travis-ci.org/IntergatedCircuits/CanDybugFW)
+### [CanDybug][CanDybug]
 
 A CAN bus gateway which uses a custom protocol over a USB serial port emulation.
 Composite USB device with CDC function and the bootloader's DFU interface.
@@ -87,7 +87,6 @@ Improvements in the form of pull requests are also welcome.
 [DebugDongle]: https://github.com/IntergatedCircuits/DebugDongleFW
 [DfuBootloader]: https://github.com/IntergatedCircuits/DfuBootloader
 [DFUSE]: http://www.st.com/resource/en/application_note/cd00264379.pdf
-[standalone]: https://github.com/IntergatedCircuits/USBDevice/wiki/Integration-for-STM32-without-XPD 
 [STM32]: http://www.st.com/en/microcontrollers/stm32-32-bit-arm-cortex-mcus.html
 [STM32_XPD]: https://github.com/IntergatedCircuits/STM32_XPD
 [USBDevice4Cube]: https://github.com/IntergatedCircuits/USBDevice4Cube
