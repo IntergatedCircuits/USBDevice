@@ -29,7 +29,6 @@ with multiple independent interfaces.
 The project consists of the followings:
 * The USB 2.0 device framework is located in the **Device** folder.
 * Common USB classes are implemented as part of the project, under the **Class** folder.
-* HID report descriptor headers and usage table definitions are available under the **Include/HID** folder.
 * The *Templates* folder contains `usbd_config.h` configuration file and various example files.
 * The *Doc* folder contains a prepared *doxyfile* for Doxygen documentation generation.
 
@@ -41,15 +40,24 @@ Currently the following hardware platforms are supported:
 
 ## Basis of operation
 
-This stack on one side is called by the user application to start or stop the device
-using the public API in *usbd.h*. On the other side the stack shall be notified when any of 
-these device peripheral events occur:
+The interface implementations are completely separated from the USB device control.
+Each of them should use its class-specific API from `usbd_<class>.h`.
+There are only two steps to mount an interface to a device:
+
+1. Setting the interface's endpoint addresses;
+2. Cross-referencing the interface and the device with a `USBD_<CLASS>_MountInterface()` call.
+
+A device's mounted interfaces shall not be changed while the device is logically connected to the host.
+
+The device control of the library is limited to the global state management
+using the public API in *usbd.h*. The bulk of the device operation is servicing
+the device peripheral events:
 - USB Reset signal on bus -> `USBD_ResetCallback()`
 - USB control pipe setup request received -> `USBD_SetupCallback()`
 - USB endpoint data transfer completed -> `USBD_EpInCallback()` or `USBD_EpOutCallback()`
 
-The goal of the USBD structures is to be a common management structure for both this stack 
-and the peripheral driver. Any additional fields that the peripheral driver necessitates
+The goal of the USBD handles is to be a shared management structure for both this stack
+and the peripheral driver. Any additional fields that the peripheral driver requires
 can be defined in the driver-specific *usbd_pd_def.h* header, while the *usbd_types.h* shall
 be included by the driver.
 
