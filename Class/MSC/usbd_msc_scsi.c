@@ -68,7 +68,7 @@ USBD_ReturnType SCSI_ProcessRead(USBD_MSC_IfHandleType *itf)
     if (len > itf->SCSI.RemLength)
     {   len = itf->SCSI.RemLength; }
 
-    retval = LU->Read(itf->Buffer,
+    retval = LU->Read(itf->CBW.bLUN, itf->Buffer,
             itf->SCSI.Address / LU->Status->BlockSize,
             len / LU->Status->BlockSize);
 
@@ -112,7 +112,7 @@ USBD_ReturnType SCSI_ProcessWrite(USBD_MSC_IfHandleType *itf)
     if (len > itf->SCSI.RemLength)
     {   len = itf->SCSI.RemLength; }
 
-    retval = LU->Write(itf->Buffer,
+    retval = LU->Write(itf->CBW.bLUN, itf->Buffer,
                 itf->SCSI.Address / LU->Status->BlockSize,
                 len / LU->Status->BlockSize);
 
@@ -155,7 +155,7 @@ static uint32_t SCSI_Inquiry(USBD_MSC_IfHandleType *itf)
     }__packed *cmd = (void*)itf->CBW.CB;
     uint8_t* data = itf->Buffer;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
-    uint32_t respLen;
+    uint32_t respLen, allocLen = ntohs(cmd->AllocLength);
 
     if (cmd->EVPD != 0)
     {
@@ -169,8 +169,8 @@ static uint32_t SCSI_Inquiry(USBD_MSC_IfHandleType *itf)
         memcpy(data, LU->Inquiry, respLen);
     }
 
-    if (respLen > cmd->AllocLength)
-    {   respLen = cmd->AllocLength; }
+    if (respLen > allocLen)
+    {   respLen = allocLen; }
 
     return respLen;
 }
@@ -193,7 +193,7 @@ static uint32_t SCSI_ReadCapacity10(USBD_MSC_IfHandleType *itf)
     struct {
         uint32_t BlockCount;
         uint32_t BlockLength;
-    }__packed *data = (void*)itf->Buffer;
+    }*data = (void*)itf->Buffer;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
     uint32_t respLen = 0;
 
@@ -204,8 +204,8 @@ static uint32_t SCSI_ReadCapacity10(USBD_MSC_IfHandleType *itf)
     }
     else
     {
-        data->BlockCount  = LU->Status->BlockCount - 1;
-        data->BlockLength = LU->Status->BlockSize;
+        data->BlockCount  = htonl(LU->Status->BlockCount - 1);
+        data->BlockLength = htonl(LU->Status->BlockSize);
         respLen = sizeof(*data);
     }
 
@@ -243,16 +243,16 @@ static uint32_t SCSI_ReadFormatCapacity(USBD_MSC_IfHandleType *itf)
         }__packed Capacity[1];
     }*data = (void*)itf->Buffer;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
-    uint32_t respLen = sizeof(*data);
+    uint32_t respLen = sizeof(*data), allocLen = ntohs(cmd->AllocLength);
 
     memset(data, 0, sizeof(*data));
     data->CapacityListLength = 8;
-    data->Capacity[0].BlockCount     = LU->Status->BlockCount - 1;
+    data->Capacity[0].BlockCount     = htonl(LU->Status->BlockCount - 1);
     data->Capacity[0].DescriptorCode = 2; /* Formatted Media */
-    data->Capacity[0].BlockLength    = LU->Status->BlockSize;
+    data->Capacity[0].BlockLength    = htons(LU->Status->BlockSize);
 
-    if (respLen > cmd->AllocLength)
-    {   respLen = cmd->AllocLength; }
+    if (respLen > allocLen)
+    {   respLen = allocLen; }
 
     return respLen;
 }
@@ -317,13 +317,12 @@ static uint32_t SCSI_ModeSense10(USBD_MSC_IfHandleType *itf)
         uint8_t Control;
     }__packed *cmd = (void*)itf->CBW.CB;
     uint8_t (*data)[8] = (void*)itf->Buffer;
-    uint32_t respLen = sizeof(*data);
+    uint32_t respLen = sizeof(*data), allocLen = ntohs(cmd->AllocLength);
 
     memset(data, 0, sizeof(*data));
-    *data[1] = 0x06;
 
-    if (respLen > cmd->AllocLength)
-    {   respLen = cmd->AllocLength; }
+    if (respLen > allocLen)
+    {   respLen = allocLen; }
 
     return respLen;
 }
@@ -374,7 +373,7 @@ static uint32_t SCSI_RequestSense(USBD_MSC_IfHandleType *itf)
 }
 
 /**
- * @brief Initializes or shuts down the LUN depending on the request data.
+ * @brief Handles start-stop requests.
  * @param itf: reference of the MSC interface
  * @return The length of the response data: 0
  */
@@ -395,29 +394,7 @@ static uint32_t SCSI_StartStopUnit(USBD_MSC_IfHandleType *itf)
         };
         uint8_t Control;
     }__packed *cmd = (void*)itf->CBW.CB;
-    const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
 
-    switch (cmd->POWERCONDITION)
-    {
-        case 0:  /* POWERCONDITION ignored, use START and LOEJ */
-            /* Start or stop LUN depending on START bit */
-            if (cmd->START != 0)
-            {
-                USBD_SAFE_CALLBACK(LU->Start, );
-            }
-            else
-            {
-                USBD_SAFE_CALLBACK(LU->Stop, );
-            }
-            break;
-        case 1:  /* Enter Active power state */
-        case 2:  /* Enter Idle power state */
-        case 3:  /* Enter Standby power state */
-        default: /* not supported conditions */
-            SCSI_PutSenseCode(itf, SCSI_SKEY_ILLEGAL_REQUEST,
-                    SCSI_ASC_INVALID_FIELD_IN_COMMAND);
-            break;
-    }
     return 0;
 }
 
@@ -543,6 +520,8 @@ static uint32_t SCSI_Read10(USBD_MSC_IfHandleType *itf)
         uint8_t Control;
     }__packed *cmd = (void*)itf->CBW.CB;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
+    uint32_t blockAddr = ntohl(cmd->BlockAddr);
+    uint16_t transferLen = ntohs(cmd->TransferLength);
 
     /* case (10): Ho <> Di */
     if (itf->CBW.bmFlags == 0)
@@ -555,15 +534,15 @@ static uint32_t SCSI_Read10(USBD_MSC_IfHandleType *itf)
         SCSI_PutSenseCode(itf, SCSI_SKEY_NOT_READY,
                 SCSI_ASC_MEDIUM_NOT_PRESENT);
     }
-    else if ((cmd->BlockAddr + cmd->TransferLength) > LU->Status->BlockCount)
+    else if ((blockAddr + transferLen) > LU->Status->BlockCount)
     {
         SCSI_PutSenseCode(itf, SCSI_SKEY_ILLEGAL_REQUEST,
                 SCSI_ASC_ADDRESS_OUT_OF_RANGE);
     }
     else
     {
-        itf->SCSI.Address = cmd->BlockAddr * LU->Status->BlockSize;
-        itf->SCSI.RemLength = cmd->TransferLength * LU->Status->BlockSize;
+        itf->SCSI.Address = blockAddr * LU->Status->BlockSize;
+        itf->SCSI.RemLength = transferLen * LU->Status->BlockSize;
 
         /* cases 4,5 : Hi <> Dn */
         if (itf->CBW.dDataLength != itf->SCSI.RemLength)
@@ -573,6 +552,7 @@ static uint32_t SCSI_Read10(USBD_MSC_IfHandleType *itf)
         }
         else
         {
+            itf->State = MSC_STATE_DATA_IN;
             SCSI_ProcessRead(itf);
         }
     }
@@ -605,6 +585,8 @@ static uint32_t SCSI_Write10(USBD_MSC_IfHandleType *itf)
         uint8_t Control;
     }__packed *cmd = (void*)itf->CBW.CB;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
+    uint32_t blockAddr = ntohl(cmd->BlockAddr);
+    uint16_t transferLen = ntohs(cmd->TransferLength);
     uint32_t respLen = sizeof(itf->Buffer);
 
     /* case 8 : Hi <> Do */
@@ -623,15 +605,15 @@ static uint32_t SCSI_Write10(USBD_MSC_IfHandleType *itf)
         SCSI_PutSenseCode(itf, SCSI_SKEY_NOT_READY,
                 SCSI_ASC_WRITE_PROTECTED);
     }
-    else if ((cmd->BlockAddr + cmd->TransferLength) > LU->Status->BlockCount)
+    else if ((blockAddr + transferLen) > LU->Status->BlockCount)
     {
         SCSI_PutSenseCode(itf, SCSI_SKEY_ILLEGAL_REQUEST,
                 SCSI_ASC_ADDRESS_OUT_OF_RANGE);
     }
     else
     {
-        itf->SCSI.Address = cmd->BlockAddr * LU->Status->BlockSize;
-        itf->SCSI.RemLength = cmd->TransferLength * LU->Status->BlockSize;
+        itf->SCSI.Address = blockAddr * LU->Status->BlockSize;
+        itf->SCSI.RemLength = transferLen * LU->Status->BlockSize;
 
         /* cases 3,11,13 : Hn,Ho <> D0 */
         if (itf->CBW.dDataLength != itf->SCSI.RemLength)

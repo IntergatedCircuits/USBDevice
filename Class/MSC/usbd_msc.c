@@ -39,17 +39,22 @@
 #define MSC_PROT_UAS                0x62
 #define MSC_PROT_VENDOR             0xFF
 
-#define MSC_CBW_SIGNATURE           0x43425355
-#define MSC_CSW_SIGNATURE           0x53425355
-
-#define MSC_CBW_SIZE                31
-#define MSC_CSW_SIZE                13
-
 #if (USBD_HS_SUPPORT == 1)
 #define MSC_DATA_PACKET_SIZE        USB_EP_BULK_HS_MPS
 #else
 #define MSC_DATA_PACKET_SIZE        USB_EP_BULK_FS_MPS
 #endif
+
+typedef union {
+    uint8_t b[4];
+    uint32_t dw;
+}USBD_MSC_SignatureType;
+
+static const USBD_MSC_SignatureType cbw_sign =
+{ .b = {'U', 'S', 'B', 'C'} };
+
+static const USBD_MSC_SignatureType csw_sign =
+{ .b = {'U', 'S', 'B', 'S'} };
 
 static const USB_InterfaceDescType msc_desc = {
     /* MSC Interface Descriptor */
@@ -145,7 +150,7 @@ static void MSC_ReceiveCBW(USBD_MSC_IfHandleType *itf)
     itf->State = MSC_STATE_COMMAND_OUT;
 
     USBD_EpReceive(itf->Base.Device, itf->Config.OutEpNum,
-            (uint8_t *)&itf->CBW, MSC_CBW_SIZE);
+            (uint8_t *)&itf->CBW, sizeof(itf->CBW));
 }
 
 /**
@@ -155,7 +160,7 @@ static void MSC_ReceiveCBW(USBD_MSC_IfHandleType *itf)
 static void MSC_SendCSW(USBD_MSC_IfHandleType *itf)
 {
     USBD_EpSend(itf->Base.Device, itf->Config.InEpNum,
-            (uint8_t*)&itf->CSW, MSC_CSW_SIZE);
+            (uint8_t*)&itf->CSW, sizeof(itf->CSW));
 
     MSC_ReceiveCBW(itf);
 }
@@ -168,6 +173,7 @@ static void MSC_Init(USBD_MSC_IfHandleType *itf)
 {
     USBD_HandleType *dev = itf->Base.Device;
     uint16_t mps;
+    uint8_t lun;
 
 #if (USBD_HS_SUPPORT == 1)
     if (itf->Base.Device->Speed == USB_SPEED_HIGH)
@@ -186,9 +192,15 @@ static void MSC_Init(USBD_MSC_IfHandleType *itf)
 
     /* Initialize BOT layer */
     itf->Status = MSC_STATUS_NORMAL;
-    itf->CSW.dSignature = MSC_CSW_SIGNATURE;
+    itf->CSW.dSignature = csw_sign.dw;
 
     MSC_ReceiveCBW(itf);
+
+    for (lun = 0; lun <= itf->Config.MaxLUN; lun++)
+    {
+        USBD_SAFE_CALLBACK(MSC_GetLU(itf, lun)->Init, lun);
+    }
+
 }
 
 /**
@@ -198,6 +210,7 @@ static void MSC_Init(USBD_MSC_IfHandleType *itf)
 static void MSC_Deinit(USBD_MSC_IfHandleType *itf)
 {
     USBD_HandleType *dev = itf->Base.Device;
+    uint8_t lun;
 
     /* Close EPs */
     USBD_EpClose(dev, itf->Config.InEpNum);
@@ -208,6 +221,11 @@ static void MSC_Deinit(USBD_MSC_IfHandleType *itf)
     dev->EP.IN [itf->Config.InEpNum  & 0xF].MaxPacketSize =
     dev->EP.OUT[itf->Config.OutEpNum      ].MaxPacketSize = MSC_DATA_PACKET_SIZE;
 #endif
+
+    for (lun = 0; lun <= itf->Config.MaxLUN; lun++)
+    {
+        USBD_SAFE_CALLBACK(MSC_GetLU(itf, lun)->Deinit, lun);
+    }
 }
 
 /**
@@ -228,7 +246,8 @@ static USBD_ReturnType MSC_SetupStage(USBD_MSC_IfHandleType *itf)
             {
                 case MSC_BOT_GET_MAX_LUN:
                 {
-                    retval = USBD_CtrlSendData(dev, &itf->Config.MaxLUN,
+                    dev->CtrlData[0] = itf->Config.MaxLUN;
+                    retval = USBD_CtrlSendData(dev, dev->CtrlData,
                             sizeof(itf->Config.MaxLUN));
                     break;
                 }
@@ -310,8 +329,8 @@ static void MSC_OutData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
             itf->CSW.bStatus = MSC_CSW_CMD_PASSED;
 
             /* Check received CBW validity */
-            if ((ep->Transfer.Length == MSC_CBW_SIZE) &&
-                (itf->CBW.dSignature == MSC_CBW_SIGNATURE) &&
+            if ((ep->Transfer.Length == sizeof(itf->CBW)) &&
+                (itf->CBW.dSignature == cbw_sign.dw) &&
                 (itf->CBW.bLUN <= itf->Config.MaxLUN) &&
                 (itf->CBW.bCBLength > 0) &&
                 (itf->CBW.bCBLength <= 16))

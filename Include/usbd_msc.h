@@ -155,8 +155,7 @@ typedef struct
     uint8_t bLUN;           /*!< Logical Unit selector Number */
     uint8_t bCBLength;      /*!< Length of the Command Block */
     uint8_t CB[16];         /*!< Command Block */
-    uint8_t reserved;       /* added for alignment */
-}USBD_MSC_CommandBlockWrapperType;
+}__packed USBD_MSC_CommandBlockWrapperType;
 
 
 /** @brief MSC Command Status Wrapper message structure */
@@ -166,7 +165,7 @@ typedef struct
     uint32_t dTag;          /*!< Tag to bind CSW to CBW */
     uint32_t dDataResidue;  /*!< Difference between host requested length and actual sent data length */
     uint8_t bStatus;        /*!< @ref USBD_MSC_CSWStatusType command execution status */
-}USBD_MSC_CommandStatusWrapperType;
+}__packed USBD_MSC_CommandStatusWrapperType;
 
 
 /** @brief MSC Logical Unit status */
@@ -182,18 +181,23 @@ typedef struct
 /** @brief MSC Logical Unit interfacing structure */
 typedef struct
 {
-    void    (*Start)        (void);             /*!< Start media (by StartUnit command) */
-    void    (*Stop)         (void);             /*!< Stop media (by StopUnit command) */
-    uint8_t (*Read)         (uint8_t *dest,
+    void    (*Init)         (uint8_t lun);      /*!< Initialize media (optional) */
+
+    void    (*Deinit)       (uint8_t lun);      /*!< Release media (optional) */
+
+    uint8_t (*Read)         (uint8_t lun,
+                             uint8_t *dest,
                              uint32_t blockAddr,
                              uint16_t blockLen);/*!< Read media block */
-    uint8_t (*Write)        (uint8_t *src,
+
+    uint8_t (*Write)        (uint8_t lun,
+                             uint8_t *src,
                              uint32_t blockAddr,
                              uint16_t blockLen);/*!< Write media block */
 
-    const USBD_SCSI_StdInquiryType* Inquiry;    /*!< Standard Inquiry of Logical Unit */
+    USBD_MSC_LUStatusType*  Status;             /*!< Up-to-date status of Logical Unit */
 
-    USBD_MSC_LUStatusType* Status;              /*!< Up-to-date status of Logical Unit */
+    const USBD_SCSI_StdInquiryType* Inquiry;    /*!< Standard Inquiry of Logical Unit */
 }USBD_MSC_LUType;
 
 
@@ -215,6 +219,7 @@ typedef struct
 
     uint8_t Buffer[USBD_MSC_BUFFER_SIZE];   /*!< Block transferring buffer */
     USBD_MSC_CommandBlockWrapperType  CBW;  /*!< Command Block Wrapper */
+    const uint8_t __padding;
     USBD_MSC_CommandStatusWrapperType CSW;  /*!< Command Status Wrapper */
 
     USBD_MSC_ConfigType Config;             /*!< MSC interface configuration */
