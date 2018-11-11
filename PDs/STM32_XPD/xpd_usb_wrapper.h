@@ -42,23 +42,31 @@ typedef USBD_ConfigurationType  USB_InitType;
 
 /** @} */
 
+#ifndef USB_vResetCallback
+#define USB_vResetCallback              USBD_ResetCallback
+#endif
+#ifndef USB_vSetupCallback
+#define USB_vSetupCallback              USBD_SetupCallback
+#endif
+#ifndef USB_vDataInCallback
+#define USB_vDataInCallback             USBD_EpInCallback
+#endif
+#ifndef USB_vDataOutCallback
+#define USB_vDataOutCallback            USBD_EpOutCallback
+#endif
+
 /* usbd <- PD */
-void            USBD_ResetCallback      (USBD_HandleType *dev,
+void            USB_vResetCallback      (USBD_HandleType *dev,
                                          USB_SpeedType speed);
 
 /* usbd_ctrl <- PD */
-void            USBD_SetupCallback      (USBD_HandleType *dev);
+void            USB_vSetupCallback      (USBD_HandleType *dev);
 
 /* usbd_ep <- PD */
-void            USBD_EpInCallback       (USBD_HandleType *dev,
+void            USB_vDataInCallback     (USBD_HandleType *dev,
                                          USBD_EpHandleType *ep);
-void            USBD_EpOutCallback      (USBD_HandleType *dev,
+void            USB_vDataOutCallback    (USBD_HandleType *dev,
                                          USBD_EpHandleType *ep);
-
-#define USB_vResetCallback      USBD_ResetCallback
-#define USB_vSetupCallback      USBD_SetupCallback
-#define USB_vDataInCallback     USBD_EpInCallback
-#define USB_vDataOutCallback    USBD_EpOutCallback
 
 /** @} */
 
