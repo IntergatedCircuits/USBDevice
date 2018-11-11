@@ -75,6 +75,13 @@ extern "C"
 #define USBD_PD_EpClearStall            USB_vEpClearStall
 #define USBD_PD_EpFlush                 USB_vEpFlush
 
+#ifndef __htonl
+#define __htonl(_x)                     ((uint32_t)__REV(_x))
+#endif
+#ifndef __htons
+#define __htons(_x)                     ((uint16_t)__REVSH(_x))
+#endif
+
 /** @} */
 
 #endif

@@ -180,6 +180,16 @@ static inline void USBD_EpClearStall    (USBD_HandleType *dev,
     (USBD_ISTR_INTERFACES + (IFNUM) + ((INTNUM) << 4))
 
 
+#ifdef __htonl
+#define htonl(_x)                       __htonl(_x)
+#endif
+#ifdef __htons
+#define htons(_x)                       __htons(_x)
+#endif
+#define ntohl(_x)                       htonl(_x)
+#define ntohs(_x)                       htons(_x)
+
+
 #ifdef __cplusplus
 }
 #endif
