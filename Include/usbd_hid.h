@@ -161,7 +161,6 @@ typedef struct
     const USBD_HID_AppType* App;    /*!< HID application reference */
     USBD_HID_ConfigType Config;     /*!< HID interface configuration */
 
-    /* HID class internal context */
     uint8_t IdleRate;               /*!< Contains the current idle rate
                                          @note Report ID separate idle rates are
                                          not readable with the current API. */
@@ -177,12 +176,12 @@ USBD_ReturnType USBD_HID_MountInterface (USBD_HID_IfHandleType *itf,
                                          USBD_HandleType *dev);
 
 USBD_ReturnType USBD_HID_ReportIn       (USBD_HID_IfHandleType *itf,
-                                         uint8_t *data,
+                                         void *data,
                                          uint16_t length);
 
 #if (USBD_HID_OUT_SUPPORT == 1)
 USBD_ReturnType USBD_HID_ReportOut      (USBD_HID_IfHandleType *itf,
-                                         uint8_t *data,
+                                         void *data,
                                          uint16_t length);
 #endif
 /** @} */

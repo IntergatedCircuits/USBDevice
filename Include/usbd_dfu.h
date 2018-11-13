@@ -178,11 +178,14 @@ typedef struct
     USBD_IfHandleType Base;             /*!< Class-independent interface base */
     const USBD_DFU_AppType* App;        /*!< DFU application reference */
     USBD_DFU_ConfigType Config;         /*!< DFU interface configuration */
+    USBD_PADDING_2(a);
+
     uint32_t Tag[2];                    /*!< Enter DFU mode request tag */
     uint16_t BlockNum;                  /*!< Current firmware transfer block number */
     uint16_t BlockLength;               /*!< Current firmware transfer block length */
     uint8_t* Address;                   /*!< Current firmware address for transfer */
     USBD_DFU_StatusDataType DevStatus;  /*!< Device DFU status */
+    USBD_PADDING_2(b);
 }USBD_DFU_IfHandleType;
 
 /** @} */

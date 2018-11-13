@@ -89,20 +89,25 @@ typedef struct
     USBD_IfHandleType Base;         /*!< Class-independent interface base */
     const USBD_NCM_AppType* App;    /*!< NCM application reference */
     USBD_NCM_ConfigType Config;     /*!< NCM interface configuration */
+    USBD_PADDING_1();
+
+    /* NCM class internal context */
     struct {
         USBD_CDC_NotifyHeaderType  SpeedChange;
         USBD_CDC_SpeedChangeType   SpeedData;
         USBD_CDC_NotifyHeaderType  Connection;
-    }Notify;
+    }Notify;                        /*!< NCM message buffer for notifications */
+
     struct {
         uint32_t Data[2][USBD_NCM_MAX_OUT_SIZE / sizeof(uint32_t)];
         void*    PT;
         uint8_t  Page;
         uint8_t  Dx;
         volatile uint8_t State[2];
-    }Out;
+    }Out;                           /*!< Received NTB status and double buffer */
+
     struct {
-        uint32_t Data [2][USBD_NCM_MAX_IN_SIZE  / sizeof(uint32_t)];
+        uint32_t Data[2][USBD_NCM_MAX_IN_SIZE  / sizeof(uint32_t)];
         uint32_t MaxSize;
         uint32_t RemSize;
         uint16_t Index;
@@ -110,7 +115,7 @@ typedef struct
         uint8_t  DgCount;
         volatile uint8_t SendState;
         volatile uint8_t FillState;
-    }In;
+    }In;                            /*!< Transmit NTB status and double buffer */
 }USBD_NCM_IfHandleType;
 
 /** @} */

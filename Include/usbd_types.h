@@ -47,19 +47,37 @@
 #endif
 
 #ifndef USBD_MAX_EP_COUNT
+/** @brief Determined by the peripheral */
 #define USBD_MAX_EP_COUNT               1
 #endif
 
 #ifndef USBD_EP0_MAX_PACKET_SIZE
-#define USBD_EP0_MAX_PACKET_SIZE        64
+/** @brief Use the allowed maximum as default.
+ * It can be reduced if the peripheral's endpoint buffers are otherwise exceeded. */
+#define USBD_EP0_MAX_PACKET_SIZE        USB_EP_CTRL_HS_MPS
 #endif
 
 #ifndef USBD_LANGID_STRING
-#define USBD_LANGID_STRING              0x409 /* en-US */
+/** @brief The default Unicode language ID is en-US */
+#define USBD_LANGID_STRING              0x409
 #endif
 
 #ifndef USBD_DATA_ALIGNMENT
+/** @brief Determined by the peripheral's data transferring requirements (e.g. DMA) */
 #define USBD_DATA_ALIGNMENT             1
+#endif
+#if USBD_DATA_ALIGNMENT == 4
+#define USBD_PADDING_1(x)               const uint8_t __padding##x[1]
+#define USBD_PADDING_2(x)               const uint8_t __padding##x[2]
+#define USBD_PADDING_3(x)               const uint8_t __padding##x[3]
+#elif USBD_DATA_ALIGNMENT == 2
+#define USBD_PADDING_1(x)               const uint8_t __padding##x[1]
+#define USBD_PADDING_2(x)
+#define USBD_PADDING_3(x)               const uint8_t __padding##x[3]
+#else
+#define USBD_PADDING_1(x)
+#define USBD_PADDING_2(x)
+#define USBD_PADDING_3(x)
 #endif
 
 #ifndef USBD_HS_SUPPORT
@@ -67,7 +85,7 @@
 #endif
 
 #if !defined(USBD_SPEC_BCD) && (USBD_LPM_SUPPORT != 0)
-/* In order to support reading the BOS descriptor
+/** @brief In order to support reading the BOS descriptor
  * (which specifies the LPM support of the device),
  * the bcdUSB has to be increased to 2.01 at least */
 #define USBD_SPEC_BCD                   0x0201
@@ -248,8 +266,9 @@ typedef struct _USBD_IfHandleType
 {
     struct _USBD_HandleType *Device;    /*!< Reference of the related USB Device */
     const  USBD_ClassType   *Class;     /*!< Reference of the class specific methods */
-    uint8_t AltCount;                   /*!< Number of alternate settings */
     uint8_t AltSelector;                /*!< Current alternate setting */
+    uint8_t AltCount;                   /*!< Number of alternate settings */
+    USBD_PADDING_2();
 }USBD_IfHandleType;
 
 
@@ -283,7 +302,7 @@ typedef struct _USBD_HandleType
         USBD_EpHandleType OUT[USBD_MAX_EP_COUNT];   /*!< OUT endpoint status */
     }EP;                                            /*!< Endpoint management */
 
-    uint8_t CtrlData[USBD_EP0_BUFFER_SIZE]; /*!< Control EP buffer for common use */
+    uint8_t CtrlData[USBD_EP0_BUFFER_SIZE] __align(USBD_DATA_ALIGNMENT); /*!< Control EP buffer for common use */
 }USBD_HandleType;
 
 /** @} */

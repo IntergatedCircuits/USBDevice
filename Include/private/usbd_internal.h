@@ -40,11 +40,11 @@ extern "C"
  * @{ */
 
 USBD_ReturnType USBD_CtrlSendData       (USBD_HandleType *dev,
-                                         const uint8_t *data,
+                                         void *data,
                                          uint16_t len);
 
 USBD_ReturnType USBD_CtrlReceiveData    (USBD_HandleType *dev,
-                                         uint8_t *data);
+                                         void *data);
 
 uint16_t        USBD_EpDesc             (USBD_HandleType *dev,
                                          uint8_t epAddr,
@@ -54,12 +54,12 @@ uint8_t         USBD_EpHsInterval       (uint32_t interval_ms);
 
 USBD_ReturnType USBD_EpSend             (USBD_HandleType *dev,
                                          uint8_t epAddr,
-                                         const uint8_t *data,
+                                         void *data,
                                          uint16_t len);
 
 USBD_ReturnType USBD_EpReceive          (USBD_HandleType *dev,
                                          uint8_t epAddr,
-                                         uint8_t *data,
+                                         void *data,
                                          uint16_t len);
 
 /**

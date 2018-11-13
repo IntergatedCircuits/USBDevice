@@ -334,8 +334,13 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                     /* Return HID class descriptor */
                     case HID_DESC_TYPE_HID:
                     {
-                        retval = USBD_CtrlSendData(dev, (uint8_t*)&hid_desc.HIDCD,
-                                sizeof(hid_desc.HIDCD));
+#if USBD_DATA_ALIGNMENT > 1
+                        void* data = dev->CtrlData;
+                        memcpy(dev->CtrlData, &hid_desc.HIDCD, sizeof(hid_desc.HIDCD));
+#else
+                        void* data = &hid_desc.HIDCD;
+#endif
+                        retval = USBD_CtrlSendData(dev, data, sizeof(hid_desc.HIDCD));
                         break;
                     }
                     /* Return HID report descriptor */
@@ -525,7 +530,7 @@ USBD_ReturnType USBD_HID_MountInterface(USBD_HID_IfHandleType *itf, USBD_HandleT
  * @param length: length of the data
  * @return BUSY if the previous transfer is still ongoing, OK if successful
  */
-USBD_ReturnType USBD_HID_ReportIn(USBD_HID_IfHandleType *itf, uint8_t *data, uint16_t length)
+USBD_ReturnType USBD_HID_ReportIn(USBD_HID_IfHandleType *itf, void *data, uint16_t length)
 {
     USBD_ReturnType retval;
     USBD_HandleType *dev = itf->Base.Device;
@@ -534,7 +539,7 @@ USBD_ReturnType USBD_HID_ReportIn(USBD_HID_IfHandleType *itf, uint8_t *data, uin
     /* If the function is invoked in the EP0 GetReport() callback context,
      * and the report ID matches, use EP0 to transfer the report */
     if ((itf->Request != 0) &&
-        ((reportId == 0) || (reportId == data[0])))
+        ((reportId == 0) || (reportId == ((uint8_t*)data)[0])))
     {
         retval = USBD_CtrlSendData(dev, data, length);
         itf->Request = 0;
@@ -554,7 +559,7 @@ USBD_ReturnType USBD_HID_ReportIn(USBD_HID_IfHandleType *itf, uint8_t *data, uin
  * @param length: length of the data
  * @return BUSY if the previous transfer is still ongoing, OK if successful
  */
-USBD_ReturnType USBD_HID_ReportOut(USBD_HID_IfHandleType *itf, uint8_t *data, uint16_t length)
+USBD_ReturnType USBD_HID_ReportOut(USBD_HID_IfHandleType *itf, void *data, uint16_t length)
 {
     USBD_ReturnType retval = USBD_E_ERROR;
     USBD_HandleType *dev = itf->Base.Device;

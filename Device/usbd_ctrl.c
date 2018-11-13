@@ -141,7 +141,7 @@ void USBD_CtrlOutCallback(USBD_HandleType *dev)
  * @param len: length of the data
  * @return OK if called from the right context, ERROR otherwise
  */
-USBD_ReturnType USBD_CtrlSendData(USBD_HandleType *dev, const uint8_t *data, uint16_t len)
+USBD_ReturnType USBD_CtrlSendData(USBD_HandleType *dev, void *data, uint16_t len)
 {
     USBD_ReturnType retval = USBD_E_ERROR;
 
@@ -155,7 +155,7 @@ USBD_ReturnType USBD_CtrlSendData(USBD_HandleType *dev, const uint8_t *data, uin
         }
 
         dev->EP.IN[0].State = USB_EP_STATE_DATA;
-        USBD_PD_EpSend(dev, 0x80, data, len);
+        USBD_PD_EpSend(dev, 0x80, (const uint8_t*)data, len);
 
         retval = USBD_E_OK;
     }
@@ -168,7 +168,7 @@ USBD_ReturnType USBD_CtrlSendData(USBD_HandleType *dev, const uint8_t *data, uin
  * @param data: pointer to the target buffer to receive to
  * @return OK if called from the right context, ERROR otherwise
  */
-USBD_ReturnType USBD_CtrlReceiveData(USBD_HandleType *dev, uint8_t *data)
+USBD_ReturnType USBD_CtrlReceiveData(USBD_HandleType *dev, void *data)
 {
     USBD_ReturnType retval = USBD_E_ERROR;
 
@@ -178,7 +178,7 @@ USBD_ReturnType USBD_CtrlReceiveData(USBD_HandleType *dev, uint8_t *data)
         uint16_t len = dev->Setup.Length;
 
         dev->EP.OUT[0].State = USB_EP_STATE_DATA;
-        USBD_PD_EpReceive(dev, 0x00, data, len);
+        USBD_PD_EpReceive(dev, 0x00, (uint8_t*)data, len);
 
         retval = USBD_E_OK;
     }

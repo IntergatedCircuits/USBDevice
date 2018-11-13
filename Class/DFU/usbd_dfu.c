@@ -105,8 +105,9 @@ static const USBD_DFU_DescType dfu_desc = {
 };
 
 #if (USBD_DFU_ST_EXTENSION != 0)
+__alignment(USBD_DATA_ALIGNMENT)
 /* List of supported DFU SE commands */
-static const uint8_t dfuse_cmds[] = {
+static const uint8_t dfuse_cmds[] __align(USBD_DATA_ALIGNMENT) = {
     DFUSE_CMD_GETCOMMANDS,
     DFUSE_CMD_SETADDRESSPOINTER,
     DFUSE_CMD_ERASE,
@@ -376,9 +377,13 @@ static USBD_ReturnType rodfu_setupStage(USBD_DFU_IfHandleType *itf)
                     /* Return DFU func. descriptor */
                     case DFU_DESC_TYPE_FUNCTIONAL:
                     {
-                        retval = USBD_CtrlSendData(dev,
-                                (uint8_t*)&dfu_desc.DFUFD,
-                                sizeof(dfu_desc.DFUFD));
+#if USBD_DATA_ALIGNMENT > 1
+                        void* data = dev->CtrlData;
+                        memcpy(dev->CtrlData, &dfu_desc.DFUFD, sizeof(dfu_desc.DFUFD));
+#else
+                        void* data = &dfu_desc.DFUFD;
+#endif
+                        retval = USBD_CtrlSendData(dev, data, sizeof(dfu_desc.DFUFD));
                         break;
                     }
                     default:
@@ -397,8 +402,7 @@ static USBD_ReturnType rodfu_setupStage(USBD_DFU_IfHandleType *itf)
                     break;
                 case DFU_REQ_GETSTATUS:
                     return USBD_CtrlSendData(dev,
-                            (uint8_t*)&itf->DevStatus,
-                            sizeof(itf->DevStatus));
+                            &itf->DevStatus, sizeof(itf->DevStatus));
                     break;
                 case DFU_REQ_GETSTATE:
                     retval = dfu_getState(itf);
@@ -694,8 +698,7 @@ static USBD_ReturnType dfu_getStatus(USBD_DFU_IfHandleType *itf)
     }
 
     /* Send the status data over EP0 */
-    USBD_CtrlSendData(dev, (uint8_t*)&itf->DevStatus,
-            sizeof(itf->DevStatus));
+    USBD_CtrlSendData(dev, &itf->DevStatus, sizeof(itf->DevStatus));
 
     itf->DevStatus.State = nextState;
     return USBD_E_OK;

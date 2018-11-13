@@ -227,9 +227,8 @@ static USBD_ReturnType USBD_SetConfig(USBD_HandleType *dev)
  */
 static USBD_ReturnType USBD_GetConfig(USBD_HandleType *dev)
 {
-    return USBD_CtrlSendData(dev,
-            (uint8_t*)&dev->ConfigSelector,
-            sizeof(dev->ConfigSelector));
+    dev->CtrlData[0] = dev->ConfigSelector;
+    return USBD_CtrlSendData(dev, dev->CtrlData, sizeof(dev->ConfigSelector));
 }
 
 /**
@@ -239,9 +238,9 @@ static USBD_ReturnType USBD_GetConfig(USBD_HandleType *dev)
  */
 static USBD_ReturnType USBD_GetStatus(USBD_HandleType *dev)
 {
-    return USBD_CtrlSendData(dev,
-            (uint8_t*)&dev->Features.w,
-            sizeof(dev->Features.w));
+    uint16_t *devStatus = (uint16_t*)dev->CtrlData;
+    *devStatus = dev->Features.w;
+    return USBD_CtrlSendData(dev, devStatus, sizeof(*devStatus));
 }
 
 /**

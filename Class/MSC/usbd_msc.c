@@ -70,23 +70,23 @@ static const USB_InterfaceDescType msc_desc = {
 };
 
 
-static uint16_t         MSC_GetDesc     (USBD_MSC_IfHandleType *itf, uint8_t ifNum, uint8_t * dest);
-static const char *     MSC_GetString   (USBD_MSC_IfHandleType *itf, uint8_t intNum);
-static void             MSC_Init        (USBD_MSC_IfHandleType *itf);
-static void             MSC_Deinit      (USBD_MSC_IfHandleType *itf);
-static USBD_ReturnType  MSC_SetupStage  (USBD_MSC_IfHandleType *itf);
-static void             MSC_OutData     (USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep);
-static void             MSC_InData      (USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep);
+static uint16_t         msc_getDesc     (USBD_MSC_IfHandleType *itf, uint8_t ifNum, uint8_t * dest);
+static const char *     msc_getString   (USBD_MSC_IfHandleType *itf, uint8_t intNum);
+static void             msc_init        (USBD_MSC_IfHandleType *itf);
+static void             msc_deinit      (USBD_MSC_IfHandleType *itf);
+static USBD_ReturnType  msc_setupStage  (USBD_MSC_IfHandleType *itf);
+static void             msc_outData     (USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep);
+static void             msc_inData      (USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep);
 
 /* MSC interface class callbacks structure */
 static const USBD_ClassType msc_cbks = {
-    .GetDescriptor  = (USBD_IfDescCbkType)  MSC_GetDesc,
-    .GetString      = (USBD_IfStrCbkType)   MSC_GetString,
-    .Init           = (USBD_IfCbkType)      MSC_Init,
-    .Deinit         = (USBD_IfCbkType)      MSC_Deinit,
-    .SetupStage     = (USBD_IfSetupCbkType) MSC_SetupStage,
-    .OutData        = (USBD_IfEpCbkType)    MSC_OutData,
-    .InData         = (USBD_IfEpCbkType)    MSC_InData,
+    .GetDescriptor  = (USBD_IfDescCbkType)  msc_getDesc,
+    .GetString      = (USBD_IfStrCbkType)   msc_getString,
+    .Init           = (USBD_IfCbkType)      msc_init,
+    .Deinit         = (USBD_IfCbkType)      msc_deinit,
+    .SetupStage     = (USBD_IfSetupCbkType) msc_setupStage,
+    .OutData        = (USBD_IfEpCbkType)    msc_outData,
+    .InData         = (USBD_IfEpCbkType)    msc_inData,
 };
 
 /** @ingroup USBD_MSC
@@ -100,7 +100,7 @@ static const USBD_ClassType msc_cbks = {
  * @param dest: the destination buffer
  * @return Length of the copied descriptor
  */
-static uint16_t MSC_GetDesc(USBD_MSC_IfHandleType *itf, uint8_t ifNum, uint8_t * dest)
+static uint16_t msc_getDesc(USBD_MSC_IfHandleType *itf, uint8_t ifNum, uint8_t * dest)
 {
     USB_InterfaceDescType *desc = (USB_InterfaceDescType*)dest;
     uint16_t len = sizeof(msc_desc);
@@ -135,7 +135,7 @@ static uint16_t MSC_GetDesc(USBD_MSC_IfHandleType *itf, uint8_t ifNum, uint8_t *
  * @param intNum: interface-internal string index
  * @return The referenced string
  */
-static const char* MSC_GetString(USBD_MSC_IfHandleType *itf, uint8_t intNum)
+static const char* msc_getString(USBD_MSC_IfHandleType *itf, uint8_t intNum)
 {
     /* TODO Temporary solution to reduce number of strings */
     return MSC_GetLU(itf,0)->Inquiry->ProductId;
@@ -145,31 +145,31 @@ static const char* MSC_GetString(USBD_MSC_IfHandleType *itf, uint8_t intNum)
  * @brief Initiate the reception of the CBW through the OUT pipe.
  * @param itf: reference of the MSC interface
  */
-static void MSC_ReceiveCBW(USBD_MSC_IfHandleType *itf)
+static void msc_receiveCBW(USBD_MSC_IfHandleType *itf)
 {
     itf->State = MSC_STATE_COMMAND_OUT;
 
     USBD_EpReceive(itf->Base.Device, itf->Config.OutEpNum,
-            (uint8_t *)&itf->CBW, sizeof(itf->CBW));
+            &itf->CBW, sizeof(itf->CBW));
 }
 
 /**
  * @brief Send the Command Status Wrapper to the host.
  * @param itf: reference of the MSC interface
  */
-static void MSC_SendCSW(USBD_MSC_IfHandleType *itf)
+static void msc_sendCSW(USBD_MSC_IfHandleType *itf)
 {
     USBD_EpSend(itf->Base.Device, itf->Config.InEpNum,
-            (uint8_t*)&itf->CSW, sizeof(itf->CSW));
+            &itf->CSW, sizeof(itf->CSW));
 
-    MSC_ReceiveCBW(itf);
+    msc_receiveCBW(itf);
 }
 
 /**
  * @brief Initializes the interface by opening its endpoints.
  * @param itf: reference of the MSC interface
  */
-static void MSC_Init(USBD_MSC_IfHandleType *itf)
+static void msc_init(USBD_MSC_IfHandleType *itf)
 {
     USBD_HandleType *dev = itf->Base.Device;
     uint16_t mps;
@@ -194,7 +194,7 @@ static void MSC_Init(USBD_MSC_IfHandleType *itf)
     itf->Status = MSC_STATUS_NORMAL;
     itf->CSW.dSignature = csw_sign.dw;
 
-    MSC_ReceiveCBW(itf);
+    msc_receiveCBW(itf);
 
     for (lun = 0; lun <= itf->Config.MaxLUN; lun++)
     {
@@ -207,7 +207,7 @@ static void MSC_Init(USBD_MSC_IfHandleType *itf)
  * @brief Deinitializes the interface by closing its endpoints.
  * @param itf: reference of the MSC interface
  */
-static void MSC_Deinit(USBD_MSC_IfHandleType *itf)
+static void msc_deinit(USBD_MSC_IfHandleType *itf)
 {
     USBD_HandleType *dev = itf->Base.Device;
     uint8_t lun;
@@ -233,7 +233,7 @@ static void MSC_Deinit(USBD_MSC_IfHandleType *itf)
  * @param itf: reference of the MSC interface
  * @return OK if the setup request is accepted, INVALID otherwise
  */
-static USBD_ReturnType MSC_SetupStage(USBD_MSC_IfHandleType *itf)
+static USBD_ReturnType msc_setupStage(USBD_MSC_IfHandleType *itf)
 {
     USBD_ReturnType retval = USBD_E_INVALID;
     USBD_HandleType *dev = itf->Base.Device;
@@ -247,8 +247,7 @@ static USBD_ReturnType MSC_SetupStage(USBD_MSC_IfHandleType *itf)
                 case MSC_BOT_GET_MAX_LUN:
                 {
                     dev->CtrlData[0] = itf->Config.MaxLUN;
-                    retval = USBD_CtrlSendData(dev, dev->CtrlData,
-                            sizeof(itf->Config.MaxLUN));
+                    retval = USBD_CtrlSendData(dev, dev->CtrlData, 1);
                     break;
                 }
                 case MSC_BOT_RESET:
@@ -272,7 +271,7 @@ static USBD_ReturnType MSC_SetupStage(USBD_MSC_IfHandleType *itf)
  * @param itf: reference of the MSC interface
  * @param ep: reference to the IN endpoint structure
  */
-static void MSC_InData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
+static void msc_inData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
 {
     USBD_HandleType *dev = itf->Base.Device;
 
@@ -299,12 +298,12 @@ static void MSC_InData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
         {
             if (itf->Status == MSC_STATUS_NORMAL)
             {
-                MSC_SendCSW(itf);
+                msc_sendCSW(itf);
             }
             break;
         }
 
-        default: /* MSC_SendCSW completed */
+        default: /* msc_sendCSW completed */
             break;
     }
 }
@@ -314,7 +313,7 @@ static void MSC_InData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
  * @param itf: reference of the MSC interface
  * @param ep: reference to the IN endpoint structure
  */
-static void MSC_OutData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
+static void msc_outData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
 {
     USBD_HandleType *dev = itf->Base.Device;
 
@@ -333,14 +332,14 @@ static void MSC_OutData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
                 (itf->CBW.dSignature == cbw_sign.dw) &&
                 (itf->CBW.bLUN <= itf->Config.MaxLUN) &&
                 (itf->CBW.bCBLength > 0) &&
-                (itf->CBW.bCBLength <= 16))
+                (itf->CBW.bCBLength <= sizeof(itf->CBW.CB)))
             {
                 SCSI_ProcessCommand(itf);
 
                 /* Send command status */
                 if (itf->CBW.dDataLength == 0)
                 {
-                    MSC_SendCSW(itf);
+                    msc_sendCSW(itf);
                 }
                 /* Treat rejected command */
                 else if (itf->CSW.bStatus != MSC_CSW_CMD_PASSED)
@@ -387,7 +386,7 @@ static void MSC_OutData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
             /* Write completed, send status */
             else if (itf->CSW.dDataResidue == 0)
             {
-                MSC_SendCSW(itf);
+                msc_sendCSW(itf);
             }
             break;
         }
@@ -397,11 +396,11 @@ static void MSC_OutData(USBD_MSC_IfHandleType *itf, USBD_EpHandleType *ep)
         {
             if (itf->Status == MSC_STATUS_NORMAL)
             {
-                MSC_SendCSW(itf);
+                msc_sendCSW(itf);
             }
             else if (itf->Status == MSC_STATUS_RECOVERY)
             {
-                MSC_ReceiveCBW(itf);
+                msc_receiveCBW(itf);
                 itf->Status = MSC_STATUS_NORMAL;
             }
             break;

@@ -37,7 +37,7 @@
  * @return BUSY if the endpoint isn't idle, OK if successful
  */
 USBD_ReturnType USBD_EpSend(USBD_HandleType *dev, uint8_t epAddr,
-        const uint8_t *data, uint16_t len)
+        void *data, uint16_t len)
 {
     USBD_ReturnType retval = USBD_E_BUSY;
     USBD_EpHandleType *ep = &dev->EP.IN[epAddr & 0xF];
@@ -47,7 +47,7 @@ USBD_ReturnType USBD_EpSend(USBD_HandleType *dev, uint8_t epAddr,
     {
         /* Set EP transfer data */
         ep->State = USB_EP_STATE_DATA;
-        USBD_PD_EpSend(dev, epAddr, data, len);
+        USBD_PD_EpSend(dev, epAddr, (const uint8_t*)data, len);
 
         retval = USBD_E_OK;
     }
@@ -64,7 +64,7 @@ USBD_ReturnType USBD_EpSend(USBD_HandleType *dev, uint8_t epAddr,
  * @return BUSY if the endpoint isn't idle, OK if successful
  */
 USBD_ReturnType USBD_EpReceive(USBD_HandleType *dev, uint8_t epAddr,
-        uint8_t *data, uint16_t len)
+        void *data, uint16_t len)
 {
     USBD_ReturnType retval = USBD_E_BUSY;
     USBD_EpHandleType *ep = &dev->EP.OUT[epAddr];
@@ -74,7 +74,7 @@ USBD_ReturnType USBD_EpReceive(USBD_HandleType *dev, uint8_t epAddr,
     {
         /* Set EP transfer data */
         ep->State = USB_EP_STATE_DATA;
-        USBD_PD_EpReceive(dev, epAddr, data, len);
+        USBD_PD_EpReceive(dev, epAddr, (uint8_t*)data, len);
 
         retval = USBD_E_OK;
     }
@@ -149,9 +149,9 @@ USBD_ReturnType USBD_EpRequest(USBD_HandleType *dev)
     {
         USBD_EpHandleType *ep = USBD_EpAddr2Ref(dev, epAddr);
 
-        /* EP halt is the only standard feature */
         switch (dev->Setup.Request)
         {
+            /* EP halt is the only standard feature */
             case USB_REQ_SET_FEATURE:
             {
                 if (dev->Setup.Value == USB_FEATURE_EP_HALT)
@@ -202,8 +202,7 @@ USBD_ReturnType USBD_EpRequest(USBD_HandleType *dev)
                 *epStatus = (ep->State == USB_EP_STATE_STALL) ?
                         1 << USB_FEATURE_EP_HALT : 0;
 
-                retval = USBD_CtrlSendData(dev,
-                        (uint8_t*)epStatus, sizeof(uint16_t));
+                retval = USBD_CtrlSendData(dev, epStatus, sizeof(*epStatus));
                 break;
             }
 

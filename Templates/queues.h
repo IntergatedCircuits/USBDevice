@@ -23,7 +23,7 @@
 #ifndef __QUEUES_H_
 #define __QUEUES_H_
 
-/** @ingroup USBD_Templates
+/** @ingroup Templates
  * @defgroup Queues Circular queue buffer definition
  * @{ */
 

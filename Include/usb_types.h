@@ -38,7 +38,6 @@ extern "C"
 /** @defgroup USB_Exported_Macros USB Exported Macros
  * @{ */
 
-/* Compiler macro to byte-align USB structures */
 #if  defined ( __GNUC__ )
 #ifndef __packed
 #define __packed __attribute__((packed))
@@ -46,15 +45,12 @@ extern "C"
 #ifndef __align
 #define __align(X) __attribute__((aligned(X)))
 #endif /* __align */
-#define __alignment(X)
-#ifndef __weak
-#define __weak   __attribute__((weak))
-#endif /* __weak */
 #elif defined ( __ICCARM__ )
 #define __stringize(X) #X
 #define __align(X)
 #define __alignment(X) _Pragma(__stringize(data_alignment=X))
-#else
+#endif
+#ifndef __alignment
 #define __alignment(X)
 #endif
 

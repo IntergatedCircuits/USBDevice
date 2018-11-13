@@ -45,7 +45,9 @@
 #undef errno
 extern int32_t errno;
 
-/** @ingroup USBD_Templates
+/** @defgroup Templates */
+
+/** @ingroup Templates
  * @defgroup console_if USB serial console interface
  * @{ */
 

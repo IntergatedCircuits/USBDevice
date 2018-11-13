@@ -272,7 +272,7 @@ static USBD_ReturnType  ncm_setupStage  (USBD_NCM_IfHandleType *itf);
 static void             ncm_dataStage   (USBD_NCM_IfHandleType *itf);
 static void             ncm_outData     (USBD_NCM_IfHandleType *itf, USBD_EpHandleType *ep);
 static void             ncm_inData      (USBD_NCM_IfHandleType *itf, USBD_EpHandleType *ep);
-static void             ncm_ntb_send    (USBD_NCM_IfHandleType *itf, uint8_t page);
+static void             ncm_sendNTB    (USBD_NCM_IfHandleType *itf, uint8_t page);
 
 /* NCM interface class callbacks structure */
 static const USBD_ClassType ncm_cbks = {
@@ -369,15 +369,6 @@ static const char* ncm_getString(USBD_NCM_IfHandleType *itf, uint8_t intNum)
  */
 static void ncm_init(USBD_NCM_IfHandleType *itf)
 {
-#if (USBD_HS_SUPPORT == 1) && 0
-    USBD_HandleType *dev = itf->Base.Device;
-    uint16_t mps = (dev->Speed == USB_SPEED_HIGH) ?
-            USB_EP_BULK_HS_MPS : USB_EP_BULK_FS_MPS;
-
-    /* Reset the endpoint MPS to the speed-specific size */
-    dev->EP.IN [itf->Config.InEpNum  & 0xF].MaxPacketSize =
-    dev->EP.OUT[itf->Config.OutEpNum      ].MaxPacketSize = mps;
-#endif
     if (itf->Base.AltSelector == 1)
     {
         /* Open notification EP */
@@ -454,7 +445,7 @@ static USBD_ReturnType ncm_setupStage(USBD_NCM_IfHandleType *itf)
                 param->NdpOutDivisor            = 4;
                 param->NdpOutAlignment          = 4;
                 param->NdpOutPayloadRemainder   = 0;
-                param->NtbOutMaxDatagrams       = 20; /* TODO */
+                param->NtbOutMaxDatagrams       = 20; /* Number is arbitrary, any number is supported */
                 param->reserved                 = 0;
 
                 retval = USBD_CtrlSendData(dev, dev->CtrlData, sizeof(*param));
@@ -464,10 +455,10 @@ static USBD_ReturnType ncm_setupStage(USBD_NCM_IfHandleType *itf)
             case CDC_REQ_GET_NTB_INPUT_SIZE:
             {
                 struct {
-                    uint32_t dw;
-                }__packed *pmax = (void*)dev->CtrlData;
-                pmax->dw = itf->In.MaxSize;
-                retval = USBD_CtrlSendData(dev, dev->CtrlData, sizeof(itf->In.MaxSize));
+                    uint32_t size;
+                }__packed *insize = (void*)dev->CtrlData;
+                insize->size = itf->In.MaxSize;
+                retval = USBD_CtrlSendData(dev, dev->CtrlData, sizeof(*insize));
                 break;
             }
 
@@ -494,7 +485,7 @@ static USBD_ReturnType ncm_setupStage(USBD_NCM_IfHandleType *itf)
 
             case CDC_REQ_GET_NTB_FORMAT:
                 *((__packed uint16_t*)dev->CtrlData) = 0;
-                retval = USBD_CtrlSendData(dev, dev->CtrlData, sizeof(uint16_t));
+                retval = USBD_CtrlSendData(dev, dev->CtrlData, 2);
                 break;
 
             case CDC_REQ_SET_NTB_FORMAT:
@@ -526,13 +517,13 @@ static void ncm_dataStage(USBD_NCM_IfHandleType *itf)
             case CDC_REQ_SET_NTB_INPUT_SIZE:
             {
                 struct {
-                    uint32_t dw;
-                }__packed *pmax = (void*)dev->CtrlData;
+                    uint32_t size;
+                }__packed *insize = (void*)dev->CtrlData;
                 /* Sanity check */
-                if (pmax->dw > (sizeof(((USBD_NCM_TransferHeaderType*)0)->V16) +
-                                sizeof(((USBD_NCM_DatagramPointerTableType*)0)->V16)))
+                if (insize->size > (sizeof(((USBD_NCM_TransferHeaderType*)0)->V16) +
+                                    sizeof(((USBD_NCM_DatagramPointerTableType*)0)->V16)))
                 {
-                    itf->In.MaxSize = pmax->dw;
+                    itf->In.MaxSize = insize->size;
                 }
                 break;
             }
@@ -601,8 +592,7 @@ static void ncm_outData(USBD_NCM_IfHandleType *itf, USBD_EpHandleType *ep)
     {
         /* Start receiving in other buffer */
         USBD_EpReceive(itf->Base.Device, itf->Config.OutEpNum,
-                (uint8_t*)itf->Out.Data[page],
-                sizeof(itf->Out.Data[0]));
+                itf->Out.Data[page], sizeof(itf->Out.Data[0]));
 
         itf->Out.State[page] = NTB_TRANSFERRING;
     }
@@ -620,7 +610,7 @@ static void ncm_outData(USBD_NCM_IfHandleType *itf, USBD_EpHandleType *ep)
  * @param itf: reference of the NCM interface
  * @param page: the IN buffer page to send
  */
-static void ncm_ntb_send(USBD_NCM_IfHandleType *itf, uint8_t page)
+static void ncm_sendNTB(USBD_NCM_IfHandleType *itf, uint8_t page)
 {
     USBD_NCM_TransferHeaderType* nth = (void*)itf->In.Data[page];
     USBD_NCM_DatagramPointerTableType* pt = (void*)nth + itf->In.Index;
@@ -661,7 +651,7 @@ static void ncm_ntb_send(USBD_NCM_IfHandleType *itf, uint8_t page)
 
     /* This should never fail */
     USBD_EpSend(itf->Base.Device, itf->Config.InEpNum,
-            (uint8_t*)itf->In.Data[page], nth->V16.BlockLength);
+            itf->In.Data[page], nth->V16.BlockLength);
 
     /* Switch to the other page */
     itf->In.Page    = 1 - page;
@@ -695,7 +685,7 @@ static void ncm_inData(USBD_NCM_IfHandleType *itf, USBD_EpHandleType *ep)
         {
             void* nth = ep->Transfer.Data - ep->Transfer.Length;
             uint8_t page = ((void*)itf->In.Data[0] == nth) ? 1 : 0;
-            ncm_ntb_send(itf, page);
+            ncm_sendNTB(itf, page);
         }
     }
 }
@@ -815,14 +805,14 @@ USBD_ReturnType USBD_NCM_Connect(USBD_NCM_IfHandleType *itf, uint32_t bitrate)
         itf->Out.Page = 0;
 
         USBD_EpReceive(dev, itf->Config.OutEpNum,
-                (uint8_t*)itf->Out.Data[1], sizeof(itf->Out.Data[0]));
+                itf->Out.Data[1], sizeof(itf->Out.Data[0]));
 
         /* Send notification */
         itf->Notify.SpeedData.DLBitRate = bitrate;
         itf->Notify.SpeedData.ULBitRate = bitrate;
         itf->Notify.Connection.Value = 1;
         retval = USBD_EpSend(dev, itf->Config.NotEpNum,
-                (uint8_t*)&itf->Notify, sizeof(itf->Notify));
+                &itf->Notify, sizeof(itf->Notify));
     }
 
     return retval;
@@ -849,7 +839,7 @@ USBD_ReturnType USBD_NCM_Disconnect(USBD_NCM_IfHandleType *itf)
         USBD_EpClose(dev, itf->Config.OutEpNum);
 
         retval = USBD_EpSend(dev, itf->Config.NotEpNum,
-                (uint8_t*)&itf->Notify.Connection, sizeof(itf->Notify.Connection));
+                &itf->Notify.Connection, sizeof(itf->Notify.Connection));
     }
 
     return retval;
@@ -913,8 +903,7 @@ uint8_t* USBD_NCM_GetDatagram(USBD_NCM_IfHandleType *itf, uint16_t *length)
             if (itf->Notify.Connection.Value != 0)
             {
                 USBD_EpReceive(itf->Base.Device, itf->Config.OutEpNum,
-                        (uint8_t*)itf->Out.Data[page],
-                        sizeof(itf->Out.Data[0]));
+                        itf->Out.Data[page], sizeof(itf->Out.Data[0]));
 
                 itf->Out.State[page] = NTB_TRANSFERRING;
             }
@@ -1002,7 +991,7 @@ USBD_ReturnType USBD_NCM_SetDatagram(USBD_NCM_IfHandleType *itf)
         }
         else /* If the other page is empty, we can transmit this one */
         {
-            ncm_ntb_send(itf, page);
+            ncm_sendNTB(itf, page);
         }
 
         retval = USBD_E_OK;

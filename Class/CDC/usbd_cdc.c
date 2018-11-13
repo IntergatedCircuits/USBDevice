@@ -344,13 +344,12 @@ static USBD_ReturnType cdc_setupStage(USBD_CDC_IfHandleType *itf)
                     /* Reset the data interface */
                     cdc_deinit(itf);
 
-                    retval = USBD_CtrlReceiveData(dev, (uint8_t*) &itf->LineCoding);
+                    retval = USBD_CtrlReceiveData(dev, &itf->LineCoding);
                     break;
 
                 case CDC_REQ_GET_LINE_CODING:
                     retval = USBD_CtrlSendData(dev,
-                            (const uint8_t*) &itf->LineCoding,
-                            sizeof(itf->LineCoding));
+                            &itf->LineCoding, sizeof(itf->LineCoding));
                     break;
 
                 case CDC_REQ_SET_CONTROL_LINE_STATE:
@@ -526,7 +525,7 @@ USBD_ReturnType USBD_CDC_Notify(USBD_CDC_IfHandleType *itf, USBD_CDC_NotifyMessa
     if (itf->Config.NotEpNum < USBD_MAX_EP_COUNT)
     {
         uint16_t length = sizeof(notice->Header) + notice->Header->Length;
-        retval = USBD_EpSend(itf->Base.Device, itf->Config.NotEpNum, (const uint8_t*)notice, length);
+        retval = USBD_EpSend(itf->Base.Device, itf->Config.NotEpNum, notice, length);
     }
 
     return retval;

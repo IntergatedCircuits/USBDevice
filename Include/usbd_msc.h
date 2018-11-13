@@ -181,21 +181,21 @@ typedef struct
 /** @brief MSC Logical Unit interfacing structure */
 typedef struct
 {
-    void    (*Init)         (uint8_t lun);      /*!< Initialize media (optional) */
+    void           (*Init)  (uint8_t lun);      /*!< Initialize media (optional) */
 
-    void    (*Deinit)       (uint8_t lun);      /*!< Release media (optional) */
+    void           (*Deinit)(uint8_t lun);      /*!< Release media (optional) */
 
-    uint8_t (*Read)         (uint8_t lun,
+    USBD_ReturnType(*Read)  (uint8_t lun,
                              uint8_t *dest,
                              uint32_t blockAddr,
                              uint16_t blockLen);/*!< Read media block */
 
-    uint8_t (*Write)        (uint8_t lun,
+    USBD_ReturnType(*Write) (uint8_t lun,
                              uint8_t *src,
                              uint32_t blockAddr,
                              uint16_t blockLen);/*!< Write media block */
 
-    USBD_MSC_LUStatusType*  Status;             /*!< Up-to-date status of Logical Unit */
+    USBD_MSC_LUStatusType*          Status;     /*!< Up-to-date status of Logical Unit */
 
     const USBD_SCSI_StdInquiryType* Inquiry;    /*!< Standard Inquiry of Logical Unit */
 }USBD_MSC_LUType;
@@ -216,13 +216,15 @@ typedef struct
 {
     USBD_IfHandleType Base;                 /*!< Class-independent interface base */
     const USBD_MSC_LUType* LUs;             /*!< Logical Units reference */
+    USBD_MSC_ConfigType Config;             /*!< MSC interface configuration */
+    USBD_PADDING_1(a);
 
+    /* MSC class internal context */
     uint8_t Buffer[USBD_MSC_BUFFER_SIZE];   /*!< Block transferring buffer */
     USBD_MSC_CommandBlockWrapperType  CBW;  /*!< Command Block Wrapper */
-    const uint8_t __padding;
+    USBD_PADDING_1(b);
     USBD_MSC_CommandStatusWrapperType CSW;  /*!< Command Status Wrapper */
-
-    USBD_MSC_ConfigType Config;             /*!< MSC interface configuration */
+    USBD_PADDING_3(c);
 
     USBD_MSC_StateType  State;              /*!< MSC interface state */
     USBD_MSC_StatusType Status;             /*!< MSC interface error status */

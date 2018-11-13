@@ -23,10 +23,7 @@
 #ifndef __USBD_CONFIG_H_
 #define __USBD_CONFIG_H_
 
-/** @defgroup USBD_Templates Templates
- * @{ */
-
-/** @defgroup USBD_Exported_Macro_Templates USBD precompiler configuration
+/** @addtogroup USBD_Exported_Macros
  * @{ */
 
 /** @brief Must be set according to the highest number of interfaces for a given USB Device. */
@@ -75,8 +72,6 @@
 
 /** @brief Set to 1 if a HID interface defines strings in its report descriptor. */
 #define USBD_HID_REPORT_STRINGS     0
-
-/** @} */
 
 /** @} */
 

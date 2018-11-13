@@ -200,7 +200,9 @@ typedef struct
     USBD_IfHandleType Base;             /*!< Class-independent interface base */
     const USBD_CDC_AppType* App;        /*!< CDC application reference */
     USBD_CDC_ConfigType Config;         /*!< CDC interface configuration */
+
     USBD_CDC_LineCodingType LineCoding; /*!< CDC line coding */
+    USBD_PADDING_1();
 }USBD_CDC_IfHandleType;
 
 /** @} */
