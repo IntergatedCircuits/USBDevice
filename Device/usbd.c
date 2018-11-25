@@ -160,11 +160,38 @@ void USBD_ResetCallback(USBD_HandleType *dev, USB_SpeedType speed)
 {
     dev->Speed = speed;
 
-    /* Reset EP0 state */
+    /* Reset EP0 state (EP0 should be opened automatically by driver) */
     dev->EP.OUT[0].State = USB_EP_STATE_IDLE;
 
     /* Reset any previous configuration */
     USBD_IfConfig(dev, 0);
+
+#if (USBD_HS_SUPPORT == 1)
+    /* Limit packet sizes according to what the current speed allows */
+    if (speed == USB_SPEED_FULL)
+    {
+        USBD_EpHandleType *ep;
+
+        /* Note on condition: EP0 doesn't require this adjustment */
+        for (ep = &dev->EP.OUT[USBD_MAX_EP_COUNT - 1]; ep > &dev->EP.IN[0]; ep--)
+        {
+            if (ep->Type == USB_EP_TYPE_ISOCHRONOUS)
+            {
+                /* An FS frame is 1 ms, 8 times as long as a HS microframe
+                 * To keep the data rate the same, each transfer has to be
+                 * 8 times larger */
+                ep->MaxPacketSize * 8;
+                /* TODO if the result is higher than USB_EP_ISOC_FS_MPS,
+                 * the interface cannot function properly */
+            }
+            /* Other types have equal FS MPS limits */
+            else if (ep->MaxPacketSize > USB_EP_CTRL_FS_MPS)
+            {
+                ep->MaxPacketSize = USB_EP_CTRL_FS_MPS;
+            }
+        }
+    }
+#endif
 }
 
 /** @} */
