@@ -79,6 +79,12 @@ extern void USBD_PD_ClearRemoteWakeup(USBD_HandleType * dev);
 extern void USBD_PD_SetAddress(USBD_HandleType * dev, uint8_t addr);
 
 /**
+ * @brief Opens the default control endpoint (EP0) of the device.
+ * @param dev: USB Device handle reference
+ */
+extern void USBD_PD_CtrlEpOpen(USBD_HandleType * dev);
+
+/**
  * @brief Opens a device endpoint.
  * @param dev: USB Device handle reference
  * @param addr: endpoint address

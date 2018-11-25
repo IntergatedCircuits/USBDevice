@@ -44,6 +44,7 @@ extern "C"
 #define USBD_PD_SetRemoteWakeup         USB_vSetRemoteWakeup
 #define USBD_PD_ClearRemoteWakeup       USB_vClearRemoteWakeup
 #define USBD_PD_SetAddress              USB_vSetAddress
+#define USBD_PD_CtrlEpOpen              USB_vCtrlEpOpen
 #define USBD_PD_EpOpen                  USB_vEpOpen
 #define USBD_PD_EpClose                 USB_vEpClose
 #define USBD_PD_EpSend                  USB_vEpSend
@@ -67,6 +68,7 @@ extern "C"
 #define USBD_PD_SetRemoteWakeup         USB_vSetRemoteWakeup
 #define USBD_PD_ClearRemoteWakeup       USB_vClearRemoteWakeup
 #define USBD_PD_SetAddress              USB_vSetAddress
+#define USBD_PD_CtrlEpOpen              USB_vCtrlEpOpen
 #define USBD_PD_EpOpen                  USB_vEpOpen
 #define USBD_PD_EpClose                 USB_vEpClose
 #define USBD_PD_EpSend                  USB_vEpSend

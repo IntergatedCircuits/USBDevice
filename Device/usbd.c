@@ -160,9 +160,6 @@ void USBD_ResetCallback(USBD_HandleType *dev, USB_SpeedType speed)
 {
     dev->Speed = speed;
 
-    /* Reset EP0 state (EP0 should be opened automatically by driver) */
-    dev->EP.OUT[0].State = USB_EP_STATE_IDLE;
-
     /* Reset any previous configuration */
     USBD_IfConfig(dev, 0);
 
@@ -192,6 +189,10 @@ void USBD_ResetCallback(USBD_HandleType *dev, USB_SpeedType speed)
         }
     }
 #endif
+
+    /* Open control endpoint to start data transfers */
+    USBD_PD_CtrlEpOpen(dev);
+    dev->EP.OUT[0].State = USB_EP_STATE_IDLE;
 }
 
 /** @} */
