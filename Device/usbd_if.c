@@ -123,7 +123,7 @@ USBD_ReturnType USBD_IfRequest(USBD_HandleType *dev)
             /* Set alternate setting of the IF */
             case USB_REQ_SET_INTERFACE:
             {
-                uint8_t altSel = (uint8_t)&dev->Setup.Value;
+                uint8_t altSel = (uint8_t)dev->Setup.Value;
 
                 /* Check validity */
                 if (itf->AltCount > altSel)

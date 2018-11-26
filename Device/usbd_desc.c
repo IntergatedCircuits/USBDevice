@@ -272,7 +272,7 @@ USBD_ReturnType USBD_GetDescriptor(USBD_HandleType *dev)
             break;
         }
 
-        case USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION:
+        case USB_DESC_TYPE_OTHER_SPEED_CONFIG:
         {
             if (dev->Speed == USB_SPEED_HIGH)
             {
