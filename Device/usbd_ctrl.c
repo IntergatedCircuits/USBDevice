@@ -125,8 +125,6 @@ void USBD_CtrlOutCallback(USBD_HandleType *dev)
         /* Proceed to Status stage */
         USBD_CtrlSendStatus(dev);
     }
-
-    dev->EP.OUT[0].State = USB_EP_STATE_IDLE;
 }
 
 /** @} */

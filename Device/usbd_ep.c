@@ -114,13 +114,14 @@ void USBD_EpInCallback(USBD_HandleType *dev, USBD_EpHandleType *ep)
  */
 void USBD_EpOutCallback(USBD_HandleType *dev, USBD_EpHandleType *ep)
 {
+    ep->State = USB_EP_STATE_IDLE;
+
     if (ep == &dev->EP.OUT[0])
     {
         USBD_CtrlOutCallback(dev);
     }
     else
     {
-        ep->State = USB_EP_STATE_IDLE;
         USBD_IfClass_OutData(dev->IF[ep->IfNum], ep);
     }
 }
