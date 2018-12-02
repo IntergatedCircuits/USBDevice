@@ -317,8 +317,8 @@ static void cdc_deinit(USBD_CDC_IfHandleType *itf)
 
 #if (USBD_HS_SUPPORT == 1)
         /* Reset the endpoint MPS to the desired size */
-        dev->EP.IN [itf->Config.InEpNum  & 0xF].MaxPacketSize =
-        dev->EP.OUT[itf->Config.OutEpNum      ].MaxPacketSize = CDC_DATA_PACKET_SIZE;
+        USBD_EpAddr2Ref(dev, itf->Config.InEpNum)->MaxPacketSize  = CDC_DATA_PACKET_SIZE;
+        USBD_EpAddr2Ref(dev, itf->Config.OutEpNum)->MaxPacketSize = CDC_DATA_PACKET_SIZE;
 #endif
         itf->LineCoding.DataBits = 0;
     }
@@ -415,7 +415,7 @@ static void cdc_outData(USBD_CDC_IfHandleType *itf, USBD_EpHandleType *ep)
 static void cdc_inData(USBD_CDC_IfHandleType *itf, USBD_EpHandleType *ep)
 {
 #if (USBD_CDC_NOTEP_USED == 1)
-    if (ep == &itf->Base.Device->EP.IN[itf->Config.InEpNum & 0xF])
+    if (ep == USBD_EpAddr2Ref(itf->Base.Device, itf->Config.InEpNum))
 #endif
     {
         USBD_SAFE_CALLBACK(CDC_APP(itf)->Transmitted, itf,
@@ -457,19 +457,19 @@ USBD_ReturnType USBD_CDC_MountInterface(USBD_CDC_IfHandleType *itf, USBD_HandleT
 #if (USBD_CDC_NOTEP_USED == 1)
             if (itf->Config.NotEpNum < USBD_MAX_EP_COUNT)
             {
-                ep = &dev->EP.IN [itf->Config.NotEpNum & 0xF];
+                ep = USBD_EpAddr2Ref(dev, itf->Config.NotEpNum);
                 ep->Type            = USB_EP_TYPE_INTERRUPT;
                 ep->MaxPacketSize   = CDC_NOT_PACKET_SIZE;
                 ep->IfNum           = dev->IfCount;
             }
 #endif
 
-            ep = &dev->EP.IN [itf->Config.InEpNum  & 0xF];
+            ep = USBD_EpAddr2Ref(dev, itf->Config.InEpNum);
             ep->Type            = USB_EP_TYPE_BULK;
             ep->MaxPacketSize   = CDC_DATA_PACKET_SIZE;
             ep->IfNum           = dev->IfCount;
 
-            ep = &dev->EP.OUT[itf->Config.OutEpNum];
+            ep = USBD_EpAddr2Ref(dev, itf->Config.OutEpNum);
             ep->Type            = USB_EP_TYPE_BULK;
             ep->MaxPacketSize   = CDC_DATA_PACKET_SIZE;
             ep->IfNum           = dev->IfCount;

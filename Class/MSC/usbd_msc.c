@@ -218,8 +218,8 @@ static void msc_deinit(USBD_MSC_IfHandleType *itf)
 
 #if (USBD_HS_SUPPORT == 1)
     /* Reset the endpoint MPS to the desired size */
-    dev->EP.IN [itf->Config.InEpNum  & 0xF].MaxPacketSize =
-    dev->EP.OUT[itf->Config.OutEpNum      ].MaxPacketSize = MSC_DATA_PACKET_SIZE;
+    USBD_EpAddr2Ref(dev, itf->Config.InEpNum)->MaxPacketSize  = MSC_DATA_PACKET_SIZE;
+    USBD_EpAddr2Ref(dev, itf->Config.OutEpNum)->MaxPacketSize = MSC_DATA_PACKET_SIZE;
 #endif
 
     for (lun = 0; lun <= itf->Config.MaxLUN; lun++)
@@ -448,12 +448,12 @@ USBD_ReturnType USBD_MSC_MountInterface(USBD_MSC_IfHandleType *itf, USBD_HandleT
         {
             USBD_EpHandleType *ep;
 
-            ep = &dev->EP.IN [itf->Config.InEpNum  & 0xF];
+            ep = USBD_EpAddr2Ref(dev, itf->Config.InEpNum);
             ep->Type            = USB_EP_TYPE_BULK;
             ep->MaxPacketSize   = MSC_DATA_PACKET_SIZE;
             ep->IfNum           = dev->IfCount;
 
-            ep = &dev->EP.OUT[itf->Config.OutEpNum];
+            ep = USBD_EpAddr2Ref(dev, itf->Config.OutEpNum);
             ep->Type            = USB_EP_TYPE_BULK;
             ep->MaxPacketSize   = MSC_DATA_PACKET_SIZE;
             ep->IfNum           = dev->IfCount;

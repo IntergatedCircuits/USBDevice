@@ -410,8 +410,8 @@ static void ncm_deinit(USBD_NCM_IfHandleType *itf)
 
 #if (USBD_HS_SUPPORT == 1)
         /* Reset the endpoint MPS to the desired size */
-        dev->EP.IN [itf->Config.InEpNum  & 0xF].MaxPacketSize =
-        dev->EP.OUT[itf->Config.OutEpNum      ].MaxPacketSize = NCM_DATA_PACKET_SIZE;
+        USBD_EpAddr2Ref(dev, itf->Config.InEpNum)->MaxPacketSize  = NCM_DATA_PACKET_SIZE;
+        USBD_EpAddr2Ref(dev, itf->Config.OutEpNum)->MaxPacketSize = NCM_DATA_PACKET_SIZE;
 #endif
     }
 }
@@ -733,17 +733,17 @@ USBD_ReturnType USBD_NCM_MountInterface(USBD_NCM_IfHandleType *itf, USBD_HandleT
         {
             USBD_EpHandleType *ep;
 
-            ep = &dev->EP.IN [itf->Config.NotEpNum & 0xF];
+            ep = USBD_EpAddr2Ref(dev, itf->Config.NotEpNum);
             ep->Type            = USB_EP_TYPE_INTERRUPT;
             ep->MaxPacketSize   = NCM_NOT_PACKET_SIZE;
             ep->IfNum           = dev->IfCount;
 
-            ep = &dev->EP.IN [itf->Config.InEpNum  & 0xF];
+            ep = USBD_EpAddr2Ref(dev, itf->Config.InEpNum);
             ep->Type            = USB_EP_TYPE_BULK;
             ep->MaxPacketSize   = NCM_DATA_PACKET_SIZE;
             ep->IfNum           = dev->IfCount;
 
-            ep = &dev->EP.OUT[itf->Config.OutEpNum];
+            ep = USBD_EpAddr2Ref(dev, itf->Config.OutEpNum);
             ep->Type            = USB_EP_TYPE_BULK;
             ep->MaxPacketSize   = NCM_DATA_PACKET_SIZE;
             ep->IfNum           = dev->IfCount;

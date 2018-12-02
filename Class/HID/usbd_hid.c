@@ -304,12 +304,6 @@ static void hid_deinit(USBD_HID_IfHandleType *itf)
 
     /* Deinitialize application */
     USBD_SAFE_CALLBACK(HID_APP(itf)->Deinit, itf);
-
-    /* Reset the endpoint MPS to the desired size */
-    dev->EP.IN [itf->Config.InEp.Num & 0xF].MaxPacketSize = itf->Config.InEp.Size;
-#if (USBD_HID_OUT_SUPPORT == 1)
-    dev->EP.OUT[itf->Config.OutEp.Num     ].MaxPacketSize = itf->Config.OutEp.Size;
-#endif /* (USBD_HID_OUT_SUPPORT == 1) */
 }
 
 /**
@@ -496,7 +490,7 @@ USBD_ReturnType USBD_HID_MountInterface(USBD_HID_IfHandleType *itf, USBD_HandleT
         {
             USBD_EpHandleType *ep;
 
-            ep = &dev->EP.IN [itf->Config.InEp.Num & 0xF];
+            ep = USBD_EpAddr2Ref(dev, itf->Config.InEp.Num);
             ep->Type            = USB_EP_TYPE_INTERRUPT;
             ep->MaxPacketSize   = itf->Config.InEp.Size;
             ep->IfNum           = dev->IfCount;
@@ -505,7 +499,7 @@ USBD_ReturnType USBD_HID_MountInterface(USBD_HID_IfHandleType *itf, USBD_HandleT
             /* OUT EP is optional */
             if (itf->Config.OutEp.Size > 0)
             {
-                ep = &dev->EP.OUT[itf->Config.OutEp.Num];
+                ep = USBD_EpAddr2Ref(dev, itf->Config.OutEp.Num);
                 ep->Type            = USB_EP_TYPE_INTERRUPT;
                 ep->MaxPacketSize   = itf->Config.OutEp.Size;
                 ep->IfNum           = dev->IfCount;
