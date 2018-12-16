@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    console_if.c
   * @author  Benedek Kupper
-  * @version 0.1
-  * @date    2018-07-08
+  * @version 0.2
+  * @date    2018-12-16
   * @brief   USB serial console interface
   *
   * @details
@@ -14,8 +14,8 @@
   *     extern USBD_CDC_IfHandleType *const console_if;
   *     @endcode
   * After configuring it's endpoint numbers it can be mounted on a USB device.
-  * Define PRINT_BUFFER_SIZE with an appropriate buffer size to enable output,
-  * SCAN_BUFFER_SIZE to enable input functionality. (Twice the max packet size
+  * Define STDOUT_BUFFER_SIZE with an appropriate buffer size to enable output,
+  * STDIN_BUFFER_SIZE to enable input functionality. (Twice the max packet size
   * is recommended.)
   * The interface becomes operational after the serial port's line coding is set
   * (with any standard baudrate value).
@@ -36,7 +36,6 @@
   * limitations under the License.
   */
 #include <usbd_cdc.h>
-#include <queues.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -53,26 +52,42 @@ extern int32_t errno;
 
 static void console_if_open         (void* itf, USBD_CDC_LineCodingType * lc);
 
-#if (PRINT_BUFFER_SIZE > 0)
+#if (STDOUT_BUFFER_SIZE > 0)
+
+static const uint16_t console_in_size = STDOUT_BUFFER_SIZE;
+
+static struct {
+    uint16_t head;
+    uint16_t tail;
+    uint8_t buffer[STDOUT_BUFFER_SIZE + 1];
+}console_if_IN;
+
 static void console_if_in_cmplt     (void* itf, uint8_t * pbuf, uint16_t length);
 static void console_if_send         (void);
-QUEUE_DEF(console_if_IN, uint8_t, PRINT_BUFFER_SIZE);
 #endif
 
-#if (SCAN_BUFFER_SIZE > 0)
+#if (STDIN_BUFFER_SIZE > 0)
+
+static const uint16_t console_out_size = STDIN_BUFFER_SIZE;
+
+static struct {
+    uint16_t head;
+    uint16_t tail;
+    uint8_t buffer[STDIN_BUFFER_SIZE + 1];
+}console_if_OUT;
+
 static void console_if_out_cmplt    (void* itf, uint8_t * pbuf, uint16_t length);
 static void console_if_recv         (void);
-QUEUE_DEF(console_if_OUT, uint8_t, SCAN_BUFFER_SIZE);
 #endif
 
 static const USBD_CDC_AppType console_app =
 {
     .Name           = "Serial port as standard I/O",
     .Open           = console_if_open,
-#if (SCAN_BUFFER_SIZE > 0)
+#if (STDIN_BUFFER_SIZE > 0)
     .Received       = console_if_out_cmplt,
 #endif
-#if (PRINT_BUFFER_SIZE > 0)
+#if (STDOUT_BUFFER_SIZE > 0)
     .Transmitted    = console_if_in_cmplt,
 #endif
 };
@@ -85,115 +100,191 @@ USBD_CDC_IfHandleType _console_if = {
 
 static void console_if_open(void* itf, USBD_CDC_LineCodingType * lc)
 {
-#if (PRINT_BUFFER_SIZE > 0)
+#if (STDOUT_BUFFER_SIZE > 0)
     console_if_IN.head = console_if_IN.tail = 0;
 #endif
-#if (SCAN_BUFFER_SIZE > 0)
+#if (STDIN_BUFFER_SIZE > 0)
     console_if_OUT.head = console_if_OUT.tail = 0;
 #endif
 }
 
-#if (PRINT_BUFFER_SIZE > 0)
+#if (STDOUT_BUFFER_SIZE > 0)
 static void console_if_in_cmplt(void* itf, uint8_t * pbuf, uint16_t length)
 {
+    if (console_if_IN.tail < console_in_size)
+        console_if_IN.tail += length;
+    else
+        console_if_IN.tail = length - 1;
     console_if_send();
 }
 
 static void console_if_send(void)
 {
-    if (!QUEUE_EMPTY(console_if_IN))
+    uint16_t head = console_if_IN.head, tail = console_if_IN.tail;
+    uint16_t start = tail + 1, length;
+
+    if (tail <= head)
     {
-        uint32_t newtail;
-        uint32_t length;
+        length = head - tail;
+    }
+    else if (tail < console_in_size)
+    {
+        length = console_in_size - tail;
+    }
+    else
+    {
+        length = head + 1;
+        start = 0;
+    }
 
-        /* If the head is ahead, transmit the new data */
-        if (console_if_IN.tail < console_if_IN.head)
-        {
-            length  = console_if_IN.head - console_if_IN.tail;
-            newtail = console_if_IN.head;
-        }
-        /* If the USB IN index is ahead, the buffer has wrapped,
-         * transmit until the end */
-        else
-        {
-            length  = console_if_IN.size - console_if_IN.tail;
-            newtail = 0;
-        }
-
-        if (USBD_E_OK == USBD_CDC_Transmit(console_if,
-                &console_if_IN.buffer[console_if_IN.tail + 1], length))
-        {
-            console_if_IN.tail = newtail;
-        }
+    if (length > 0)
+    {
+        USBD_CDC_Transmit(console_if,
+                &console_if_IN.buffer[start], length);
     }
 }
 
 int _write(int32_t file, uint8_t *ptr, int32_t len)
 {
     int retval = -1;
+    uint16_t head = console_if_IN.head, tail = console_if_IN.tail;
+
     if (console_if->LineCoding.DataBits == 0)
     {
         errno = EIO;
     }
-    else if (QUEUE_SPACE(console_if_IN) < len)
+    else if (((tail > head) ?
+            (tail - head - 1) : (console_in_size - (head - tail))) < len)
     {
         errno = ENOMEM;
     }
     else
     {
-        QUEUE_PUT_ARRAY(console_if_IN, ptr, len);
+        uint16_t len1, len2 = 0;
 
+        if (tail > head)
+        {
+            /* continuous */
+            len1 = tail - head - 1;
+            if (len < len1)
+                len1 = len;
+        }
+        else
+        {
+            /* two chunks */
+            len1 = console_in_size - head;
+
+            if (len <= len1)
+                len1 = len;
+            else if (len < (len1 + tail))
+                len2 = len - len1;
+            else
+                len2 = tail;
+        }
+
+        /* first chunk is copied starting from current head */
+        memcpy(ptr, &console_if_IN.buffer[head + 1], len1);
+        console_if_IN.head += len1;
+        ptr += len1;
+
+        /* the remaining chunk is copied from the buffer start */
+        if (len2 > 0)
+        {
+            memcpy(ptr, &console_if_IN.buffer[0], len2);
+            console_if_IN.head = len2 - 1;
+        }
+
+        retval = len1 + len2;
         console_if_send();
-        retval = len;
     }
     return retval;
 }
 #endif
 
-#if (SCAN_BUFFER_SIZE > 0)
+#if (STDIN_BUFFER_SIZE > 0)
 static void console_if_out_cmplt(void* itf, uint8_t * pbuf, uint16_t length)
 {
-    console_if_OUT.head += length;
+    if (console_if_OUT.head < console_out_size)
+        console_if_OUT.head += length;
+    else
+        console_if_OUT.head = length - 1;
     console_if_recv();
 }
 
 static void console_if_recv(void)
 {
-    if (!QUEUE_FULL(console_if_OUT))
+    uint16_t tail = console_if_OUT.tail, head = console_if_OUT.head;
+    uint16_t start = head + 1, length;
+
+    if (tail > head)
     {
-        uint32_t length;
+        length = tail - head - 1;
+    }
+    else if (head < console_out_size)
+    {
+        length = console_out_size - head;
+    }
+    else
+    {
+        length = tail;
+        start = 0;
+    }
 
-        if (console_if_OUT.tail > console_if_OUT.head)
-        {
-            length = console_if_OUT.tail - console_if_OUT.head - 1;
-        }
-        else
-        {
-            length = console_if_OUT.size - console_if_OUT.head;
-        }
-
-        USBD_CDC_Transmit(console_if,
-                &console_if_OUT.buffer[console_if_OUT.head + 1], length);
+    if (length > 0)
+    {
+        USBD_CDC_Receive(console_if,
+                &console_if_OUT.buffer[start], length);
     }
 }
 
 int _read(int32_t file, uint8_t *ptr, int32_t len)
 {
     int retval = -1;
+    uint16_t tail = console_if_OUT.tail, head = console_if_OUT.head;
+
     if (console_if->LineCoding.DataBits == 0)
     {
         errno = EIO;
     }
-    else if (QUEUE_SPACE(console_if_OUT) < len)
-    {
-        errno = ENOMEM;
-    }
     else
     {
-        QUEUE_GET_ARRAY(console_if_OUT, ptr, len);
+        uint16_t len1, len2 = 0;
 
-        console_if_recv();
-        retval = len;
+        if (tail <= head)
+        {
+            /* continuous */
+            len1 = head - tail;
+            if (len < len1)
+                len1 = len;
+        }
+        else
+        {
+            /* two chunks */
+            len1 = console_out_size - tail;
+
+            if (len <= len1)
+                len1 = len;
+            else if (len < (len1 + head + 1))
+                len2 = len - len1;
+            else
+                len2 = head + 1;
+        }
+
+        /* first chunk is copied starting from current tail */
+        memcpy(&console_if_IN.buffer[tail + 1], ptr, len1);
+        console_if_IN.tail += len1;
+        ptr += len1;
+
+        /* the remaining chunk is copied from the buffer start */
+        if (len2 > 0)
+        {
+            memcpy(&console_if_IN.buffer[0], ptr, len2);
+            console_if_IN.tail = len2 - 1;
+        }
+
+        retval = len1 + len2;
+        if (retval > 0)
+            console_if_recv();
     }
     return retval;
 }
