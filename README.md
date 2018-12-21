@@ -16,10 +16,10 @@ with multiple independent interfaces.
 
 ### Supported device classes
 
-* Communications Device Class (**CDC**-ACM) specification version 1.10
-* Network Control Model (CDC-**NCM**) specification version 1.0
+* Communications Device Class (**CDC** - ACM) specification version 1.10
+* Network Control Model (CDC - **NCM**) specification version 1.0
 * Human Interface Device Class (**HID**) specification version 1.11 - with helper macros for report definition
-* Mass Storage Class Bulk-Only Transport (**MSC**-BOT) revision 1.0 with transparent SCSI command set
+* Mass Storage Class Bulk-Only Transport (**MSC** - BOT) revision 1.0 with transparent SCSI command set
 * Device Firmware Upgrade Class (**DFU**) specification version 1.1
   (or DFU STMicroelectronics Extension [(DFUSE)][DFUSE] 1.1A
   using `USBD_DFU_ST_EXTENSION` compile switch)
@@ -61,7 +61,13 @@ and the peripheral driver. Any additional fields that the peripheral driver requ
 can be defined in the driver-specific *usbd_pd_def.h* header, while the *usbd_types.h* shall
 be included by the driver.
 
-## Projects using USBDevice
+## Example Projects
+
+### [IP over USB][IPoverUSB]
+
+A virtual network with a single lwIP server (DNS, DHCP, HTTP) is presented by the device
+(as a network adapter). Composite USB device demonstrating the CDC-NCM function usage
+and a reduced DFU interface to enter ROM bootloader.
 
 ### [DfuBootloader][DfuBootloader]
 
@@ -79,7 +85,7 @@ and the bootloader's DFU interface.
 ### [CanDybug][CanDybug]
 
 A CAN bus gateway which uses a custom protocol over a USB serial port emulation.
-Composite USB device with CDC function and the bootloader's DFU interface.
+Composite USB device with CDC-ACM function and the bootloader's DFU interface.
 
 ## How to contribute
 
@@ -95,6 +101,7 @@ Improvements in the form of pull requests are also welcome.
 [DebugDongle]: https://github.com/IntergatedCircuits/DebugDongleFW
 [DfuBootloader]: https://github.com/IntergatedCircuits/DfuBootloader
 [DFUSE]: http://www.st.com/resource/en/application_note/cd00264379.pdf
+[IPoverUSB]: https://github.com/IntergatedCircuits/IPoverUSB
 [STM32]: http://www.st.com/en/microcontrollers/stm32-32-bit-arm-cortex-mcus.html
 [STM32_XPD]: https://github.com/IntergatedCircuits/STM32_XPD
 [USBDevice4Cube]: https://github.com/IntergatedCircuits/USBDevice4Cube
