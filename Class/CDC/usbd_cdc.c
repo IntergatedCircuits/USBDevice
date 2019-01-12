@@ -524,7 +524,7 @@ USBD_ReturnType USBD_CDC_Notify(USBD_CDC_IfHandleType *itf, USBD_CDC_NotifyMessa
 
     if (itf->Config.NotEpNum < USBD_MAX_EP_COUNT)
     {
-        uint16_t length = sizeof(notice->Header) + notice->Header->Length;
+        uint16_t length = sizeof(notice->Header) + notice->Header.Length;
         retval = USBD_EpSend(itf->Base.Device, itf->Config.NotEpNum, notice, length);
     }
 
