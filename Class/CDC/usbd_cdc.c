@@ -353,6 +353,21 @@ static USBD_ReturnType cdc_setupStage(USBD_CDC_IfHandleType *itf)
                     break;
 
                 case CDC_REQ_SET_CONTROL_LINE_STATE:
+#if (USBD_CDC_CONTROL_LINE_USED == 1)
+                    if (CDC_APP(itf)->SetCtrlLine != NULL)
+                    {
+                        union {
+                            struct {
+                                uint16_t DTR : 1; /* Data Terminal Ready */
+                                uint16_t RTS : 1; /* Request To Send */
+                                uint16_t : 14;
+                            }b;
+                            uint16_t w;
+                        } *ctrl = (void*)&dev->Setup.Value;
+
+                        CDC_APP(itf)->SetCtrlLine(itf, ctrl->b.DTR, ctrl->b.RTS);
+                    }
+#endif /* USBD_CDC_CONTROL_LINE_USED */
                     retval = USBD_E_OK;
                     break;
 

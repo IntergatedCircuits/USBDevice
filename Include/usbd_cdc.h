@@ -175,9 +175,15 @@ typedef struct
                          uint8_t* data,
                          uint16_t length);  /*!< Transmission of data completed */
 
+#if (USBD_CDC_CONTROL_LINE_USED == 1)
+    void (*SetCtrlLine) (void* itf,
+                         uint8_t dtr,
+                         uint8_t rts);      /*!< Control DTR and RTS signals */
+#endif /* USBD_CDC_CONTROL_LINE_USED */
+
 #if (USBD_CDC_BREAK_SUPPORT == 1)
     void (*Break)       (void* itf,
-                         uint16_t len_ms);  /*!< Interface interaction through the control channel */
+                         uint16_t len_ms);  /*!< Send BREAK signal of given time on Tx line */
 #endif /* USBD_CDC_BREAK_SUPPORT */
 }USBD_CDC_AppType;
 
