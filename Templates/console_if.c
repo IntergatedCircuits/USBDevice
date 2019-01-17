@@ -95,7 +95,6 @@ static const USBD_CDC_AppType console_app =
 USBD_CDC_IfHandleType _console_if = {
     .App = &console_app,
     .Base.AltCount = 1,
-    .Config.Protocol = 0xFF, /* Vendor-specific protocol */
 }, *const console_if = &_console_if;
 
 static void console_if_open(void* itf, USBD_CDC_LineCodingType * lc)
