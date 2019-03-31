@@ -142,7 +142,7 @@ static uint16_t hid_getAltsDesc(USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8
         desc->HID.bAlternateSetting = as;
 
         /* Set report size */
-        desc->HIDCD.sHIDD[0].wItemLength = itf->App[as].Report.Length;
+        desc->HIDCD.sHIDD[0].wItemLength = itf->App[as].Report->DescLength;
 
         desc->HID.iInterface = USBD_IIF_INDEX(ifNum, as);
     }
@@ -166,7 +166,7 @@ static uint16_t hid_getDesc(USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t *
     memcpy(dest, &hid_desc, sizeof(hid_desc));
 
     /* Set report size */
-    desc->HIDCD.sHIDD[0].wItemLength = HID_APP(itf)->Report.Length;
+    desc->HIDCD.sHIDD[0].wItemLength = HID_APP(itf)->Report->DescLength;
 
 #if (USBD_MAX_IF_COUNT > 1)
     /* Adjustment of interface indexes */
@@ -177,32 +177,32 @@ static uint16_t hid_getDesc(USBD_HID_IfHandleType *itf, uint8_t ifNum, uint8_t *
 #endif /* (USBD_MAX_IF_COUNT > 1) */
 
     /* Add endpoints */
-    len += USBD_EpDesc(dev, itf->Config.InEp.Num, &dest[len]);
+    len += USBD_EpDesc(dev, itf->Config.InEpNum, &dest[len]);
 #if (USBD_HS_SUPPORT == 1)
     if (dev->Speed == USB_SPEED_HIGH)
     {
-        dest[len - 1] = USBD_EpHsInterval(itf->Config.InEp.Interval_ms);
+        dest[len - 1] = USBD_EpHsInterval(HID_APP(itf)->Report->Input.Interval_ms);
     }
     else
 #endif /* (USBD_HS_SUPPORT == 1) */
     {
-        dest[len - 1] = itf->Config.InEp.Interval_ms;
+        dest[len - 1] = HID_APP(itf)->Report->Input.Interval_ms;
     }
 
 #if (USBD_HID_OUT_SUPPORT == 1)
-    if (itf->Config.OutEp.Size > 0)
+    if (itf->Config.OutEpNum != 0)
     {
         desc->HID.bNumEndpoints = 2;
-        len += USBD_EpDesc(dev, itf->Config.OutEp.Num, &dest[len]);
+        len += USBD_EpDesc(dev, itf->Config.OutEpNum, &dest[len]);
 #if (USBD_HS_SUPPORT == 1)
         if (dev->Speed == USB_SPEED_HIGH)
         {
-            dest[len - 1] = USBD_EpHsInterval(itf->Config.OutEp.Interval_ms);
+            dest[len - 1] = USBD_EpHsInterval(HID_APP(itf)->Report->Output.Interval_ms);
         }
         else
 #endif /* (USBD_HS_SUPPORT == 1) */
         {
-            dest[len - 1] = itf->Config.OutEp.Interval_ms;
+            dest[len - 1] = HID_APP(itf)->Report->Output.Interval_ms;
         }
     }
 #endif /* (USBD_HID_OUT_SUPPORT == 1) */
@@ -265,20 +265,20 @@ static void hid_init(USBD_HID_IfHandleType *itf)
     USBD_HandleType *dev = itf->Base.Device;
 
     /* Open EPs */
-    USBD_EpOpen(dev, itf->Config.InEp.Num,
-            USB_EP_TYPE_INTERRUPT, itf->Config.InEp.Size);
+    USBD_EpOpen(dev, itf->Config.InEpNum,
+            USB_EP_TYPE_INTERRUPT, HID_APP(itf)->Report->Input.MaxSize);
 
 #if (USBD_HID_OUT_SUPPORT == 1)
-    if (itf->Config.OutEp.Size > 0)
+    if (itf->Config.OutEpNum != 0)
     {
-        USBD_EpOpen(dev, itf->Config.OutEp.Num,
-                USB_EP_TYPE_INTERRUPT, itf->Config.OutEp.Size);
+        USBD_EpOpen(dev, itf->Config.OutEpNum,
+                USB_EP_TYPE_INTERRUPT, HID_APP(itf)->Report->Output.MaxSize);
     }
 #endif /* (USBD_HID_OUT_SUPPORT == 1) */
 
     /* Initialize state */
     itf->Request = 0;
-    itf->IdleRate = itf->Config.InEp.Interval_ms / 4;
+    itf->IdleRate = HID_APP(itf)->Report->Input.Interval_ms / 4;
 
     /* Initialize application */
     USBD_SAFE_CALLBACK(HID_APP(itf)->Init, itf);
@@ -294,11 +294,11 @@ static void hid_deinit(USBD_HID_IfHandleType *itf)
     USBD_HandleType *dev = itf->Base.Device;
 
     /* Close EPs */
-    USBD_EpClose(dev, itf->Config.InEp.Num);
+    USBD_EpClose(dev, itf->Config.InEpNum);
 #if (USBD_HID_OUT_SUPPORT == 1)
-    if (itf->Config.OutEp.Size > 0)
+    if (itf->Config.OutEpNum != 0)
     {
-        USBD_EpClose(dev, itf->Config.OutEp.Num);
+        USBD_EpClose(dev, itf->Config.OutEpNum);
     }
 #endif /* (USBD_HID_OUT_SUPPORT == 1) */
 
@@ -332,7 +332,7 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                         void* data = dev->CtrlData;
                         memcpy(dev->CtrlData, &hid_desc.HIDCD, sizeof(hid_desc.HIDCD));
 #else
-                        void* data = &hid_desc.HIDCD;
+                        void* data = (void*)&hid_desc.HIDCD;
 #endif
                         retval = USBD_CtrlSendData(dev, data, sizeof(hid_desc.HIDCD));
                         break;
@@ -341,8 +341,8 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                     case HID_DESC_TYPE_REPORT:
                     {
                         retval = USBD_CtrlSendData(dev,
-                                HID_APP(itf)->Report.Desc,
-                                HID_APP(itf)->Report.Length);
+                                (void*)HID_APP(itf)->Report->Desc,
+                                HID_APP(itf)->Report->DescLength);
                         break;
                     }
                     default:
@@ -490,18 +490,18 @@ USBD_ReturnType USBD_HID_MountInterface(USBD_HID_IfHandleType *itf, USBD_HandleT
         {
             USBD_EpHandleType *ep;
 
-            ep = USBD_EpAddr2Ref(dev, itf->Config.InEp.Num);
+            ep = USBD_EpAddr2Ref(dev, itf->Config.InEpNum);
             ep->Type            = USB_EP_TYPE_INTERRUPT;
-            ep->MaxPacketSize   = itf->Config.InEp.Size;
+            ep->MaxPacketSize   = HID_APP(itf)->Report->Input.MaxSize;
             ep->IfNum           = dev->IfCount;
 
 #if (USBD_HID_OUT_SUPPORT == 1)
             /* OUT EP is optional */
-            if (itf->Config.OutEp.Size > 0)
+            if (itf->Config.OutEpNum != 0)
             {
-                ep = USBD_EpAddr2Ref(dev, itf->Config.OutEp.Num);
+                ep = USBD_EpAddr2Ref(dev, itf->Config.OutEpNum);
                 ep->Type            = USB_EP_TYPE_INTERRUPT;
-                ep->MaxPacketSize   = itf->Config.OutEp.Size;
+                ep->MaxPacketSize   = HID_APP(itf)->Report->Output.MaxSize;
                 ep->IfNum           = dev->IfCount;
             }
 #endif /* (USBD_HID_OUT_SUPPORT == 1) */
@@ -540,7 +540,7 @@ USBD_ReturnType USBD_HID_ReportIn(USBD_HID_IfHandleType *itf, void *data, uint16
     }
     else
     {
-        retval = USBD_EpSend(dev, itf->Config.InEp.Num, data, length);
+        retval = USBD_EpSend(dev, itf->Config.InEpNum, data, length);
     }
     return retval;
 }
@@ -558,9 +558,9 @@ USBD_ReturnType USBD_HID_ReportOut(USBD_HID_IfHandleType *itf, void *data, uint1
     USBD_ReturnType retval = USBD_E_ERROR;
     USBD_HandleType *dev = itf->Base.Device;
 
-    if (itf->Config.OutEp.Size > 0)
+    if (itf->Config.OutEpNum != 0)
     {
-        retval = USBD_EpReceive(dev, itf->Config.OutEp.Num, data, length);
+        retval = USBD_EpReceive(dev, itf->Config.OutEpNum, data, length);
     }
     return retval;
 }

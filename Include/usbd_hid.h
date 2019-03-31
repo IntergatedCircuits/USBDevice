@@ -67,7 +67,7 @@ typedef enum
     HID_REQ_SET_PROTOCOL    = 0x0B, /*!< Sets the new protocol.
                                          wValue = @ref USBD_HID_ProtocolType */
     HID_REQ_GET_PROTOCOL    = 0x03, /*!< Read which @ref USBD_HID_ProtocolType is currently active. */
-}USBD_HID_RequestType;
+}HID_RequestType, USBD_HID_RequestType;
 
 
 /** @brief HID standard descriptor types */
@@ -76,7 +76,7 @@ typedef enum
     HID_DESC_TYPE_HID       = 0x21, /*!< HID class descriptor */
     HID_DESC_TYPE_REPORT    = 0x22, /*!< HID report descriptor */
     HID_DESC_TYPE_PHYSICAL  = 0x23, /*!< HID physical descriptor */
-}USBD_HID_DescriptorType;
+}HID_DescriptorType, USBD_HID_DescriptorType;
 
 
 /** @brief HID report types */
@@ -85,7 +85,7 @@ typedef enum
     HID_REPORT_INPUT    = 0x01, /*!< Report sent by the device */
     HID_REPORT_OUTPUT   = 0x02, /*!< Report sent to the device */
     HID_REPORT_FEATURE  = 0x03, /*!< Bidirectional configuration report */
-}USBD_HID_ReportType;
+}HID_ReportType, USBD_HID_ReportType;
 
 
 /** @brief HID protocol types */
@@ -93,29 +93,34 @@ typedef enum
 {
     HID_PROTOCOL_REPORT     = 0x01, /*!< Default HID protocol */
     HID_PROTOCOL_BOOT       = 0x00, /*!< BOOT protocol */
-}USBD_HID_ProtocolType;
+}HID_ProtocolType, USBD_HID_ProtocolType;
 
 
-/** @brief HID endpoint setup structure */
+/** @brief HID report configuration structure */
 typedef struct {
-    uint8_t  Num;           /*!< Endpoint address */
-    uint8_t  Interval_ms;   /*!< Endpoint frame interval in ms */
-    uint16_t Size;          /*!< Endpoint max packet size */
-}USBD_HID_EpConfigType;
-
-
-/** @brief HID endpoint setup structure */
-typedef struct {
-    const uint8_t*  Desc;   /*!< Pointer to the report descriptor */
-    uint16_t        Length; /*!< Byte size of the report descriptor */
-    uint8_t         IDs;    /*!< unused */
-}USBD_HID_ReportDescType;
+    const uint8_t*  Desc;       /*!< Pointer to the report descriptor */
+    uint16_t        DescLength; /*!< Byte size of the report descriptor */
+    uint8_t         MaxId;      /*!< Largest used report ID (0 if report IDs aren't used) */
+    struct {
+        uint8_t     Interval_ms;/*!< Input frame interval in ms */
+        uint16_t    MaxSize;    /*!< Maximal input report size */
+    }Input;
+    struct {
+        uint16_t    MaxSize;    /*!< Maximal feature report size */
+    }Feature;
+    struct {
+        uint8_t     Interval_ms;/*!< Output frame interval in ms */
+        uint16_t    MaxSize;    /*!< Maximal output report size */
+    }Output;
+}HID_ReportConfigType, USBD_HID_ReportConfigType;
 
 
 /** @brief HID application structure */
 typedef struct
 {
-    const char* Name;       /*!< String description of the application */
+    const char* Name;                           /*!< String description of the application */
+
+    const HID_ReportConfigType* Report;         /*!< Report configuration */
 
     void (*Init)            (void* itf);        /*!< Initialization request */
 
@@ -139,17 +144,15 @@ typedef struct
                              uint8_t intNum);   /*!< Return a string from the report description */
 
 #endif
-
-    USBD_HID_ReportDescType Report;         /*!< The Report descriptor */
-}USBD_HID_AppType;
+}HID_AppType, USBD_HID_AppType;
 
 
 /** @brief HID interface configuration */
 typedef struct
 {
-    USBD_HID_EpConfigType InEp;  /*!< IN endpoint setup */
+    uint8_t InEpNum;    /*!< IN endpoint address */
 #if (USBD_HID_OUT_SUPPORT == 1)
-    USBD_HID_EpConfigType OutEp; /*!< OUT endpoint setup */
+    uint8_t OutEpNum;   /*!< OUT endpoint address */
 #endif
 }USBD_HID_ConfigType;
 
