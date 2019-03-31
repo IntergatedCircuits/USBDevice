@@ -47,7 +47,9 @@ There are only two steps to mount an interface to a device:
 1. Setting the interface's endpoint addresses;
 2. Cross-referencing the interface and the device with a `USBD_<CLASS>_MountInterface()` call.
 
-A device's mounted interfaces shall not be changed while the device is logically connected to the host.
+The interfaces are added to the device configuration in the order of the mount calls.
+It is possible to change the active interfaces during runtime by unmounting all and mounting the new ones.
+The only requirement is that the device has to be logically disconnected from the host when it is done.
 
 The device control of the library is limited to the global state management
 using the public API in *usbd.h*. The bulk of the device operation is servicing
@@ -56,7 +58,7 @@ the device peripheral events:
 - USB control pipe setup request received -> `USBD_SetupCallback()`
 - USB endpoint data transfer completed -> `USBD_EpInCallback()` or `USBD_EpOutCallback()`
 
-The goal of the USBD handles is to be a shared management structure for both this stack
+The USBD handles are used as a shared management structure for both this stack
 and the peripheral driver. Any additional fields that the peripheral driver requires
 can be defined in the driver-specific *usbd_pd_def.h* header, while the *usbd_types.h* shall
 be included by the driver.
