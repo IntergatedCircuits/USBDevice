@@ -150,12 +150,12 @@ int _write(int32_t file, uint8_t *ptr, int32_t len)
 
     if (console_if->LineCoding.DataBits == 0)
     {
-        errno = EIO;
+        errno = -EIO;
     }
     else if (((tail > head) ?
             (tail - head - 1) : (console_in_size - (head - tail))) < len)
     {
-        errno = ENOMEM;
+        errno = -ENOMEM;
     }
     else
     {
@@ -182,14 +182,14 @@ int _write(int32_t file, uint8_t *ptr, int32_t len)
         }
 
         /* first chunk is copied starting from current head */
-        memcpy(ptr, &console_if_IN.buffer[head + 1], len1);
+        memcpy(&console_if_IN.buffer[head + 1], ptr, len1);
         console_if_IN.head += len1;
         ptr += len1;
 
         /* the remaining chunk is copied from the buffer start */
         if (len2 > 0)
         {
-            memcpy(ptr, &console_if_IN.buffer[0], len2);
+            memcpy(&console_if_IN.buffer[0], ptr, len2);
             console_if_IN.head = len2 - 1;
         }
 
@@ -243,7 +243,7 @@ int _read(int32_t file, uint8_t *ptr, int32_t len)
 
     if (console_if->LineCoding.DataBits == 0)
     {
-        errno = EIO;
+        errno = -EIO;
     }
     else
     {
@@ -270,15 +270,15 @@ int _read(int32_t file, uint8_t *ptr, int32_t len)
         }
 
         /* first chunk is copied starting from current tail */
-        memcpy(&console_if_IN.buffer[tail + 1], ptr, len1);
-        console_if_IN.tail += len1;
+        memcpy(ptr, &console_if_OUT.buffer[tail + 1], len1);
+        console_if_OUT.tail += len1;
         ptr += len1;
 
         /* the remaining chunk is copied from the buffer start */
         if (len2 > 0)
         {
-            memcpy(&console_if_IN.buffer[0], ptr, len2);
-            console_if_IN.tail = len2 - 1;
+            memcpy(ptr, &console_if_OUT.buffer[0], len2);
+            console_if_OUT.tail = len2 - 1;
         }
 
         retval = len1 + len2;
