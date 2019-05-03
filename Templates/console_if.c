@@ -104,6 +104,7 @@ static void console_if_open(void* itf, USBD_CDC_LineCodingType * lc)
 #endif
 #if (STDIN_BUFFER_SIZE > 0)
     console_if_OUT.head = console_if_OUT.tail = 0;
+    console_if_recv();
 #endif
 }
 
