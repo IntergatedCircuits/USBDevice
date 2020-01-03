@@ -74,10 +74,10 @@ static const USB_DeviceQualifierDescType usbd_devQualDesc __align(USBD_DATA_ALIG
 
 /** @brief USB Binary device Object Store (BOS) Descriptor */
 #if (USBD_LPM_SUPPORT == 1)
-static const struct {
+static const PACKED(struct) {
     USB_BOSDescType bos;                /*!< BOS base */
     USB_DevCapabilityDescType devCap;   /*!< Device capabilities */
-}__packed usbd_bosDesc __align(USBD_DATA_ALIGNMENT) =
+}usbd_bosDesc __align(USBD_DATA_ALIGNMENT) =
 {
     .bos = {
         .bLength            = sizeof(USB_BOSDescType),

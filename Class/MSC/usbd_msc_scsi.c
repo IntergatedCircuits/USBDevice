@@ -146,13 +146,13 @@ USBD_ReturnType SCSI_ProcessWrite(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_Inquiry(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         uint8_t EVPD;
         uint8_t PageCode;
         uint16_t AllocLength;
         uint8_t Control;
-    }__packed *cmd = (void*)itf->CBW.CB;
+    }*cmd = (void*)itf->CBW.CB;
     uint8_t* data = itf->Buffer;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
     uint32_t respLen, allocLen = ntohs(cmd->AllocLength);
@@ -182,14 +182,14 @@ static uint32_t SCSI_Inquiry(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_ReadCapacity10(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         uint8_t __reserved0;
         uint32_t LogicalBlockAddr;
         uint8_t __reserved1[2];
         uint8_t PMI;
         uint8_t Control;
-    }__packed *cmd = (void*)itf->CBW.CB;
+    }*cmd = (void*)itf->CBW.CB;
     struct {
         uint32_t BlockCount;
         uint32_t BlockLength;
@@ -219,7 +219,7 @@ static uint32_t SCSI_ReadCapacity10(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_ReadFormatCapacity(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         union {
             struct {
@@ -231,8 +231,8 @@ static uint32_t SCSI_ReadFormatCapacity(USBD_MSC_IfHandleType *itf)
         uint8_t __reserved0[5];
         uint16_t AllocLength;
         uint8_t __reserved1[3];
-    }__packed *cmd = (void*)itf->CBW.CB;
-    struct {
+    }*cmd = (void*)itf->CBW.CB;
+    PACKED(struct) {
         uint8_t __reserved0[3];
         uint8_t CapacityListLength;
         struct {
@@ -240,7 +240,7 @@ static uint32_t SCSI_ReadFormatCapacity(USBD_MSC_IfHandleType *itf)
             uint8_t  DescriptorCode;
             uint8_t  __reserved1;
             uint16_t BlockLength;
-        }__packed Capacity[1];
+        }Capacity[1];
     }*data = (void*)itf->Buffer;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
     uint32_t respLen = sizeof(*data), allocLen = ntohs(cmd->AllocLength);
@@ -264,7 +264,7 @@ static uint32_t SCSI_ReadFormatCapacity(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_ModeSense6(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         union {
             struct {
@@ -279,7 +279,7 @@ static uint32_t SCSI_ModeSense6(USBD_MSC_IfHandleType *itf)
         uint8_t SubpageCode;
         uint8_t AllocLength;
         uint8_t Control;
-    }__packed *cmd = (void*)itf->CBW.CB;
+    }*cmd = (void*)itf->CBW.CB;
     uint8_t (*data)[8] = (void*)itf->Buffer;
     uint32_t respLen = sizeof(*data);
 
@@ -298,7 +298,7 @@ static uint32_t SCSI_ModeSense6(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_ModeSense10(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         union {
             struct {
@@ -315,7 +315,7 @@ static uint32_t SCSI_ModeSense10(USBD_MSC_IfHandleType *itf)
         uint8_t __reserved1[2];
         uint16_t AllocLength;
         uint8_t Control;
-    }__packed *cmd = (void*)itf->CBW.CB;
+    }*cmd = (void*)itf->CBW.CB;
     uint8_t (*data)[8] = (void*)itf->Buffer;
     uint32_t respLen = sizeof(*data), allocLen = ntohs(cmd->AllocLength);
 
@@ -334,14 +334,14 @@ static uint32_t SCSI_ModeSense10(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_RequestSense(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         uint8_t DESC;
         uint8_t __reserved[2];
         uint8_t AllocLength;
         uint8_t Control;
-    }__packed *cmd = (void*)itf->CBW.CB;
-    struct {
+    }*cmd = (void*)itf->CBW.CB;
+    PACKED(struct) {
         uint8_t ResponseCode;
         uint8_t __reserved0;
         uint8_t SenseKey;
@@ -379,7 +379,7 @@ static uint32_t SCSI_RequestSense(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_StartStopUnit(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         uint8_t IMMED;
         uint8_t __reserved0[2];
@@ -393,7 +393,7 @@ static uint32_t SCSI_StartStopUnit(USBD_MSC_IfHandleType *itf)
             uint8_t __reserved1;
         };
         uint8_t Control;
-    }__packed *cmd = (void*)itf->CBW.CB;
+    }*cmd = (void*)itf->CBW.CB;
 
     return 0;
 }
@@ -405,7 +405,7 @@ static uint32_t SCSI_StartStopUnit(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_PreventAllowMediumRemoval(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         uint8_t __reserved0[3];
         union {
@@ -417,7 +417,7 @@ static uint32_t SCSI_PreventAllowMediumRemoval(USBD_MSC_IfHandleType *itf)
             };
             uint8_t __reserved1;
         };
-    }__packed *cmd = (void*)itf->CBW.CB;
+    }*cmd = (void*)itf->CBW.CB;
 
     return 0;
 }
@@ -429,11 +429,11 @@ static uint32_t SCSI_PreventAllowMediumRemoval(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_TestUnitReady(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         uint8_t __reserved[4];
         uint8_t Control;
-    }__packed *cmd = (void*)itf->CBW.CB;
+    }*cmd = (void*)itf->CBW.CB;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
 
     /* case 9 : Hi > D0 */
@@ -461,7 +461,7 @@ static uint32_t SCSI_TestUnitReady(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_Verify10(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         union {
             struct {
@@ -477,7 +477,7 @@ static uint32_t SCSI_Verify10(USBD_MSC_IfHandleType *itf)
         uint8_t GroupNr;
         uint16_t TransferLength;
         uint8_t Control;
-    }__packed *cmd = (void*)itf->CBW.CB;
+    }*cmd = (void*)itf->CBW.CB;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
 
     /* byte-by-byte comparison is not supported (it requires 2 buffers) */
@@ -501,7 +501,7 @@ static uint32_t SCSI_Verify10(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_Read10(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         union {
             struct {
@@ -518,7 +518,7 @@ static uint32_t SCSI_Read10(USBD_MSC_IfHandleType *itf)
         uint8_t GroupNr;
         uint16_t TransferLength;
         uint8_t Control;
-    }__packed *cmd = (void*)itf->CBW.CB;
+    }*cmd = (void*)itf->CBW.CB;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
     uint32_t blockAddr = ntohl(cmd->BlockAddr);
     uint16_t transferLen = ntohs(cmd->TransferLength);
@@ -566,7 +566,7 @@ static uint32_t SCSI_Read10(USBD_MSC_IfHandleType *itf)
  */
 static uint32_t SCSI_Write10(USBD_MSC_IfHandleType *itf)
 {
-    struct {
+    PACKED(struct) {
         uint8_t OpCode;
         union {
             struct {
@@ -583,7 +583,7 @@ static uint32_t SCSI_Write10(USBD_MSC_IfHandleType *itf)
         uint8_t GroupNr;
         uint16_t TransferLength;
         uint8_t Control;
-    }__packed *cmd = (void*)itf->CBW.CB;
+    }*cmd = (void*)itf->CBW.CB;
     const USBD_MSC_LUType *LU = MSC_GetLU(itf, itf->CBW.bLUN);
     uint32_t blockAddr = ntohl(cmd->BlockAddr);
     uint16_t transferLen = ntohs(cmd->TransferLength);

@@ -41,42 +41,42 @@
 
 #define CDC_APP(ITF)    ((USBD_CDC_AppType*)((ITF)->App))
 
-typedef struct
+typedef PACKED(struct)
 {
     /* Interface Association Descriptor */
     USB_IfAssocDescType IAD;
     /* Communication Interface Descriptor */
     USB_InterfaceDescType CID;
     /* Header Functional Descriptor */
-    struct {
+    PACKED(struct) {
         uint8_t bLength;
         uint8_t bDescriptorType;
         uint8_t bDescriptorSubtype;
         uint16_t bcdCDC;
-    }__packed HFD;
+    }HFD;
     /* Call Management Functional Descriptor */
-    struct {
+    PACKED(struct) {
         uint8_t  bFunctionLength;
         uint8_t  bDescriptorType;
         uint8_t  bDescriptorSubtype;
         uint8_t  bmCapabilities;
         uint8_t  bDataInterface;
-    }__packed CMFD;
+    }CMFD;
     /* ACM Functional Descriptor */
-    struct {
+    PACKED(struct) {
         uint8_t  bFunctionLength;
         uint8_t  bDescriptorType;
         uint8_t  bDescriptorSubtype;
         uint8_t  bmCapabilities;
-    }__packed ACMFD;
+    }ACMFD;
     /* Union Functional Descriptor */
-    struct {
+    PACKED(struct) {
         uint8_t  bFunctionLength;
         uint8_t  bDescriptorType;
         uint8_t  bDescriptorSubtype;
         uint8_t  bMasterInterface;
         uint8_t  bSlaveInterface0;
-    }__packed UFD;
+    }UFD;
 #if (USBD_CDC_NOTEP_USED == 1)
     /* Notification Endpoint Descriptor */
     USB_EndpointDescType NED;
@@ -84,7 +84,7 @@ typedef struct
     /* Data Interface Descriptor */
     USB_InterfaceDescType DID;
     /* Endpoint descriptors are dynamically added */
-}__packed USBD_CDC_DescType;
+}USBD_CDC_DescType;
 
 static const USBD_CDC_DescType cdc_desc = {
     .IAD = { /* Interface Association Descriptor */

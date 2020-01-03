@@ -54,6 +54,14 @@ extern "C"
 #define __alignment(X)
 #endif
 
+#ifndef PACKED
+#if defined (__ICCARM__)
+#define PACKED(X) __packed X
+#else
+#define PACKED(X) X __packed
+#endif
+#endif
+
 /* The current implementation is based on USB release 2.00 */
 #define USB_SPEC_BCD                    0x0200
 
@@ -203,7 +211,7 @@ typedef enum
 }USB_DeviceCapabilityType;
 
 /** @brief USB setup request */
-typedef struct
+typedef PACKED(struct)
 {
     union {
         struct {
@@ -217,12 +225,12 @@ typedef struct
     uint16_t  Value;    /*!< The contents vary according to the request */
     uint16_t  Index;    /*!< The contents vary according to the request */
     uint16_t  Length;   /*!< Specifies the length of the data transferred during the data stage */
-}__packed USB_SetupRequestType;
+}USB_SetupRequestType;
 
 /* All elements shall be stored MSB first in the descriptors */
 
 /** @brief USB device descriptor structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  bLength;               /*!< Size of the Descriptor in Bytes (18 bytes) */
     uint8_t  bDescriptorType;       /*!< Device Descriptor (0x01) */
@@ -241,10 +249,10 @@ typedef struct
     uint8_t  iProduct;              /*!< Index of Product String Descriptor */
     uint8_t  iSerialNumber;         /*!< Index of Serial Number String Descriptor */
     uint8_t  bNumConfigurations;    /*!< Number of Possible Configurations */
-}__packed USB_DeviceDescType;
+}USB_DeviceDescType;
 
 /** @brief USB configuration descriptor structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  bLength;               /*!< Size of Descriptor in Bytes */
     uint8_t  bDescriptorType;       /*!< Configuration Descriptor (0x02) */
@@ -254,18 +262,18 @@ typedef struct
     uint8_t  iConfiguration;        /*!< Index of String Descriptor describing this configuration */
     uint8_t  bmAttributes;          /*!< 0b1[Self Powered][Remote Wakeup]00000 */
     uint8_t  bMaxPower;             /*!< Maximum Power Consumption in 2mA units */
-}__packed USB_ConfigDescType;
+}USB_ConfigDescType;
 
 /** @brief USB Unicode language identifier structure (with a single supported element) */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  bLength;           /*!< Size of Descriptor in Bytes */
     uint8_t  bDescriptorType;   /*!< String Descriptor (0x03) */
     uint16_t wLANGID[1];        /*!< Supported Language Codes (e.g. 0x0409 English - United States) */
-}__packed USB_LangIdDescType;
+}USB_LangIdDescType;
 
 /** @brief USB interface descriptor structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  bLength;               /*!< Size of Descriptor in Bytes (9 Bytes) */
     uint8_t  bDescriptorType;       /*!< Interface Descriptor (0x04) */
@@ -276,10 +284,10 @@ typedef struct
     uint8_t  bInterfaceSubClass;    /*!< Subclass Code (Assigned by USB Org) */
     uint8_t  bInterfaceProtocol;    /*!< Protocol Code (Assigned by USB Org) */
     uint8_t  iInterface;            /*!< Index of String Descriptor Describing this interface */
-}__packed USB_InterfaceDescType;
+}USB_InterfaceDescType;
 
 /** @brief USB endpoint descriptor structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  bLength;           /*!< Size of Descriptor in Bytes (7 Bytes) */
     uint8_t  bDescriptorType;   /*!< Interface Descriptor (0x05) */
@@ -304,10 +312,10 @@ typedef struct
     uint8_t  bInterval;         /*!< Interval for polling endpoint data transfers. Value in frame counts.
                                      Ignored for Bulk & Control Endpoints. Isochronous must equal 1 and
                                      field may range from 1 to 255 for interrupt endpoints. */
-}__packed USB_EndpointDescType;
+}USB_EndpointDescType;
 
 /** @brief USB device qualifier descriptor structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  bLength;               /*!< Size of Descriptor in Bytes */
     uint8_t  bDescriptorType;       /*!< Device Qualifier Descriptor (0x06) */
@@ -321,29 +329,29 @@ typedef struct
     uint8_t  bMaxPacketSize;        /*!< Maximum Packet Size for Zero Endpoint. Valid Sizes are 8, 16, 32, 64 */
     uint8_t  bNumConfigurations;    /*!< Number of Possible Configurations */
     uint8_t  bReserved;             /*!< Keep 0 */
-}__packed USB_DeviceQualifierDescType;
+}USB_DeviceQualifierDescType;
 
 /** @brief Binary device Object Store descriptor (header only) */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  bLength;               /*!< Size of Descriptor in Bytes */
     uint8_t  bDescriptorType;       /*!< BOS Descriptor (0x0F) */
     uint16_t wTotalLength;          /*!< Total length in bytes of data returned */
     uint8_t  bNumDeviceCaps;        /*!< Number of device capabilities to follow */
-}__packed USB_BOSDescType;
+}USB_BOSDescType;
 
 /** @brief USB device capability descriptor structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  bLength;               /*!< Size of Descriptor in Bytes */
     uint8_t  bDescriptorType;       /*!< Device Capability Descriptor (0x10) */
     uint8_t  bDevCapabilityType;    /*!< Capability type: USB 2.0 EXTENSION (0x02) */
     uint32_t bmAttributes;          /*!< Bit 0 Reserved (set to 0)
                                          Bit 1 Link Power Management support */
-}__packed USB_DevCapabilityDescType;
+}USB_DevCapabilityDescType;
 
 /** @brief USB Interface Association Descriptor structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  bLength;               /*!< Size of Descriptor in Bytes */
     uint8_t  bDescriptorType;       /*!< Interface Association Descriptor (0x0B) */
@@ -353,7 +361,7 @@ typedef struct
     uint8_t  bFunctionSubClass;     /*!< Subclass Code (Assigned by USB Org) */
     uint8_t  bFunctionProtocol;     /*!< Protocol Code (Assigned by USB Org) */
     uint8_t  iFunction;             /*!< Index of String Descriptor Describing this function */
-}__packed USB_IfAssocDescType;
+}USB_IfAssocDescType;
 
 /** @} */
 

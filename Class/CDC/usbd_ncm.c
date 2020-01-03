@@ -58,57 +58,57 @@ typedef union {
 /* NTB Header */
 typedef union
 {
-    struct {
+    PACKED(struct) {
         uint32_t Signature;     /* "NCMH" */
         uint16_t HeaderLength;  /* Size in bytes of this NTH16 structure */
         uint16_t Sequence;      /* Sequence number (for debugging) */
         uint16_t BlockLength;   /* Size of this NTB in bytes */
         uint16_t NdpIndex;      /* Offset of the first NDP16 from byte zero of the NTB */
-    }__packed V16;
-    struct {
+    }V16;
+    PACKED(struct) {
         uint32_t Signature;     /* "ncmh" */
         uint16_t HeaderLength;  /* Size in bytes of this NTH32 structure */
         uint16_t Sequence;      /* Sequence number (for debugging) */
         uint32_t BlockLength;   /* Size of this NTB in bytes */
         uint32_t NdpIndex;      /* Offset of the first NDP32 from byte zero of the NTB */
-    }__packed V32;
+    }V32;
 }USBD_NCM_TransferHeaderType;
 
 
-typedef struct {
+typedef PACKED(struct) {
     uint16_t Index; /* Byte index of the datagram in the NTB */
     uint16_t Length;/* Size in bytes of the datagram in the NTB */
-}__packed USBD_NCM_Datagram16;
+}USBD_NCM_Datagram16;
 
 
-typedef struct {
+typedef PACKED(struct) {
     uint32_t Index; /* Byte index of the datagram in the NTB */
     uint32_t Length;/* Size in bytes of the datagram in the NTB */
-}__packed USBD_NCM_Datagram32;
+}USBD_NCM_Datagram32;
 
 
 /* NTB Datagram Pointer Table */
 typedef union
 {
-    struct {
+    PACKED(struct) {
         uint32_t Signature;     /* "NCM0" for no CRC, "NCM1" for CRC-32 */
         uint16_t Length;        /* Size in bytes of this NDP16 structure */
         uint16_t NextNdpIndex;  /* Offset of the next NDP16 from byte zero of the NTB */
         USBD_NCM_Datagram16 Datagram[1]; /* The last datagram index + header is always 0 */
-    }__packed V16;
-    struct {
+    }V16;
+    PACKED(struct) {
         uint32_t Signature;     /*"ncm0" for no CRC, "ncm1" for CRC-32 */
         uint16_t Length;        /* Size in bytes of this NDP32 structure */
         uint16_t Reserved6;     /* Keep 0 */
         uint32_t NextNdpIndex;  /* Offset of the next NDP32 from byte zero of the NTB */
         uint32_t Reserved12;    /* Keep 0 */
         USBD_NCM_Datagram32 Datagram[1]; /* The last datagram index + header is always 0 */
-    }__packed V32;
+    }V32;
 }USBD_NCM_DatagramPointerTableType;
 
 
 /* NTB Parameters */
-typedef struct
+typedef PACKED(struct)
 {
     uint16_t Length;                /* Size in bytes of this NTBT structure */
     uint16_t NtbFormatsSupported;   /* 1 if only 16bit, 3 if 32bit is supported as well */
@@ -122,32 +122,32 @@ typedef struct
     uint16_t NdpOutPayloadRemainder;
     uint16_t NdpOutAlignment;
     uint16_t NtbOutMaxDatagrams;    /* Maximum number of datagrams in a single OUT NTB */
-}__packed USBD_NCM_ParametersType;
+}USBD_NCM_ParametersType;
 
 
-typedef struct
+typedef PACKED(struct)
 {
     /* Interface Association Descriptor */
     USB_IfAssocDescType IAD;
     /* Communication Interface Descriptor */
     USB_InterfaceDescType CID;
     /* Header Functional Descriptor */
-    struct {
+    PACKED(struct) {
         uint8_t bLength;
         uint8_t bDescriptorType;
         uint8_t bDescriptorSubtype;
         uint16_t bcdCDC;
-    }__packed HFD;
+    }HFD;
     /* Union Functional Descriptor */
-    struct {
+    PACKED(struct) {
         uint8_t  bFunctionLength;
         uint8_t  bDescriptorType;
         uint8_t  bDescriptorSubtype;
         uint8_t  bMasterInterface;
         uint8_t  bSlaveInterface0;
-    }__packed UFD;
+    }UFD;
     /* Ethernet Networking Functional Descriptor */
-    struct {
+    PACKED(struct) {
         uint8_t  bFunctionLength;
         uint8_t  bDescriptorType;
         uint8_t  bDescriptorSubtype;
@@ -156,22 +156,22 @@ typedef struct
         uint16_t wMaxSegmentSize;
         uint16_t wNumberMCFilters;
         uint8_t  bNumberPowerFilters;
-    }__packed ENFD;
+    }ENFD;
     /* NCM Functional Descriptor */
-    struct {
+    PACKED(struct) {
         uint8_t  bFunctionLength;
         uint8_t  bDescriptorType;
         uint8_t  bDescriptorSubtype;
         uint16_t bcdNcmVersion;
         uint8_t  bmNetworkCapabilities;
-    }__packed NCMFD;
+    }NCMFD;
     /* Notification Endpoint Descriptor */
     USB_EndpointDescType NED;
     /* Data Interface Descriptors */
     USB_InterfaceDescType DID0;
     USB_InterfaceDescType DID;
     /* Endpoint descriptors are dynamically added */
-}__packed USBD_NCM_DescType;
+}USBD_NCM_DescType;
 
 
 static const USBD_NCM_SignatureType nth16_sign =
@@ -272,7 +272,7 @@ static USBD_ReturnType  ncm_setupStage  (USBD_NCM_IfHandleType *itf);
 static void             ncm_dataStage   (USBD_NCM_IfHandleType *itf);
 static void             ncm_outData     (USBD_NCM_IfHandleType *itf, USBD_EpHandleType *ep);
 static void             ncm_inData      (USBD_NCM_IfHandleType *itf, USBD_EpHandleType *ep);
-static void             ncm_sendNTB    (USBD_NCM_IfHandleType *itf, uint8_t page);
+static void             ncm_sendNTB     (USBD_NCM_IfHandleType *itf, uint8_t page);
 
 /* NCM interface class callbacks structure */
 static const USBD_ClassType ncm_cbks = {
@@ -454,9 +454,9 @@ static USBD_ReturnType ncm_setupStage(USBD_NCM_IfHandleType *itf)
 
             case CDC_REQ_GET_NTB_INPUT_SIZE:
             {
-                struct {
+                PACKED(struct) {
                     uint32_t size;
-                }__packed *insize = (void*)dev->CtrlData;
+                }*insize = (void*)dev->CtrlData;
                 insize->size = itf->In.MaxSize;
                 retval = USBD_CtrlSendData(dev, dev->CtrlData, sizeof(*insize));
                 break;
@@ -484,7 +484,7 @@ static USBD_ReturnType ncm_setupStage(USBD_NCM_IfHandleType *itf)
                 break;
 
             case CDC_REQ_GET_NTB_FORMAT:
-                *((__packed uint16_t*)dev->CtrlData) = 0;
+                *((uint16_t*)dev->CtrlData) = 0;
                 retval = USBD_CtrlSendData(dev, dev->CtrlData, 2);
                 break;
 
@@ -516,9 +516,9 @@ static void ncm_dataStage(USBD_NCM_IfHandleType *itf)
         {
             case CDC_REQ_SET_NTB_INPUT_SIZE:
             {
-                struct {
+                PACKED(struct) {
                     uint32_t size;
-                }__packed *insize = (void*)dev->CtrlData;
+                }*insize = (void*)dev->CtrlData;
                 /* Sanity check */
                 if (insize->size > (sizeof(((USBD_NCM_TransferHeaderType*)0)->V16) +
                                     sizeof(((USBD_NCM_DatagramPointerTableType*)0)->V16)))

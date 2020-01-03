@@ -81,7 +81,7 @@ typedef enum
 
 
 /** @brief CDC line coding configuration structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint32_t DTERate;       /*!< Data terminal rate, in bits per second */
     uint8_t  CharFormat;    /*!< Stop bits:
@@ -95,7 +95,7 @@ typedef struct
                                     @arg 3 -> Mark
                                     @arg 4 -> Space */
     uint8_t  DataBits;      /*!< Data bits: (5, 6, 7, 8 or 16) */
-}__packed USBD_CDC_LineCodingType;
+}USBD_CDC_LineCodingType;
 
 
 /** @brief Standard CDC notifications */
@@ -109,26 +109,26 @@ typedef enum
 
 
 /** @brief CDC notification header structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  RequestType;       /*!< Always set to 0xA1 */
     uint8_t  NotificationType;  /*!< @ref USBD_CDC_NotificationType */
     uint16_t Value;             /*!< The data if it fits */
     uint16_t Index;             /*!< Communication interface index in the USB configuration */
     uint16_t Length;            /*!< Length of optional additional data */
-}__packed USBD_CDC_NotifyHeaderType;
+}USBD_CDC_NotifyHeaderType;
 
 
 /** @brief CDC speed change notification data structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint32_t DLBitRate; /* contains the downlink bit rate (IN pipe) */
     uint32_t ULBitRate; /* contains the uplink bit rate (OUT pipe) */
-}__packed USBD_CDC_SpeedChangeType;
+}USBD_CDC_SpeedChangeType;
 
 
 /** @brief CDC serial state notification data structure */
-typedef union
+typedef PACKED(union)
 {
     struct {
         uint16_t RxCarrier : 1; /*!< State of receiver carrier detection mechanism (RS-232 signal DCD) */
@@ -141,7 +141,7 @@ typedef union
         uint16_t : 9;
     };
     uint16_t w;
-}__packed USBD_CDC_SerialStateType;
+}USBD_CDC_SerialStateType;
 
 
 /** @brief Common CDC notification data structure */

@@ -32,32 +32,32 @@
 #endif
 
 
-typedef struct {
+typedef PACKED(struct) {
     uint8_t Id;
     USBD_HID_ReportType Type;
-}__packed USBD_HID_ReportInfoType;
+}USBD_HID_ReportInfoType;
 
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  bDescriptorType;
     uint16_t wItemLength;
-}__packed USBD_HID_SubDescType;
+}USBD_HID_SubDescType;
 
-typedef struct
+typedef PACKED(struct)
 {
     /* Human Interface Descriptor */
     USB_InterfaceDescType HID;
     /* HID Class Descriptor */
-    struct {
+    PACKED(struct) {
         uint8_t  bLength;
         uint8_t  bDescriptorType;
         uint16_t bcdHID;
         uint8_t  bCountryCode;
         uint8_t  bNumDescriptors;
         USBD_HID_SubDescType sHIDD[HID_SUB_DESC_COUNT];
-    }__packed HIDCD;
+    }HIDCD;
     /* Endpoint descriptors are dynamically added */
-}__packed USBD_HID_DescType;
+}USBD_HID_DescType;
 
 static const USBD_HID_DescType hid_desc = {
     .HID = { /* HID Interface Descriptor */

@@ -146,7 +146,7 @@ typedef enum
 
 
 /** @brief MSC Command Block Wrapper message structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint32_t dSignature;    /*!< CBW identifier signature */
     uint32_t dTag;          /*!< Tag to bind CSW to CBW */
@@ -155,17 +155,17 @@ typedef struct
     uint8_t bLUN;           /*!< Logical Unit selector Number */
     uint8_t bCBLength;      /*!< Length of the Command Block */
     uint8_t CB[16];         /*!< Command Block */
-}__packed USBD_MSC_CommandBlockWrapperType;
+}USBD_MSC_CommandBlockWrapperType;
 
 
 /** @brief MSC Command Status Wrapper message structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint32_t dSignature;    /*!< CBW identifier signature */
     uint32_t dTag;          /*!< Tag to bind CSW to CBW */
     uint32_t dDataResidue;  /*!< Difference between host requested length and actual sent data length */
     uint8_t bStatus;        /*!< @ref USBD_MSC_CSWStatusType command execution status */
-}__packed USBD_MSC_CommandStatusWrapperType;
+}USBD_MSC_CommandStatusWrapperType;
 
 
 /** @brief MSC Logical Unit status */

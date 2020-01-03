@@ -115,14 +115,14 @@ typedef enum
 
 
 /** @brief DFU status structure */
-typedef struct
+typedef PACKED(struct)
 {
     uint8_t  Status;        /*!< Error status from execution of the last request. */
     uint16_t PollTimeout;   /*!< Minimum time [ms] between subsequent DFU_GETSTATUS requests. */
     uint8_t  __reserved;    /* PollTimeout is 24 bits */
     uint8_t  State;         /*!< The new device state. */
     uint8_t  iString;       /*!< Index of status description in string table. */
-}__packed USBD_DFU_StatusDataType;
+}USBD_DFU_StatusDataType;
 
 
 /** @brief DFU application structure */

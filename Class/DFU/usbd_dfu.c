@@ -50,7 +50,7 @@
 #define DFUSE_GETADDRESS(ITF, DESC)     \
     ((uint8_t*)((ITF)->Address + (((ITF)->BlockNum - 2) * (DESC)->DFUFD.wTransferSize)))
 
-typedef struct {
+typedef PACKED(struct) {
     uint8_t  bLength;
     uint8_t  bDescriptorType;
     uint8_t  bmAttributes; /*
@@ -62,16 +62,16 @@ typedef struct {
     uint16_t wDetachTimeOut;
     uint16_t wTransferSize;
     uint16_t bcdDFUVersion;
-}__packed USBD_DFU_FuncDescType;
+}USBD_DFU_FuncDescType;
 
 
-typedef struct
+typedef PACKED(struct)
 {
     /* DFU Interface Descriptor */
     USB_InterfaceDescType DFU;
     /* DFU Functional Descriptor */
     USBD_DFU_FuncDescType DFUFD;
-}__packed USBD_DFU_DescType;
+}USBD_DFU_DescType;
 
 
 static const USBD_DFU_DescType dfu_desc = {
