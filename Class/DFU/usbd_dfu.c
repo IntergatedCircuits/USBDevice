@@ -331,9 +331,8 @@ static void dfu_init(USBD_DFU_IfHandleType *itf)
     /* DFU mode only */
     if (itf->DevStatus.State >= DFU_STATE_IDLE)
     {
+        dfu_abort(itf);
         itf->Address = (uint8_t*)DFU_APP(itf)->Firmware.Address;
-        itf->BlockNum = 0;
-        itf->BlockLength = 0;
 
         /* Initialize media */
         USBD_SAFE_CALLBACK(DFU_APP(itf)->Init, );
@@ -665,7 +664,6 @@ static USBD_ReturnType dfu_upload(USBD_DFU_IfHandleType *itf)
 static USBD_ReturnType dfu_getStatus(USBD_DFU_IfHandleType *itf)
 {
     USBD_HandleType *dev = itf->Base.Device;
-    USBD_DFU_StateType nextState = itf->DevStatus.State;
 
     /* Provide timeout values before starting download / manifestation */
     if ((itf->DevStatus.State == DFU_STATE_DNLOAD_SYNC) ||
@@ -683,24 +681,22 @@ static USBD_ReturnType dfu_getStatus(USBD_DFU_IfHandleType *itf)
 
             /* DNLOAD_SYNC   -> DNLOAD_BUSY
              * MANIFEST_SYNC -> MANIFEST */
-            nextState += 1;
+            itf->DevStatus.State += 1;
         }
         else if (itf->DevStatus.State == DFU_STATE_DNLOAD_SYNC)
         {
             /* Download has been completed */
-            itf->DevStatus.State = nextState = DFU_STATE_DNLOAD_IDLE;
+            itf->DevStatus.State = DFU_STATE_DNLOAD_IDLE;
         }
-        else
+        else /* DFU_STATE_MANIFEST_SYNC */
         {
             /* Manifestation has been completed */
-            itf->DevStatus.State = nextState = DFU_STATE_IDLE;
+            itf->DevStatus.State = DFU_STATE_IDLE;
         }
     }
 
     /* Send the status data over EP0 */
     USBD_CtrlSendData(dev, &itf->DevStatus, sizeof(itf->DevStatus));
-
-    itf->DevStatus.State = nextState;
     return USBD_E_OK;
 }
 
@@ -759,8 +755,6 @@ static void dfu_dataStage(USBD_DFU_IfHandleType *itf)
         {
             case DFU_STATE_DNLOAD_BUSY:
             {
-                /* New state if no errors occur */
-                itf->DevStatus.State = DFU_STATE_DNLOAD_SYNC;
 #if (USBD_DFU_ST_EXTENSION != 0)
                 /* Regular Download Command */
                 if (itf->BlockNum > 1)
@@ -823,6 +817,8 @@ static void dfu_dataStage(USBD_DFU_IfHandleType *itf)
                     itf->Address += itf->BlockLength;
                 }
 #endif /* (USBD_DFU_ST_EXTENSION != 0) */
+                /* New state if no errors occurred */
+                itf->DevStatus.State = DFU_STATE_DNLOAD_SYNC;
                 itf->BlockLength = 0;
                 itf->DevStatus.PollTimeout = 0;
                 break;
