@@ -83,7 +83,7 @@ static const USBD_DFU_DescType dfu_desc = {
         .bNumEndpoints      = 0,
         .bInterfaceClass    = 0xFE, /* bInterfaceClass: Application Specific Class Code */
         .bInterfaceSubClass = 0x01, /* bInterfaceSubClass: Device Firmware Upgrade Code */
-        .bInterfaceProtocol = 0x02, /* bInterfaceProtocol: 1=runtime, 2=boot mode */
+        .bInterfaceProtocol = 0x01, /* bInterfaceProtocol: 1=runtime, 2=boot mode */
         .iInterface         = USBD_ISTR_INTERFACES,
     },
     .DFUFD = { /* DFU Functional Descriptor */
@@ -287,6 +287,12 @@ static uint16_t dfu_getDesc(USBD_DFU_IfHandleType *itf, uint8_t ifNum, uint8_t *
     if (DFU_APP(itf)->Read != NULL)
     {
         desc->DFUFD.bmAttributes |= DFU_ATTR_CAN_UPLOAD;
+    }
+
+    /* Switch between runtime (0x01) and DFU mode (0x02) protocol */
+    if (itf->DevStatus.State >= DFU_STATE_IDLE)
+    {
+        desc->DFU.bInterfaceProtocol = 0x02;
     }
 
     return len;
