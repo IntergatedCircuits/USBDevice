@@ -209,6 +209,7 @@ static uint32_t SCSI_ReadCapacity10(USBD_MSC_IfHandleType *itf)
         respLen = sizeof(*data);
     }
 
+    (void)cmd;
     return respLen;
 }
 
@@ -395,6 +396,7 @@ static uint32_t SCSI_StartStopUnit(USBD_MSC_IfHandleType *itf)
         uint8_t Control;
     }*cmd = (void*)itf->CBW.CB;
 
+    (void)cmd;
     return 0;
 }
 
@@ -419,6 +421,7 @@ static uint32_t SCSI_PreventAllowMediumRemoval(USBD_MSC_IfHandleType *itf)
         };
     }*cmd = (void*)itf->CBW.CB;
 
+    (void)cmd;
     return 0;
 }
 
@@ -451,6 +454,8 @@ static uint32_t SCSI_TestUnitReady(USBD_MSC_IfHandleType *itf)
     {
         /* Unit is ready, return with PASSED CSW */
     }
+
+    (void)cmd;
     return 0;
 }
 
