@@ -598,7 +598,7 @@ static USBD_ReturnType dfu_upload(USBD_DFU_IfHandleType *itf)
                     DFU_STATE_IDLE : DFU_STATE_UPLOAD_IDLE;
 
             /* Return with supported commands */
-            retval = USBD_CtrlSendData(dev, dfuse_cmds, sizeof(dfuse_cmds));
+            retval = USBD_CtrlSendData(dev, (void*)dfuse_cmds, sizeof(dfuse_cmds));
         }
         /* Read memory */
         else if (itf->BlockNum > 1)
