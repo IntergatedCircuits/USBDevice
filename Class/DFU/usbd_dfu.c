@@ -107,7 +107,7 @@ static const USBD_DFU_DescType dfu_desc = {
 #if (USBD_DFU_ST_EXTENSION != 0)
 __alignment(USBD_DATA_ALIGNMENT)
 /* List of supported DFU SE commands */
-static const uint8_t dfuse_cmds[] __align(USBD_DATA_ALIGNMENT) = {
+static uint8_t dfuse_cmds[] __align(USBD_DATA_ALIGNMENT) = {
     DFUSE_CMD_GETCOMMANDS,
     DFUSE_CMD_SETADDRESSPOINTER,
     DFUSE_CMD_ERASE,
