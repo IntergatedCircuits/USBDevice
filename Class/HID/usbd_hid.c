@@ -31,6 +31,11 @@
 #define HID_APP(ITF)    ((USBD_HID_AppType*)((ITF)->App))
 #endif
 
+#if (USBD_HS_SUPPORT == 1)
+#define HID_EP_MPS                      USB_EP_INTR_HS_MPS
+#else
+#define HID_EP_MPS                      USB_EP_INTR_FS_MPS
+#endif
 
 typedef PACKED(struct) {
     uint8_t Id;
@@ -263,16 +268,34 @@ static const char* hid_getString(USBD_HID_IfHandleType *itf, uint8_t intNum)
 static void hid_init(USBD_HID_IfHandleType *itf)
 {
     USBD_HandleType *dev = itf->Base.Device;
+    uint16_t mpsLimit, mps;
 
-    /* Open EPs */
-    USBD_EpOpen(dev, itf->Config.InEpNum,
-            USB_EP_TYPE_INTERRUPT, HID_APP(itf)->Report->Input.MaxSize);
+#if (USBD_HS_SUPPORT == 1)
+    if (dev->Speed == USB_SPEED_HIGH)
+    {
+        mpsLimit = USB_EP_INTR_HS_MPS;
+    }
+    else
+#endif
+    {
+        mpsLimit = USB_EP_INTR_FS_MPS;
+    }
+    mps = HID_APP(itf)->Report->Input.MaxSize;
+    if (mps > mpsLimit)
+    {
+        mps = mpsLimit;
+    }
+    USBD_EpOpen(dev, itf->Config.InEpNum, USB_EP_TYPE_INTERRUPT, mps);
 
 #if (USBD_HID_OUT_SUPPORT == 1)
     if (itf->Config.OutEpNum != 0)
     {
-        USBD_EpOpen(dev, itf->Config.OutEpNum,
-                USB_EP_TYPE_INTERRUPT, HID_APP(itf)->Report->Output.MaxSize);
+        mps = HID_APP(itf)->Report->Input.MaxSize;
+        if (mps > mpsLimit)
+        {
+            mps = mpsLimit;
+        }
+        USBD_EpOpen(dev, itf->Config.OutEpNum, USB_EP_TYPE_INTERRUPT, mps);
     }
 #endif /* (USBD_HID_OUT_SUPPORT == 1) */
 
@@ -492,8 +515,12 @@ USBD_ReturnType USBD_HID_MountInterface(USBD_HID_IfHandleType *itf, USBD_HandleT
 
             ep = USBD_EpAddr2Ref(dev, itf->Config.InEpNum);
             ep->Type            = USB_EP_TYPE_INTERRUPT;
-            ep->MaxPacketSize   = HID_APP(itf)->Report->Input.MaxSize;
             ep->IfNum           = dev->IfCount;
+            ep->MaxPacketSize   = HID_APP(itf)->Report->Input.MaxSize;
+            if (ep->MaxPacketSize > HID_EP_MPS)
+            {
+                ep->MaxPacketSize = HID_EP_MPS;
+            }
 
 #if (USBD_HID_OUT_SUPPORT == 1)
             /* OUT EP is optional */
@@ -501,8 +528,12 @@ USBD_ReturnType USBD_HID_MountInterface(USBD_HID_IfHandleType *itf, USBD_HandleT
             {
                 ep = USBD_EpAddr2Ref(dev, itf->Config.OutEpNum);
                 ep->Type            = USB_EP_TYPE_INTERRUPT;
-                ep->MaxPacketSize   = HID_APP(itf)->Report->Output.MaxSize;
                 ep->IfNum           = dev->IfCount;
+                ep->MaxPacketSize   = HID_APP(itf)->Report->Output.MaxSize;
+                if (ep->MaxPacketSize > HID_EP_MPS)
+                {
+                    ep->MaxPacketSize = HID_EP_MPS;
+                }
             }
 #endif /* (USBD_HID_OUT_SUPPORT == 1) */
         }
