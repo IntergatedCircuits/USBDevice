@@ -177,7 +177,7 @@ void USBD_ResetCallback(USBD_HandleType *dev, USB_SpeedType speed)
                 /* An FS frame is 1 ms, 8 times as long as a HS microframe
                  * To keep the data rate the same, each transfer has to be
                  * 8 times larger */
-                ep->MaxPacketSize * 8;
+                ep->MaxPacketSize *= 8;
                 /* TODO if the result is higher than USB_EP_ISOC_FS_MPS,
                  * the interface cannot function properly */
             }
