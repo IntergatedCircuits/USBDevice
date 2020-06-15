@@ -433,8 +433,26 @@ static void cdc_inData(USBD_CDC_IfHandleType *itf, USBD_EpHandleType *ep)
     if (ep == USBD_EpAddr2Ref(itf->Base.Device, itf->Config.InEpNum))
 #endif
     {
-        USBD_SAFE_CALLBACK(CDC_APP(itf)->Transmitted, itf,
-                ep->Transfer.Data - ep->Transfer.Length, ep->Transfer.Length);
+        uint16_t len = ep->Transfer.Length;
+
+        if (len == 0)
+        {
+            /* if ZLP is finished, substitute original length */
+            len = itf->TransmitLength;
+            itf->TransmitLength = 0;
+        }
+        else if ((len & (ep->MaxPacketSize - 1)) == 0)
+        {
+            /* if length mod MPS == 0, split the transfer by sending ZLP */
+            itf->TransmitLength = len;
+            USBD_CDC_Transmit(itf, ep->Transfer.Data, 0);
+        }
+
+        /* callback when the endpoint isn't busy sending ZLP */
+        if (ep->State != USB_EP_STATE_DATA)
+        {
+            USBD_SAFE_CALLBACK(CDC_APP(itf)->Transmitted, itf, ep->Transfer.Data - len, len);
+        }
     }
 }
 
@@ -465,6 +483,7 @@ USBD_ReturnType USBD_CDC_MountInterface(USBD_CDC_IfHandleType *itf, USBD_HandleT
         itf->Base.Class  = &cdc_cbks;
         itf->Base.AltCount = 1;
         itf->Base.AltSelector = 0;
+        itf->TransmitLength = 0;
 
         {
             USBD_EpHandleType *ep;

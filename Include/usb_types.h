@@ -29,6 +29,7 @@ extern "C"
 {
 #endif
 
+#include <stdbool.h>
 #include <stdint.h>
 
 /** @defgroup USB Universal Serial Bus
