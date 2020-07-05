@@ -506,10 +506,6 @@ static USBD_ReturnType dfu_detach(USBD_DFU_IfHandleType *itf)
     /* Check the detach capability in the DFU functional descriptor */
     if ((dfu_desc.DFUFD.bmAttributes & DFU_ATTR_WILL_DETACH) != 0)
     {
-        /* Shutting down USB detaches it from the host,
-         * attach will be done in DFU mode */
-        USBD_Deinit(itf->Base.Device);
-
         /* Set tag to DFU mode */
         itf->Tag[0] =  DFU_MODE_TAG;
         itf->Tag[1] = ~DFU_MODE_TAG;
