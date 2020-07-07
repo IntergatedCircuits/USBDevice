@@ -286,7 +286,10 @@ static void cdc_init(USBD_CDC_IfHandleType *itf)
     USBD_EpOpen(dev, itf->Config.InEpNum , USB_EP_TYPE_BULK, mps);
     USBD_EpOpen(dev, itf->Config.OutEpNum, USB_EP_TYPE_BULK, mps);
 #if (USBD_CDC_NOTEP_USED == 1)
-    USBD_EpOpen(dev, itf->Config.NotEpNum, USB_EP_TYPE_INTERRUPT, CDC_NOT_PACKET_SIZE);
+    if ((itf->Config.NotEpNum & 0xF) < USBD_MAX_EP_COUNT)
+    {
+        USBD_EpOpen(dev, itf->Config.NotEpNum, USB_EP_TYPE_INTERRUPT, CDC_NOT_PACKET_SIZE);
+    }
 #endif
 
     /* Initialize application */
@@ -308,8 +311,10 @@ static void cdc_deinit(USBD_CDC_IfHandleType *itf)
         USBD_EpClose(dev, itf->Config.InEpNum);
         USBD_EpClose(dev, itf->Config.OutEpNum);
 #if (USBD_CDC_NOTEP_USED == 1)
-        if (itf->Config.NotEpNum < USBD_MAX_EP_COUNT)
-        {   USBD_EpClose(dev, itf->Config.NotEpNum); }
+        if ((itf->Config.NotEpNum & 0xF) < USBD_MAX_EP_COUNT)
+        {
+            USBD_EpClose(dev, itf->Config.NotEpNum);
+        }
 #endif
 
         /* Deinitialize application */
@@ -489,7 +494,7 @@ USBD_ReturnType USBD_CDC_MountInterface(USBD_CDC_IfHandleType *itf, USBD_HandleT
             USBD_EpHandleType *ep;
 
 #if (USBD_CDC_NOTEP_USED == 1)
-            if (itf->Config.NotEpNum < USBD_MAX_EP_COUNT)
+            if ((itf->Config.NotEpNum & 0xF) < USBD_MAX_EP_COUNT)
             {
                 ep = USBD_EpAddr2Ref(dev, itf->Config.NotEpNum);
                 ep->Type            = USB_EP_TYPE_INTERRUPT;
