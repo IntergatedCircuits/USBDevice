@@ -409,7 +409,8 @@ static void cdc_dataStage(USBD_CDC_IfHandleType *itf)
     USBD_HandleType *dev = itf->Base.Device;
 
     {
-        if (dev->Setup.Request == CDC_REQ_SET_LINE_CODING)
+        if ((dev->Setup.Request == CDC_REQ_SET_LINE_CODING) &&
+            (itf->LineCoding.DataBits != 0))
         {
             cdc_init(itf);
         }
