@@ -769,15 +769,18 @@ static void dfu_dataStage(USBD_DFU_IfHandleType *itf)
                 /* Execute special command */
                 else if (itf->BlockNum == 0)
                 {
-                    uint8_t cmd = dev->CtrlData[0], *data = dev->CtrlData + 1;
+                    PACKED(struct) {
+                        uint8_t Cmd;
+                        uint8_t *Address;
+                    } *dfuseCmd = (void*)dev->CtrlData;
 
-                    switch (cmd)
+                    switch (dfuseCmd->Cmd)
                     {
                         /* Change the address pointer for more optimal flashing */
                         case DFUSE_CMD_SETADDRESSPOINTER:
                             if (itf->BlockLength == 5)
                             {
-                                itf->Address = (uint8_t*)(*(__packed uint32_t *)data);
+                                itf->Address = dfuseCmd->Address;
                             }
                             break;
 
@@ -785,7 +788,7 @@ static void dfu_dataStage(USBD_DFU_IfHandleType *itf)
                         case DFUSE_CMD_ERASE:
                             if (itf->BlockLength == 5)
                             {
-                                itf->Address = (uint8_t*)(*(__packed uint32_t *)data);
+                                itf->Address = dfuseCmd->Address;
 
                                 itf->DevStatus.Status = DFU_APP(itf)->Erase(
                                         itf->Address);
