@@ -209,6 +209,7 @@ typedef enum
 typedef enum
 {
     USB_DEVCAP_USB_2p0_EXT  = 0x02, /*!< USB 2.0 extension (for LPM) */
+    USB_DEVCAP_PLATFORM     = 0x05, /*!< Microsoft OS 2.0 descriptors */
 }USB_DeviceCapabilityType;
 
 /** @brief USB setup request */
@@ -348,7 +349,8 @@ typedef PACKED(struct)
     uint8_t  bDescriptorType;       /*!< Device Capability Descriptor (0x10) */
     uint8_t  bDevCapabilityType;    /*!< Capability type: USB 2.0 EXTENSION (0x02) */
     uint32_t bmAttributes;          /*!< Bit 0 Reserved (set to 0)
-                                         Bit 1 Link Power Management support */
+                                         Bit 1 Link Power Management support
+                                         Bit 2 BESL and alternate HIRD definitions support */
 }USB_DevCapabilityDescType;
 
 /** @brief USB Interface Association Descriptor structure */

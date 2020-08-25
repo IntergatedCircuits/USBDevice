@@ -26,6 +26,7 @@
 
 #include <usb_types.h>
 #include <usbd_config.h>
+#include <usb_microsoft_os.h>
 #include <usbd_pd_def.h>
 
 /** @ingroup USB
@@ -84,7 +85,7 @@
 #define USBD_HS_SUPPORT                 0
 #endif
 
-#if !defined(USBD_SPEC_BCD) && (USBD_LPM_SUPPORT != 0)
+#if !defined(USBD_SPEC_BCD) && ((USBD_LPM_SUPPORT != 0) || (USBD_MS_OS_DESC_VERSION == 2))
 /** @brief In order to support reading the BOS descriptor
  * (which specifies the LPM support of the device),
  * the bcdUSB has to be increased to 2.01 at least */
@@ -117,6 +118,9 @@ typedef enum
     USBD_ISTR_PRODUCT    = 0x20, /*!< Product name */
     USBD_ISTR_SERIAL     = 0x30, /*!< Serial number string */
     USBD_ISTR_CONFIG     = 0x40, /*!< Configuration name */
+#if (USBD_MS_OS_DESC_VERSION == 1)
+    USBD_ISTR_MS_OS_1p0_DESC = 0xEE, /*!< Microsoft OS 1.0 descriptor */
+#endif
 }USBD_iStringType;
 
 
@@ -258,6 +262,10 @@ typedef struct
 
     USBD_IfEpCbkType    OutData;        /*!< OUT EP transfer is completed */
     USBD_IfEpCbkType    InData;         /*!< IN EP transfer is completed */
+
+#if (USBD_MS_OS_DESC_VERSION > 0)
+    const char *        MsCompatibleId; /*!< Microsoft Compatible Id for the function, used in @ref USB_MsCompatIdDescType */
+#endif /* (USBD_MS_OS_DESC_VERSION > 0) */
 }USBD_ClassType;
 
 

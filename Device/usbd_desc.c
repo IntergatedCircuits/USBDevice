@@ -70,29 +70,62 @@ static const USB_DeviceQualifierDescType usbd_devQualDesc __align(USBD_DATA_ALIG
     .bMaxPacketSize     = USBD_EP0_MAX_PACKET_SIZE,
     .bNumConfigurations = USBD_MAX_CONFIGURATION_COUNT,
 };
-#endif
+#endif /* (USBD_HS_SUPPORT == 1) */
 
-/** @brief USB Binary device Object Store (BOS) Descriptor */
-#if (USBD_LPM_SUPPORT == 1)
-static const PACKED(struct) {
-    USB_BOSDescType bos;                /*!< BOS base */
-    USB_DevCapabilityDescType devCap;   /*!< Device capabilities */
-}usbd_bosDesc __align(USBD_DATA_ALIGNMENT) =
-{
+#if (USBD_LPM_SUPPORT == 1) || (USBD_MS_OS_DESC_VERSION == 2)
+/** @brief USB Binary device Object Store (BOS) Descriptor structure */
+typedef PACKED(struct) {
+    USB_BOSDescType bos;                    /*!< BOS base */
+    USB_DevCapabilityDescType devCap;       /*!< Device capabilities */
+#if (USBD_MS_OS_DESC_VERSION == 2)
+    USB_MsPlatformCapabilityDescType winPlatform;
+#endif
+}USBD_BOSType;
+
+/** @brief USB Binary device Object Store (BOS) */
+static const USBD_BOSType usbd_bosDesc __align(USBD_DATA_ALIGNMENT) = {
     .bos = {
         .bLength            = sizeof(USB_BOSDescType),
         .bDescriptorType    = USB_DESC_TYPE_BOS,
         .wTotalLength       = sizeof(usbd_bosDesc),
+#if (USBD_MS_OS_DESC_VERSION == 2)
+        .bNumDeviceCaps     = 2,
+#else
         .bNumDeviceCaps     = 1,
+#endif /* (USBD_MS_OS_DESC_VERSION == 2) */
     },
     .devCap = {
         .bLength            = sizeof(USB_DevCapabilityDescType),
         .bDescriptorType    = USB_DESC_TYPE_DEVICE_CAPABILITY,
         .bDevCapabilityType = USB_DEVCAP_USB_2p0_EXT,
         .bmAttributes       = 0,
-    }
+    },
+#if (USBD_MS_OS_DESC_VERSION == 2)
+    .winPlatform = {
+        .bLength            = sizeof(usbd_bosDesc.winPlatform),
+        .bDescriptorType    = USB_DESC_TYPE_DEVICE_CAPABILITY,
+        .bDevCapabilityType = USB_DEVCAP_PLATFORM,
+        .PlatformCapabilityUUID = {
+            0xDF, 0x60, 0xDD, 0xD8, 0x89, 0x45, 0xC7, 0x4C,
+            0x9C, 0xD2, 0x65, 0x9D, 0x9E, 0x64, 0x8A, 0x9F
+        },
+        .CapabilityData.DescInfoSet = {
+            .dwWindowsVersion = USB_MS_OS_2P0_MIN_WINDOWS_VERSION,
+            .wMSOSDescriptorSetTotalLength = 0,
+            .bMS_VendorCode = USB_REQ_MICROSOFT_OS,
+            .bAltEnumCode = 0,
+        },
+    },
+#endif /* (USBD_MS_OS_DESC_VERSION == 2) */
 };
-#endif
+#endif /* (USBD_LPM_SUPPORT == 1) || (USBD_MS_OS_DESC_VERSION == 2) */
+
+#if (USBD_MS_OS_DESC_VERSION == 1)
+/** @brief Microsoft OS 1.0 string descriptor */
+static const char usbd_msos1p0[] = {
+    'M', 'S', 'F', 'T', '1', '0', '0', USB_REQ_MICROSOFT_OS, 0
+};
+#endif /* (USBD_MS_OS_DESC_VERSION == 1) */
 
 /**
  * @brief This function provides the USB device descriptor.
@@ -245,7 +278,13 @@ USBD_ReturnType USBD_GetDescriptor(USBD_HandleType *dev)
                     Uint2Unicode((const uint8_t*)dev->Desc->SerialNumber,
                             &data[2], USBD_SERIAL_BCD_SIZE);
                     break;
-#endif
+#endif /* (USBD_SERIAL_BCD_SIZE > 0) */
+
+#if (USBD_MS_OS_DESC_VERSION == 1)
+                case USBD_ISTR_MS_OS_1p0_DESC:
+                    len = USBD_GetStringDesc(usbd_msos1p0, data);
+                    break;
+#endif /* (USBD_MS_OS_DESC_VERSION == 1) */
 
                 default:
                 {
@@ -284,31 +323,40 @@ USBD_ReturnType USBD_GetDescriptor(USBD_HandleType *dev)
             }
             break;
         }
-#endif
+#endif /* (USBD_HS_SUPPORT == 1) */
 
-#if (USBD_LPM_SUPPORT == 1)
+#if (USBD_LPM_SUPPORT == 1) || (USBD_MS_OS_DESC_VERSION == 2)
         case USB_DESC_TYPE_BOS:
         {
-            len = sizeof(usbd_bosDesc);
+            USBD_BOSType *bos = (void*)data;
 
+#if (USBD_MS_OS_DESC_VERSION == 2)
+            /* first find out the length of the OS descriptor */
+            len = USBD_MsOs2p0Desc(dev, data);
+
+            /* copy the default BOS */
+            memcpy(bos, &usbd_bosDesc, sizeof(usbd_bosDesc));
+
+            /* set the runtime field */
+            bos->winPlatform.CapabilityData.DescInfoSet.wMSOSDescriptorSetTotalLength = len;
+#else
+            memcpy(bos, &usbd_bosDesc, sizeof(usbd_bosDesc));
+#endif /* (USBD_MS_OS_DESC_VERSION == 2) */
+
+#if (USBD_LPM_SUPPORT == 1)
             /* Check if Link Power Management is used */
             if (dev->Desc->Config.LPM != 0)
             {
-                memcpy(data, &usbd_bosDesc, sizeof(usbd_bosDesc));
-
                 /* Modify bmAttributes:
                  * bit1: LPM protocol support
                  * bit2: BESL and alternate HIRD definitions supported */
-                data[8] |= 6;
+                bos->devCap.bmAttributes |= 6;
             }
-            else
-            {
-                /* Return the default BOS */
-                data = (uint8_t*)&usbd_bosDesc;
-            }
+#endif /* (USBD_LPM_SUPPORT == 1) */
+            len = sizeof(USBD_BOSType);
             break;
         }
-#endif
+#endif /* (USBD_LPM_SUPPORT == 1) || (USBD_MS_OS_DESC_VERSION == 2) */
 
         default:
             break;

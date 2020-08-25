@@ -353,6 +353,30 @@ USBD_ReturnType USBD_DevRequest(USBD_HandleType *dev)
                 break;
         }
     }
+#if (USBD_MS_OS_DESC_VERSION > 0)
+    else if (dev->Setup.RequestType.Type == USB_REQ_TYPE_VENDOR)
+    {
+        switch (dev->Setup.Request)
+        {
+            case USB_REQ_MICROSOFT_OS:
+                if (dev->Setup.RequestType.Direction == USB_DIRECTION_IN)
+                {
+                    retval = USBD_GetMsDescriptor(dev);
+                }
+#if (USBD_MS_OS_DESC_VERSION == 2)
+                else
+                {
+                    if (dev->Setup.Index == USB_MS_OS_2p0_SET_ALT_ENUMERATION_INDEX)
+                    {
+                        /* MS OS 2.0 set alternate enumeration
+                         * wValue high byte = bAltEnumCode */
+                    }
+                }
+#endif /* (USBD_MS_OS_DESC_VERSION == 2) */
+                break;
+        }
+    }
+#endif /* (USBD_MS_OS_DESC_VERSION > 0) */
     return retval;
 }
 

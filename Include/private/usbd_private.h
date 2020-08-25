@@ -56,6 +56,16 @@ USBD_ReturnType USBD_EpRequest          (USBD_HandleType *dev);
 /* usbd_desc <- usbd */
 USBD_ReturnType USBD_GetDescriptor      (USBD_HandleType *dev);
 
+#if (USBD_MS_OS_DESC_VERSION > 0)
+USBD_ReturnType USBD_GetMsDescriptor    (USBD_HandleType *dev);
+
+#if (USBD_MS_OS_DESC_VERSION == 2)
+uint16_t        USBD_MsOs2p0Desc        (USBD_HandleType *dev,
+                                         uint8_t *data);
+#endif /* (USBD_MS_OS_DESC_VERSION == 2) */
+
+#endif /* (USBD_MS_OS_DESC_VERSION > 0) */
+
 /** @ingroup USBD
  * @defgroup USBD_Private_Functions_IfClass USBD Class-specific Interface Callouts
  * @brief These functions simply call the class-specific function pointer
@@ -165,6 +175,20 @@ static inline void USBD_IfClass_OutData(
 {
     USBD_SAFE_CALLBACK(itf->Class->OutData, itf, ep);
 }
+
+#if (USBD_MS_OS_DESC_VERSION > 0)
+/**
+ * @brief Returns the interface's class specific
+ *        Microsoft compatible Id.
+ * @param itf:    reference of the interface
+ * @return String reference
+ */
+static inline const char* USBD_IfClass_GetMsCompatibleId(
+        USBD_IfHandleType *itf)
+{
+    return itf->Class->MsCompatibleId;
+}
+#endif
 
 /** @} */
 

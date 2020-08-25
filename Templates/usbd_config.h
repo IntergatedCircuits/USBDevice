@@ -44,6 +44,11 @@
  * amount of raw bytes to string BCD format and sent to the host. */
 #define USBD_SERIAL_BCD_SIZE        0
 
+/** @brief Selects which Microsoft OS descriptor specification should be used (if any).
+ * Supported values are: 0, 1, 2
+ * @note Microsoft OS 2.0 descriptors are supported by Windows 8.1 and higher.
+ * Unless the device is required to operate on earlier Windows OS versions, use version 2. */
+#define USBD_MS_OS_DESC_VERSION     0
 
 
 /** @brief Set to 1 if notifications are sent by a CDC-ACM interface.

@@ -284,6 +284,11 @@ static const USBD_ClassType ncm_cbks = {
     .DataStage      = (USBD_IfCbkType)      ncm_dataStage,
     .OutData        = (USBD_IfEpCbkType)    ncm_outData,
     .InData         = (USBD_IfEpCbkType)    ncm_inData,
+#if (USBD_MS_OS_DESC_VERSION > 0)
+    .MsCompatibleId = "WINNCM",
+#else
+#warning "Without Microsoft OS descriptor support the UsbNcm function driver will have to be installed manually on Windows OS!"
+#endif /* (USBD_MS_OS_DESC_VERSION > 0) */
 };
 
 /** @ingroup USBD_NCM

@@ -172,6 +172,11 @@ static const USBD_ClassType dfu_cbks = {
     .Deinit         = (USBD_IfCbkType)      dfu_deinit,
     .SetupStage     = (USBD_IfSetupCbkType) dfu_setupStage,
     .DataStage      = (USBD_IfCbkType)      dfu_dataStage,
+#if (USBD_MS_OS_DESC_VERSION > 0)
+    .MsCompatibleId = "WINUSB",
+#else
+#warning "Without Microsoft OS descriptor support the WinUSB/other function driver will have to be installed manually on Windows OS!"
+#endif /* (USBD_MS_OS_DESC_VERSION > 0) */
 };
 
 static USBD_ReturnType (*const dfu_reqFns[])(USBD_DFU_IfHandleType *itf) = {
@@ -192,6 +197,9 @@ static const USBD_ClassType rodfu_cbks = {
     .GetDescriptor  = (USBD_IfDescCbkType)  rodfu_getDesc,
     .GetString      = (USBD_IfStrCbkType)   dfu_getString,
     .SetupStage     = (USBD_IfSetupCbkType) rodfu_setupStage,
+#if (USBD_MS_OS_DESC_VERSION > 0)
+    .MsCompatibleId = "WINUSB",
+#endif /* (USBD_MS_OS_DESC_VERSION > 0) */
 };
 
 /** @ingroup USBD_DFU
