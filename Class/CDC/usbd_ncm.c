@@ -565,7 +565,7 @@ static void ncm_outData(USBD_NCM_IfHandleType *itf, USBD_EpHandleType *ep)
         USBD_NCM_DatagramPointerTableType* pt = (void*)nth + ndpIndex;
 
         /* Verify all tables in advance */
-        while ((ndpIndex > sizeof(nth->V16)) &&
+        while ((ndpIndex >= sizeof(nth->V16)) &&
                (ndpIndex < nth->V16.BlockLength) &&
                (pt->V16.Signature == ndp16_sign.dw) &&
                (pt->V16.Length > sizeof(pt->V16)))
