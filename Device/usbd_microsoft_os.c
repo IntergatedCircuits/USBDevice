@@ -175,9 +175,6 @@ uint16_t USBD_MsOs2p0Desc(USBD_HandleType *dev, uint8_t *data)
                     if (dev->IF[ifNum] == itf) { continue; }
 
                     itf = dev->IF[ifNum];
-                    compatIdStr = USBD_IfClass_GetMsCompatibleId(itf);
-
-                    if (compatIdStr == NULL) { continue; }
 
                     /* If the compatible ID is defined, add the feature under the function header */
                     funcSubset = (void*)data;
@@ -186,6 +183,9 @@ uint16_t USBD_MsOs2p0Desc(USBD_HandleType *dev, uint8_t *data)
                     funcSubset->bFirstInterface = ifNum;
                     funcSubset->bReserved       = 0;
                     data += funcSubset->wLength;
+
+                    compatIdStr = USBD_IfClass_GetMsCompatibleId(itf);
+                    if (compatIdStr != NULL)
                     {
                         /* Function-level features */
                         USB_MsCompatIdDescType *compatId;
@@ -210,16 +210,43 @@ uint16_t USBD_MsOs2p0Desc(USBD_HandleType *dev, uint8_t *data)
                         }
 #endif
                     }
+
                     /* When finished with the features, save the total size of the subset */
-                    funcSubset->wSubsetLength = data - ((uint8_t*)funcSubset);
+                    if (data > ((uint8_t*)funcSubset + funcSubset->wLength))
+                    {
+                        funcSubset->wSubsetLength = data - ((uint8_t*)funcSubset);
+                    }
+                    else
+                    {
+                        /* If no features are added, roll back this subset */
+                        data -= funcSubset->wLength;
+                    }
                 }
             }
+
             /* When finished with the contents, save the total size of the subset */
-            confSubset->wTotalLength = data - ((uint8_t*)confSubset);
+            if (data > ((uint8_t*)confSubset + confSubset->wLength))
+            {
+                confSubset->wTotalLength = data - ((uint8_t*)confSubset);
+            }
+            else
+            {
+                /* If no features are added, roll back this subset */
+                data -= confSubset->wLength;
+            }
         }
     }
+
     /* When finished with the contents, save the total size of the set */
-    descSet->wTotalLength = data - ((uint8_t*)descSet);
+    if (data > ((uint8_t*)descSet + descSet->wLength))
+    {
+        descSet->wTotalLength = data - ((uint8_t*)descSet);
+    }
+    else
+    {
+        /* If no features are added in the whole set, reject this request */
+        descSet->wTotalLength = 0;
+    }
 
     return descSet->wTotalLength;
 }
