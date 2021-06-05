@@ -139,6 +139,8 @@ typedef struct
                              uint16_t idleRate_ms,
                              uint8_t reportId); /*!< Limit the IN reporting frequency */
 
+    void (*InReportSent)    (void* itf, uint8_t reportId); /*!< The last IN report transmit is complete */
+
 #if (USBD_HID_REPORT_STRINGS != 0)
     const char* (*GetString)(void* itf,
                              uint8_t intNum);   /*!< Return a string from the report description */

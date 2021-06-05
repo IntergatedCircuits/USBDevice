@@ -99,6 +99,7 @@ static void             hid_init        (USBD_HID_IfHandleType *itf);
 static void             hid_deinit      (USBD_HID_IfHandleType *itf);
 static USBD_ReturnType  hid_setupStage  (USBD_HID_IfHandleType *itf);
 static void             hid_dataStage   (USBD_HID_IfHandleType *itf);
+static void             hid_inData      (USBD_HID_IfHandleType *itf, USBD_EpHandleType *ep);
 #if (USBD_HID_OUT_SUPPORT == 1)
 static void             hid_outData     (USBD_HID_IfHandleType *itf, USBD_EpHandleType *ep);
 #endif
@@ -116,6 +117,7 @@ static const USBD_ClassType hid_cbks = {
     .Deinit         = (USBD_IfCbkType)      hid_deinit,
     .SetupStage     = (USBD_IfSetupCbkType) hid_setupStage,
     .DataStage      = (USBD_IfCbkType)      hid_dataStage,
+    .InData         = (USBD_IfEpCbkType)    hid_inData,
 #if (USBD_HID_OUT_SUPPORT == 1)
     .OutData        = (USBD_IfEpCbkType)    hid_outData,
 #endif
@@ -469,6 +471,17 @@ static void hid_dataStage(USBD_HID_IfHandleType *itf)
                 dev->CtrlData, dev->Setup.Length);
         itf->Request = 0;
     }
+}
+
+/**
+ * @brief Notifies the application of a completed IN transfer.
+ * @param itf: reference of the HID interface
+ * @param ep: reference to the endpoint structure
+ */
+static void hid_inData(USBD_HID_IfHandleType *itf, USBD_EpHandleType *ep)
+{
+    USBD_SAFE_CALLBACK(HID_APP(itf)->InReportSent, itf,
+            *(ep->Transfer.Data - ep->Transfer.Length));
 }
 
 #if (USBD_HID_OUT_SUPPORT == 1)
