@@ -144,7 +144,8 @@ USBD_ReturnType USBD_CtrlSendData(USBD_HandleType *dev, void *data, uint16_t len
     USBD_ReturnType retval = USBD_E_ERROR;
 
     /* Sanity check */
-    if (dev->EP.OUT[0].State == USB_EP_STATE_SETUP)
+    if ((dev->Setup.RequestType.Direction == USB_DIRECTION_IN) &&
+        (dev->EP.OUT[0].State == USB_EP_STATE_SETUP))
     {
         /* Don't send more bytes than requested */
         if (dev->Setup.Length < len)
@@ -172,7 +173,8 @@ USBD_ReturnType USBD_CtrlReceiveData(USBD_HandleType *dev, void *data, uint16_t 
     USBD_ReturnType retval = USBD_E_ERROR;
 
     /* Sanity check */
-    if (dev->EP.OUT[0].State == USB_EP_STATE_SETUP)
+    if ((dev->Setup.RequestType.Direction == USB_DIRECTION_OUT) &&
+        (dev->EP.OUT[0].State == USB_EP_STATE_SETUP))
     {
         /* Don't receive more bytes than requested */
         if (dev->Setup.Length < len)
