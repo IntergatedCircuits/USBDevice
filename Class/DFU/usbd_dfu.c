@@ -562,7 +562,7 @@ static USBD_ReturnType dfu_download(USBD_DFU_IfHandleType *itf)
                 itf->DevStatus.State = DFU_STATE_DNLOAD_SYNC;
 
                 /* Prepare the reception of the buffer over EP0 */
-                retval = USBD_CtrlReceiveData(dev, dev->CtrlData);
+                retval = USBD_CtrlReceiveData(dev, dev->CtrlData, itf->BlockLength);
             }
         }
     }

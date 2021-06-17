@@ -38,6 +38,8 @@
 
 #define NCM_MAX_SEGMENT_SIZE    1514
 
+#define NCM_NET_ADDRESS_SIZE    6
+
 #define NCM_APP(ITF)    ((USBD_NCM_AppType*)((ITF)->App))
 
 typedef enum
@@ -123,6 +125,13 @@ typedef PACKED(struct)
     uint16_t NdpOutAlignment;
     uint16_t NtbOutMaxDatagrams;    /* Maximum number of datagrams in a single OUT NTB */
 }USBD_NCM_ParametersType;
+
+
+/* NTB Parameters */
+typedef PACKED(struct)
+{
+    uint32_t size;
+}USBD_NCM_NTB_InputSize;
 
 
 typedef PACKED(struct)
@@ -459,9 +468,7 @@ static USBD_ReturnType ncm_setupStage(USBD_NCM_IfHandleType *itf)
 
             case CDC_REQ_GET_NTB_INPUT_SIZE:
             {
-                PACKED(struct) {
-                    uint32_t size;
-                }*insize = (void*)dev->CtrlData;
+                USBD_NCM_NTB_InputSize *insize = (void*)dev->CtrlData;
                 insize->size = itf->In.MaxSize;
                 retval = USBD_CtrlSendData(dev, dev->CtrlData, sizeof(*insize));
                 break;
@@ -469,22 +476,26 @@ static USBD_ReturnType ncm_setupStage(USBD_NCM_IfHandleType *itf)
 
             case CDC_REQ_SET_NTB_INPUT_SIZE:
             {
-                retval = USBD_CtrlReceiveData(dev, dev->CtrlData);
+                retval = USBD_CtrlReceiveData(dev, dev->CtrlData, sizeof(USBD_NCM_NTB_InputSize));
                 break;
             }
 
 #if 0
             /* Optional requests */
             case CDC_REQ_GET_NET_ADDRESS:
-                /* TODO */
+                if (dev->Setup.Length == NCM_NET_ADDRESS_SIZE)
+                {
+                    /* TODO */
+                }
                 break;
 
             case CDC_REQ_SET_NET_ADDRESS:
                 /* Only accepted while data interface alt sel = 0
                  * doesn't change iMACAddress value */
-                if (itf->Base.AltSelector == 0)
+                if ((dev->Setup.Length == NCM_NET_ADDRESS_SIZE) &&
+                    (itf->Base.AltSelector == 0))
                 {
-                    retval = USBD_CtrlReceiveData(dev, dev->CtrlData);
+                    retval = USBD_CtrlReceiveData(dev, dev->CtrlData, NCM_NET_ADDRESS_SIZE);
                 }
                 break;
 
@@ -521,9 +532,7 @@ static void ncm_dataStage(USBD_NCM_IfHandleType *itf)
         {
             case CDC_REQ_SET_NTB_INPUT_SIZE:
             {
-                PACKED(struct) {
-                    uint32_t size;
-                }*insize = (void*)dev->CtrlData;
+                USBD_NCM_NTB_InputSize *insize = (void*)dev->CtrlData;
                 /* Sanity check */
                 if (insize->size > (sizeof(((USBD_NCM_TransferHeaderType*)0)->V16) +
                                     sizeof(((USBD_NCM_DatagramPointerTableType*)0)->V16)))

@@ -164,16 +164,21 @@ USBD_ReturnType USBD_CtrlSendData(USBD_HandleType *dev, void *data, uint16_t len
  * @brief This function receives control data according to the setup request.
  * @param dev: USB Device handle reference
  * @param data: pointer to the target buffer to receive to
+ * @param len: maximum allowed length of the data
  * @return OK if called from the right context, ERROR otherwise
  */
-USBD_ReturnType USBD_CtrlReceiveData(USBD_HandleType *dev, void *data)
+USBD_ReturnType USBD_CtrlReceiveData(USBD_HandleType *dev, void *data, uint16_t len)
 {
     USBD_ReturnType retval = USBD_E_ERROR;
 
     /* Sanity check */
     if (dev->EP.OUT[0].State == USB_EP_STATE_SETUP)
     {
-        uint16_t len = dev->Setup.Length;
+        /* Don't receive more bytes than requested */
+        if (dev->Setup.Length < len)
+        {
+            len = dev->Setup.Length;
+        }
 
         dev->EP.OUT[0].State = USB_EP_STATE_DATA;
         USBD_PD_EpReceive(dev, 0x00, (uint8_t*)data, len);

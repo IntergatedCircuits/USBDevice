@@ -380,6 +380,7 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
         case USB_REQ_TYPE_CLASS:
         {
             uint8_t reportId = (uint8_t)dev->Setup.Value;
+            USBD_HID_ReportType reportType = dev->Setup.Value >> 8;
 
             switch (dev->Setup.Request)
             {
@@ -388,7 +389,7 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                 {
                     /* Set flag, invoke callback which should provide data
                      * via USBD_HID_ReportIn() */
-                    itf->Request = dev->Setup.Value >> 8;
+                    itf->Request = reportType;
                     USBD_SAFE_CALLBACK(HID_APP(itf)->GetReport,
                             itf, itf->Request, reportId);
 
@@ -401,7 +402,16 @@ static USBD_ReturnType hid_setupStage(USBD_HID_IfHandleType *itf)
                 /* HID report OUT */
                 case HID_REQ_SET_REPORT:
                 {
-                    retval = USBD_CtrlReceiveData(dev, dev->CtrlData);
+                    uint16_t max_len;
+                    if (reportType == HID_REPORT_OUTPUT)
+                    {
+                        max_len = HID_APP(itf)->Report->Output.MaxSize;
+                    }
+                    else
+                    {
+                        max_len = HID_APP(itf)->Report->Feature.MaxSize;
+                    }
+                    retval = USBD_CtrlReceiveData(dev, dev->CtrlData, max_len);
                     break;
                 }
 

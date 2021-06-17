@@ -44,7 +44,7 @@ USBD_ReturnType USBD_CtrlSendData       (USBD_HandleType *dev,
                                          uint16_t len);
 
 USBD_ReturnType USBD_CtrlReceiveData    (USBD_HandleType *dev,
-                                         void *data);
+                                         void *data, uint16_t len);
 
 uint16_t        USBD_EpDesc             (USBD_HandleType *dev,
                                          uint8_t epAddr,

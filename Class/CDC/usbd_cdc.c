@@ -349,7 +349,8 @@ static USBD_ReturnType cdc_setupStage(USBD_CDC_IfHandleType *itf)
                     /* Reset the data interface */
                     cdc_deinit(itf);
 
-                    retval = USBD_CtrlReceiveData(dev, &itf->LineCoding);
+                    retval = USBD_CtrlReceiveData(dev,
+                            &itf->LineCoding, sizeof(itf->LineCoding));
                     break;
 
                 case CDC_REQ_GET_LINE_CODING:
