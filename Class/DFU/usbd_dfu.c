@@ -588,8 +588,12 @@ static USBD_ReturnType dfu_upload(USBD_DFU_IfHandleType *itf)
     USBD_ReturnType retval = USBD_E_INVALID;
     USBD_HandleType *dev = itf->Base.Device;
 
+    if (dev->Setup.Length > dfu_desc.DFUFD.wTransferSize)
+    {
+        /* Oversized request, invalid */
+    }
     /* Send data to host if supported */
-    if ((dev->Setup.Length > 0) && (DFU_APP(itf)->Read != NULL))
+    else if ((dev->Setup.Length > 0) && (DFU_APP(itf)->Read != NULL))
     {
         uint8_t *data = dev->CtrlData;
 #if (USBD_DFU_ST_EXTENSION != 0)
@@ -607,14 +611,18 @@ static USBD_ReturnType dfu_upload(USBD_DFU_IfHandleType *itf)
         /* Read memory */
         else if (itf->BlockNum > 1)
         {
-            itf->DevStatus.State = DFU_STATE_UPLOAD_IDLE;
+            uint8_t *addr = DFUSE_GETADDRESS(itf, &dfu_desc);
 
-            DFU_APP(itf)->Read(
-                    DFUSE_GETADDRESS(itf, &dfu_desc),
-                    data,
-                    dev->Setup.Length);
+            /* Check overall length */
+            if (((uint32_t)addr + dev->Setup.Length) <
+                (DFU_APP(itf)->Firmware.Address + DFU_APP(itf)->Firmware.TotalSize))
+            {
+                itf->DevStatus.State = DFU_STATE_UPLOAD_IDLE;
 
-            retval = USBD_CtrlSendData(dev, data, dev->Setup.Length);
+                DFU_APP(itf)->Read(addr, data, dev->Setup.Length);
+
+                retval = USBD_CtrlSendData(dev, data, dev->Setup.Length);
+            }
         }
 #else
         /* The host sends DFU_UPLOAD requests to the device until it
