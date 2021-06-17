@@ -535,7 +535,11 @@ static USBD_ReturnType dfu_download(USBD_DFU_IfHandleType *itf)
     USBD_ReturnType retval = USBD_E_INVALID;
     USBD_HandleType *dev = itf->Base.Device;
 
-    if (dev->Setup.Length > 0)
+    if (dev->Setup.Length > dfu_desc.DFUFD.wTransferSize)
+    {
+        /* Oversized request, invalid */
+    }
+    else if (dev->Setup.Length > 0)
     {
         /* Check for download support */
         if ((DFU_APP(itf)->Erase != NULL) && (DFU_APP(itf)->Write != NULL))
@@ -549,10 +553,12 @@ static USBD_ReturnType dfu_download(USBD_DFU_IfHandleType *itf)
             }
 
             /* Checks for valid sequence and overall length */
-            if (   ( dev->Setup.Value == ((itf->BlockNum + 1) & 0xFFFF))
-                && (((uint32_t)itf->Address + dev->Setup.Length) <
-                    (DFU_APP(itf)->Firmware.Address + DFU_APP(itf)->Firmware.TotalSize)))
+            if ((dev->Setup.Value == ((itf->BlockNum + 1) & 0xFFFF)) &&
+#else
+            if (
 #endif /* (USBD_DFU_ST_EXTENSION == 0) */
+                (((uint32_t)itf->Address + dev->Setup.Length) <
+                (DFU_APP(itf)->Firmware.Address + DFU_APP(itf)->Firmware.TotalSize)))
             {
                 /* Update the global length and block number */
                 itf->BlockNum    = dev->Setup.Value;
