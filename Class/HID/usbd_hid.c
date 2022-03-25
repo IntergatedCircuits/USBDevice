@@ -292,7 +292,7 @@ static void hid_init(USBD_HID_IfHandleType *itf)
 #if (USBD_HID_OUT_SUPPORT == 1)
     if (itf->Config.OutEpNum != 0)
     {
-        mps = HID_APP(itf)->Report->Input.MaxSize;
+        mps = HID_APP(itf)->Report->Output.MaxSize;
         if (mps > mpsLimit)
         {
             mps = mpsLimit;
